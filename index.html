@@ -7,21 +7,15 @@
     <meta name="Keywords" content="EditPlus®,Microshaoft">
     <meta name="Description" content="EditPlus®,Microshaoft">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-    <title>MS SQL Code Diff Verioning</title>
+    <title>Json Structure Diff tools</title>
 
     <script src="libs/knockout/knockout-3.5.1.debug.js" type="text/javascript"></script>
     <script src="libs/jquery/jquery-3.5.1.js" type="text/javascript"></script>
 
     <link rel="stylesheet" href="libs/jquery-ui/jquery-ui-1.12.1.css">
     <script src="libs/jquery-ui/jquery-ui-1.12.1.js"></script>
-
-    <link href="libs/driver.js/driver.min.css" rel="stylesheet" />
-    <script src="libs/driver.js/driver.min.js"></script>
-
     <script src="libs/splitjs/split.js"></script>
-
     <script src="libs/monaco-editor/min/vs/loader.js"></script>
-
     <!-- <script src="libs/jsonify/parse.js"></script>
     <script src="libs/jsonify/stringify.js"></script> -->
 
@@ -181,15 +175,7 @@
             }
         });
 
-        window.jwtToken = "";
-        $(document).ready(function () {
-            $('#loading').hide();
-        });
-        $(function () {
-            $('#datepicker1').datepicker();
-        });
-        var baseUrl = "http://localhost:5000";
-        baseUrl = "";
+        
         function GetObjectsTexts() {
             
             //debugger;
@@ -274,9 +260,6 @@
             gutterSize: 10,
             cursor: 'col-resize',
         });
-
-        
-
         require.config({ paths: { 'vs': 'libs/monaco-editor/min/vs' } });
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
@@ -308,10 +291,6 @@
                     automaticLayout: true
             });
         });
-
-
-
-
         var diffEditor;
         require(['vs/editor/editor.main'], function () {
             diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'),{
@@ -325,8 +304,6 @@
             this.SelectedDiffViewType = ko.observable("0");
 
         };
-
-            
         var vm = new viewModel([]);
         ko.applyBindings(vm);
         function diffUsingJS(viewType, baseObject, newObject) {
@@ -342,8 +319,6 @@
             });
             $('#loading').fadeOut();
         }
-
-       
     </script>
 </body>
 </html>
