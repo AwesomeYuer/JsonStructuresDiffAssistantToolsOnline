@@ -22,6 +22,8 @@
 
     <script src="libs/monaco-editor/min/vs/loader.js"></script>
 
+    
+
     <style type="text/css">
         body {
             font-size: 12px;
@@ -142,6 +144,29 @@
 
     <script type="text/javascript">
 
+        var stringify = require('json-stable-stringify')
+
+
+
+        function reStringify(x) {
+            var a = JSON.parse(x);
+            var reStringifyJson = stringify(a, function (k, v) {
+            if (typeof v == 'string') {
+                console.log('%s : %s', k, JSON.stringify(v));
+                //if (k.indexOf("F") >= 0) {
+                    return '********';
+                //}
+                keys = '';
+            } else if (typeof v == 'integer') {
+                return 0;
+                keys = '';
+            }
+            return v;
+            }, 2);
+            return reStringifyJson;
+
+        }
+
         $(document).keyup(function (e) {
             if (e.key === "Escape") { // escape key maps to keycode `27`
                 // <DO YOUR WORK HERE>
@@ -161,66 +186,29 @@
         function GetObjectsTexts() {
             
             //debugger;
-            var left = -1;
-            var right = -1;
-            var a = vm.selectedDetailItems();
-            if (a.length == 1) {
-                left = right = a[0];
-            } else if (a.length > 1) {
-                left = a[0];
-                right = a[1];
-            } else {
-                if (vm.selectedItem() == undefined) {
-                    //$('#loading').fadeOut();
-                    return;
-                }
-                left = right = vm.selectedItem();
-            }
+            
             $('#loading').fadeIn();
             if (left > right) {
                 left += right;
                 right = left - right;
                 left -= right;
             }
-            var ids = left + ',' + right;
-            var url = baseUrl + "/api/StoreProcedureExecutor/result/mssql/aaa/ccc/objects?SearchIdsList=" + ids;
-            $.getJSON(
-                url
-                , function (data) {
-                        //alert("none");
-                    }
-                ).done(function (data) {
-                    //alert("done");
-                    data = data["Outputs"]["ResultSets"][0]["Rows"];
-                    var x = data[0];
-                    var x1 = {
-                        Name: x.ObjectName,
-                        TextHeader: '/*\n' + x.ObjectName + '(' + x.ID + ')' + '\n@ ' + x.DatabaseName + ' @ ' + x.DatabaseServerName + '\n@ ' + x.PostTime + '\nBy ' + x.LoginName + ' @ ' + x.HostName + '\n*/\n\n',
-                        TextBody: x.TSQLCommand,
-                        TimeStamp: x.PostTime
-                    };
+            //data = data["Outputs"]["ResultSets"][0]["Rows"];
 
-                    var x2;
-                    if (data.length <= 1) {
-                        x2 = x1;
-                    }
-                    else {
-                        x = data[1];
-                        x2 = {
-                            Name: x.ObjectName,
-                            TextHeader: '/*\n' + x.ObjectName + '(' + x.ID + ')' + '\n@ ' + x.DatabaseName + ' @ ' + x.DatabaseServerName + '\n@ ' + x.PostTime + '\nBy ' + x.LoginName + ' @ ' + x.HostName + '\n*/\n\n',
-                            TextBody: x.TSQLCommand,
-                            TimeStamp: x.PostTime
-                        }
-                    }
-                    diffUsingJS(parseInt(vm.SelectedDiffViewType()),
-                        x1, x2
-                    );
-                }).fail(function (d, textStatus, error) {
-                    alert("getJSON failed, status: " + textStatus + ", error: " + error);
-                }).always(function () {
-                    $('#loading').fadeOut();
-                });
+            var ss = reStringify(topLeftEditor.getValue());
+            var x1 = {
+                TextBody: ss
+            };
+
+            ss = reStringify(topRightEditor.getValue());
+            var x2;
+            var x2 = {
+                    TextBody: ss
+            };
+            
+            diffUsingJS(parseInt(vm.SelectedDiffViewType()),
+                x1, x2
+            );
         }
     </script>
 </head>
@@ -382,14 +370,34 @@
         driver.start();
 
         require.config({ paths: { 'vs': 'libs/monaco-editor/min/vs' } });
-
+        var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
             // "javascript"
-            var topLeftEditor = monaco.editor.create(document.getElementById('left'));
+            //topLeftEditor = monaco.editor.create(document.getElementById('left'));
+            topLeftEditor = monaco.editor.create(document.getElementById('left'), {
+                value: [
+                        '{'                 ,
+                            '   "a":"11111",'   ,
+                            '   "b":"222"'      ,
+                        '}'
+                        ].join('\n')        ,
+                        language: 'json'     ,
+                        automaticLayout: true
+                });
             });
+        var topRightEditor;            
         require(['vs/editor/editor.main'], function () {
-        // "javascript"
-        var topRightEditor = monaco.editor.create(document.getElementById('right'));
+            // "javascript"
+            topRightEditor = monaco.editor.create(document.getElementById('right'), {
+            value: [
+                    '{'                 ,
+                        '   "b": 1000,'   ,
+                        '   "a":"222"'      ,
+                    '}'
+                    ].join('\n')        ,
+                    language: 'json'     ,
+                    automaticLayout: true
+            });
         });
 
 
@@ -497,8 +505,8 @@
         var vm = new viewModel([]);
         ko.applyBindings(vm);
         function diffUsingJS(viewType, baseObject, newObject) {
-            var originalTxt = baseObject.TextHeader + baseObject.TextBody;
-            var modifiedTxt = newObject.TextHeader + newObject.TextBody;
+            var originalTxt = baseObject.TextBody;
+            var modifiedTxt = newObject.TextBody;
             diffEditor.updateOptions({
                 renderSideBySide: !viewType,
                 readOnly: true
