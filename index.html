@@ -138,11 +138,7 @@
     <link href="styles/text-magic.css" rel="stylesheet" />
 
     <script type="text/javascript">
-
         //var stringify = require('json-stable-stringify')
-
-
-
         function reStringify(x) {
             var a = JSON.parse(x);
             var reStringifyJson = JSON.stringify(a, function (k, v) {
@@ -163,9 +159,8 @@
                 keys = '';
             }
             return v;
-            }, 2);
+            }, 4);
             return reStringifyJson;
-
         }
 
         $(document).keyup(function (e) {
@@ -267,13 +262,15 @@
         //topLeftEditor = monaco.editor.create(document.getElementById('left'));
         topLeftEditor = monaco.editor.create(document.getElementById('left'), {
             value: [
-                    '{'                 ,
-                        '   "a":"11111",'   ,
-                        '   "b":"222",'      ,
-                        '   "c":false'      ,
+                    '{'                         ,
+                        '   "z": [{"a":1}],'    ,
+                        '   "y": [{"a":{"a":true}}],'    ,
+                        '   "a":"11111",'       ,
+                        '   "b":"222",'         ,
+                        '   "c":false'          ,
                     '}'
-                    ].join('\n')        ,
-                    language: 'json'     ,
+                    ].join('\n')            ,
+                    language: 'json'        ,
                     automaticLayout: true
             });
         });
