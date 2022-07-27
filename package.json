@@ -1,0 +1,8 @@
+{
+  
+  "scripts": {
+    "test": "test",
+    "start": "node app",
+    "dev": "lite-server"
+  }
+}
