@@ -22,7 +22,8 @@
 
     <script src="libs/monaco-editor/min/vs/loader.js"></script>
 
-    
+    <!-- <script src="libs/jsonify/parse.js"></script>
+    <script src="libs/jsonify/stringify.js"></script> -->
 
     <style type="text/css">
         body {
@@ -144,21 +145,27 @@
 
     <script type="text/javascript">
 
-        var stringify = require('json-stable-stringify')
+        //var stringify = require('json-stable-stringify')
 
 
 
         function reStringify(x) {
             var a = JSON.parse(x);
-            var reStringifyJson = stringify(a, function (k, v) {
+            var reStringifyJson = JSON.stringify(a, function (k, v) {
             if (typeof v == 'string') {
                 console.log('%s : %s', k, JSON.stringify(v));
                 //if (k.indexOf("F") >= 0) {
                     return '********';
                 //}
                 keys = '';
-            } else if (typeof v == 'integer') {
+            } else if (typeof v == 'number') {
                 return 0;
+                keys = '';
+            } else if (typeof v == 'boolean') {
+                return true;
+                keys = '';
+            } else if (typeof v == 'undeclaredVariable') {
+                return undefined;
                 keys = '';
             }
             return v;
@@ -188,11 +195,7 @@
             //debugger;
             
             $('#loading').fadeIn();
-            if (left > right) {
-                left += right;
-                right = left - right;
-                left -= right;
-            }
+
             //data = data["Outputs"]["ResultSets"][0]["Rows"];
 
             var ss = reStringify(topLeftEditor.getValue());
@@ -236,62 +239,13 @@
         </div>
         <div>
 
-            Top Limit:<input id="topLimit" type="number" value="100" />
-            <br />
-            <br />
-            Search Object's Name Contains Text:<input id="search" type="text" />
-            Search Host Name Contains Text:<input id="searchHostName" type="text" />
-            Search DataBase Name Contains Text:<input id="searchDatabaseName" type="text" />
-            Post Time After:<input id="datepicker1" type="text" />
-            <button id="searching" onclick="GetMasterList()">Search and Append</button>
-            <br />
-            <br />
-            <button onclick="vm.Items.removeAll();vm.Counter = 0;">clear</button>
-            <button data-bind="text: SortByObjectNameDirection"
-                    onclick="vm.SortByObjectName()">
-                SortByObjectName
-            </button>
-            <button data-bind="text: SortByAddSequenceDirection"
-                    onclick="vm.SortByAddSequence()">
-                SortByAddSequence
-            </button>
-            Filter Keyword in Object Name:
-            <input id="filterKeyword"
-                   type="text"
-                   data-bind="value: FilterKeyword, 
-                                valueUpdate: 'afterkeydown'" />
-            [(Filtered: <span data-bind="text: FilteredItems().length"></span> /
-            Total: <span data-bind="text: Items().length"></span>)&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
-            Details: <span data-bind="text: DetailItems().length"></span>]
+            
         </div>
         <br />            
         <div id="up" class="split" style="border: 1px solid black">
             <div id="left" class="split content split-horizontal" width="50%">
-            <!-- <select
-                    size="2"
-                    id="left"
-                    class="split content split-horizontal"
-                    data-bind="options: FilteredItems,
-                                optionsCaption:'Master',
-                                optionsText: 'OptionText',
-                                optionsValue: 'ID',
-                                value: selectedItem">
-            </select> -->
-            <!-- <textarea name="" rows="10" cols="10"></textarea> -->
             </div>
             <div id="right" class="split content split-horizontal" width="50%">
-            <!-- <select
-                    multiple
-                    id="right"
-                    class="split content split-horizontal"
-                    data-bind="options: DetailItems,
-                                optionsCaption:'Detail',
-                                optionsText: 'OptionText',
-                                optionsValue: 'ID',
-                                selectedOptions: selectedDetailItems,
-                                enable: DetailItems().length">
-            </select> -->
-            <!-- <textarea name="" rows="10" cols="10"></textarea> -->
             </div>
         </div>
     
@@ -321,70 +275,25 @@
             cursor: 'col-resize',
         });
 
-        var driver = new Driver();
-        // Define the steps for introduction
-        driver.defineSteps([
-            {
-                element: '#search',
-                popover: {
-                    className: 'first-step-popover-class',
-                    title: 'Title on Popover',
-                    description: 'Body of the popover',
-                    position: 'bottom'
-                }
-            },
-            {
-                element: '#searchHostName',
-                popover: {
-                    title: 'Title on Popover',
-                    description: 'Body of the popover',
-                    position: 'bottom'
-                }
-            },
-            {
-                element: '#searchDatabaseName',
-                popover: {
-                    title: 'Title on Popover',
-                    description: 'Body of the popover',
-                    position: 'bottom'
-                }
-            },
-            {
-                element: '#datepicker1',
-                popover: {
-                    title: 'Title on Popover',
-                    description: 'Body of the popover',
-                    position: 'bottom'
-                }
-            },
-            {
-                element: '#searching',
-                popover: {
-                    title: 'Title on Popover',
-                    description: 'Body of the popover',
-                    position: 'bottom'
-                }
-            },
-        ]);
-        // Start the introduction
-        driver.start();
+        
 
         require.config({ paths: { 'vs': 'libs/monaco-editor/min/vs' } });
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
-            // "javascript"
-            //topLeftEditor = monaco.editor.create(document.getElementById('left'));
-            topLeftEditor = monaco.editor.create(document.getElementById('left'), {
-                value: [
-                        '{'                 ,
-                            '   "a":"11111",'   ,
-                            '   "b":"222"'      ,
-                        '}'
-                        ].join('\n')        ,
-                        language: 'json'     ,
-                        automaticLayout: true
-                });
+        // "javascript"
+        //topLeftEditor = monaco.editor.create(document.getElementById('left'));
+        topLeftEditor = monaco.editor.create(document.getElementById('left'), {
+            value: [
+                    '{'                 ,
+                        '   "a":"11111",'   ,
+                        '   "b":"222",'      ,
+                        '   "c":false'      ,
+                    '}'
+                    ].join('\n')        ,
+                    language: 'json'     ,
+                    automaticLayout: true
             });
+        });
         var topRightEditor;            
         require(['vs/editor/editor.main'], function () {
             // "javascript"
@@ -405,103 +314,19 @@
 
         var diffEditor;
         require(['vs/editor/editor.main'], function () {
-            diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'));
+            diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'),{
+                        language: 'json'     ,
+                        automaticLayout: true
+
+            });
         });
         var viewModel = function (data) {
             var self = this;
-            this.Counter = 0;
             this.SelectedDiffViewType = ko.observable("0");
 
-            this.Items = ko.observableArray(data);
-            this.FilterKeyword = ko.observable('');
-            this.FilteredItems = ko.computed(function () {
-                return this.Items().filter(function (x) {
-                    var r = true;
-                    var keyword = self.FilterKeyword().toLowerCase(); 
-                    if (keyword != null && keyword != '') {
-                        var xx = x.ObjectName.toLowerCase();
-                        r = (xx.indexOf(keyword) >= 0);
-                    }
-                    return r;
-                });
-            }, this);
-
-            this.selectedItem = ko.observable();
-            this.selectedDetailItems = ko.observableArray([]);
-            function getById(items, id) {
-                if (!id) {
-                    return [];
-                }
-
-                var result = ko.utils.arrayFirst(items, function (item) {
-                    return item.ID === id;
-                });
-
-                return result && result.childItems || [];
-            }
-
-            this.DetailItems = ko.computed(function () {
-                var items = this.Items();
-                var id = this.selectedItem()
-                return getById(items, id);
-            }, this);
-
-            this.SortByAddSequenceState = ko.observable(false);
-            this.SortByAddSequenceDirection = ko.computed(function () {
-                var r = "SortByAddSequence ";
-                if (self.SortByAddSequenceState) {
-                    if (self.SortByAddSequenceState()) {
-                        r += " Asc";
-                    } else {
-                        r += " Desc";
-                    }
-                }
-                return r;
-            });
-            this.SortByAddSequence = function () {
-                $('#loading').fadeIn();
-                self.Items.sort(function (x, y) {
-                    var r = x.AddSequence > y.AddSequence ? -1 : 1;
-                    if (self.SortByAddSequenceState()) {
-                        r = -1 * r;
-                    }
-                    return r;
-                });
-                self.SortByAddSequenceState(!self.SortByAddSequenceState());
-                $('#loading').fadeOut();
-            };
-            this.SortByObjectNameState = ko.observable(false);
-            this.SortByObjectNameDirection = ko.computed(function () {
-                var r = "SortByObjectName ";
-                if (self.SortByObjectNameState) {
-                    if (self.SortByObjectNameState()) {
-                        r += " Asc";
-                    } else {
-                        r += " Desc";
-                    }
-                }
-                return r;
-            });
-            this.SortByObjectName = function () {
-                $('#loading').fadeIn();
-                this.Items.sort(
-                    function (x, y) {
-                        var xx = x.ObjectName.toLowerCase();
-                        var yy = y.ObjectName.toLowerCase();
-                        var r = (
-                            xx == yy ?
-                                (x.ID < y.ID ? -1 : 1) :
-                                (xx < yy ? -1 : 1)
-                        );
-                        if (self.SortByObjectNameState()) {
-                            r = -1 * r;
-                        }
-                        return r;
-                    });
-                self.SortByObjectNameState(!self.SortByObjectNameState());
-                $('#loading').fadeOut();
-            };
         };
+
+            
         var vm = new viewModel([]);
         ko.applyBindings(vm);
         function diffUsingJS(viewType, baseObject, newObject) {
@@ -517,45 +342,8 @@
             });
             $('#loading').fadeOut();
         }
-        function Clear() {
-            vm.Items.removeAll();
-            vm.Counter = 0;
-        }
-        function GetMasterList() {
-            $('#loading').fadeIn();
-            //jsonp cross domain
-            var search = document.getElementById("search").value;
-            var afterTime = document.getElementById("datepicker1").value;
-            var searchHostName = document.getElementById("searchHostName").value;
-            var searchDatabaseName = document.getElementById("searchDatabaseName").value;
-            var topLimit = document.getElementById("topLimit").value;
-            var url = baseUrl + "/api/StoreProcedureExecutor/result/mssql/aaa/bbb/objects?top=" + topLimit + "&searchobjectname=" + search + "&searchhostname=" + searchHostName + "&searchdatabasename=" + searchDatabaseName + "&searchaftertime=" + afterTime;
-            $.getJSON(
-                url,
-                function (data) {
-                    //alert(data);
-                }).done(function (data) {
-                    $.each(data.Outputs.ResultSets[0].Rows, function (i, item) {
-                        var items = vm.Items();
-                        var found = items.find(function (x) {
-                            return x.ID == item.ID;
-                        });
-                        if (found == undefined) {
-                            item.DisableInDetail = ko.observable(false);
-                            item.AddSequence = (++vm.Counter);
-                            item.OptionText = '[' + item.AddSequence + '].' + item.ObjectName + '(' + item.ID + ')' + ' @ ' + item.DatabaseName + ' @ ' + item.DatabaseServerName + ' @ ' + item.PostTime + ' By ' + item.LoginName + ' @ ' + item.HostName;
-                            $.each(item.childItems, function (ii, childItem) {
-                                childItem.OptionText = '[' + (ii + 1) + '].' + childItem.ObjectName + '(' + childItem.ID + ')' + ' @ ' + childItem.DatabaseName + ' @ ' + childItem.DatabaseServerName + ' @ ' + childItem.PostTime + ' By ' + item.LoginName + ' @ ' + childItem.HostName;
-                            });
-                            vm.Items.push(item);
-                        }
-                    });
-                }).fail(function (data, textStatus, error) {
-                    alert("getJSON failed,\nstatus: " + textStatus + ",\nerror: " + error + ",\ndata: " + JSON.stringify(data));
-                }).always(function () {
-                    $('#loading').fadeOut();
-                });
-        }
+
+       
     </script>
 </body>
 </html>
