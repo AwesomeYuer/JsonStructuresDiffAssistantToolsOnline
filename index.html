@@ -16,8 +16,8 @@
     <script src="libs/jquery-ui/jquery-ui-1.12.1.js"></script>
     <script src="libs/splitjs/split.js"></script>
     <script src="libs/monaco-editor/min/vs/loader.js"></script>
-    <!-- <script src="libs/jsonify/parse.js"></script>
-    <script src="libs/jsonify/stringify.js"></script> -->
+    <!-- <script src="libs/requirejs/require.js"></script> -->
+    <!-- <script src="libs/fast-json-stable-stringify/index.js"></script> -->
 
     <style type="text/css">
         body {
@@ -138,25 +138,25 @@
     <link href="styles/text-magic.css" rel="stylesheet" />
 
     <script type="text/javascript">
-        //var stringify = require('json-stable-stringify')
+        require.config({ paths: { 
+                    'vs': 'libs/monaco-editor/min/vs' //, //
+                    //'fast-json-stable-stringify':'libs/fast-json-stable-stringify/index'
+                }});
+        //var stringify = require('fast-json-stable-stringify');
+        
         function reStringify(x) {
             var a = JSON.parse(x);
-            var reStringifyJson = JSON.stringify(a, function (k, v) {
+            //var reStringifyJson = stringify(a);
+            reStringifyJson = JSON.stringify(a, function (k, v) {
             if (typeof v == 'string') {
-                console.log('%s : %s', k, JSON.stringify(v));
-                //if (k.indexOf("F") >= 0) {
-                    return '********';
-                //}
-                keys = '';
+                //console.log('%s : %s', k, JSON.stringify(v));
+                return '********';
             } else if (typeof v == 'number') {
-                return 0;
-                keys = '';
+                return -1;
             } else if (typeof v == 'boolean') {
                 return true;
-                keys = '';
             } else if (typeof v == 'undeclaredVariable') {
                 return undefined;
-                keys = '';
             }
             return v;
             }, 4);
@@ -255,7 +255,7 @@
             gutterSize: 10,
             cursor: 'col-resize',
         });
-        require.config({ paths: { 'vs': 'libs/monaco-editor/min/vs' } });
+        
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
         // "javascript"
