@@ -15,6 +15,10 @@
     <link rel="stylesheet" href="libs/jquery-ui/jquery-ui-1.12.1.css">
     <script src="libs/jquery-ui/jquery-ui-1.12.1.js"></script>
     <script src="libs/splitjs/split.js"></script>
+    
+    <link href="libs/driver.js/driver.min.css" rel="stylesheet" />
+    <script src="libs/driver.js/driver.min.js"></script>
+    
     <script src="libs/monaco-editor/min/vs/loader.js"></script>
 
     <style type="text/css">
@@ -137,7 +141,7 @@
 
     <script type="text/javascript">
         // extract from fast-json-stable-stringify, thanks author
-        function stringify (data, opts) {
+        function stringify(data, opts) {
             if (!opts) opts = {};
             if (typeof opts === 'function') opts = { cmp: opts };
             var cycles = (typeof opts.cycles === 'boolean') ? opts.cycles : false;
@@ -195,19 +199,15 @@
             })(data);
         };
 
-        require.config({ paths: { 
-                    'vs': 'libs/monaco-editor/min/vs' //, //
-                }});
-        
-        function reStringify(x, sorted) {
-            var a = JSON.parse(x);
+       
+        function jsonStructureStringify(x, sorted) {
+            var o = JSON.parse(x);
             if (sorted) {
-                var reStringifyJson = stringify(a);
-                a = JSON.parse(reStringifyJson);
+                o = JSON.parse(stringify(o));
             }
-            reStringifyJson = JSON.stringify(a, function (k, v) {
+            var j = JSON.stringify(o, function (k, v) {
             if (typeof v == 'string') {
-                return '********';
+                return '*****';
             } else if (typeof v == 'number') {
                 return -1;
             } else if (typeof v == 'boolean') {
@@ -217,7 +217,7 @@
             }
             return v;
             }, 4);
-            return reStringifyJson;
+            return j;
         }
 
         $(document).keyup(function (e) {
@@ -225,21 +225,30 @@
                 $('#loading').hide();
             }
         });
+        
+        function swap() {
+            var s = topLeftEditor.getValue();
+            topLeftEditor.setValue(topRightEditor.getValue());
+            topRightEditor.setValue(s);
+            diffEditor.setModel({
+                original: monaco.editor.createModel("", 'json'),
+                modified: monaco.editor.createModel("", 'json')
+            });
+        }
 
-        function GetObjectsTexts() {
+        function diff() {
             //debugger;
             $('#loading').fadeIn();
-            var ss = reStringify(topLeftEditor.getValue(),vm.SelectedSortedStringify());
-            var x1 = {
-                TextBody: ss
+            var jj = jsonStructureStringify(topLeftEditor.getValue(),vm.SelectedSortedStringify());
+            var j1 = {
+                TextBody: jj
             };
-            ss = reStringify(topRightEditor.getValue(),vm.SelectedSortedStringify());
-            var x2;
-            var x2 = {
-                    TextBody: ss
+            jj = jsonStructureStringify(topRightEditor.getValue(),vm.SelectedSortedStringify());
+            var j2 = {
+                TextBody: jj
             };
-            diffUsingJS(parseInt(vm.SelectedDiffViewType()),
-                x1, x2
+            diffView(parseInt(vm.SelectedDiffViewType()),
+                j1, j2
             );
         }
     </script>
@@ -265,6 +274,7 @@
     </div>
         <div id="up" class="split" style="border: 1px solid black">
             <div id="left" class="split content split-horizontal" width="50%">
+
             </div>
             <div id="right" class="split content split-horizontal" width="50%">
             </div>
@@ -272,16 +282,17 @@
     
     <div id="down" class="split content">
         <div class="viewType">
+            <button id="swap" onclick="swap();">swap</button>
+            <hr>
             <input type="checkbox" id="reStringify" value="1" data-bind="checked:SelectedSortedStringify" />
-            <label for="reStringify">Sorted by key stringify</label>
+            <label id="reStringifyLabel" for="reStringify">Sorted by key stringify</label>
             <br />
-            <br />
-            Diff View Type:
+            <label id="diffViewTypeLabel">Diff View Type:</label>
             <br />
             <input type="radio" id="diffViewType0" value="0" data-bind="checked:SelectedDiffViewType" />
-            <label for="diffViewType0" onclick="GetObjectsTexts();">Side</label>
+            <label id="diffViewType0Label" for="diffViewType0" onclick="diff();">Side</label>
             <input type="radio" id="diffViewType1" value="1" data-bind="checked:SelectedDiffViewType" />
-            <label for="diffViewType1" onclick="GetObjectsTexts();">Inline</label>
+            <label id="diffViewType1Label" for="diffViewType1" onclick="diff();">Inline</label>
         </div>
         <div id="diffoutput">
             <div id="container" style="width:100%;height:400px;border:1px solid grey"></div>
@@ -299,10 +310,83 @@
             gutterSize: 10,
             cursor: 'col-resize',
         });
-        
+        // driver should be after split
+        var driver = new Driver();
+        driver.defineSteps([
+            {
+                element: '#left',
+                popover: {
+                    className: 'first-step-popover-class',
+                    title: 'Compare ...',
+                    description: 'Copy & Paste Text in to the here for compare',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#right',
+                popover: {
+                    title: 'Compare with ...',
+                    description: 'Copy & Paste Text in to the here for compare with left',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#swap',
+                popover: {
+                    title: 'Swap',
+                    description: 'Click here Swap Left and Right on above',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#reStringifyLabel',
+                popover: {
+                    title: 'Sorted key Stringify',
+                    description: 'Switch mode for whether base on Sorted key Stringify comparison',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffViewTypeLabel',
+                popover: {
+                    title: 'Diff View Type',
+                    description: 'Diff View Type selection',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffViewType0Label',
+                popover: {
+                    title: 'Side',
+                    description: 'Side diff View type selection',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffViewType1Label',
+                popover: {
+                    title: 'Inline',
+                    description: 'Inline diff View type selection',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffoutput',
+                popover: {
+                    title: 'Diff View',
+                    description: 'Comparison Diff View',
+                    position: 'bottom-center'
+                }
+            },
+        ]);
+        // Start the introduction
+        driver.start();
         var topLeftEditor;
+        require.config({ paths: { 
+                    'vs': 'libs/monaco-editor/min/vs'
+                }});
         require(['vs/editor/editor.main'], function () {
-        topLeftEditor = monaco.editor.create(document.getElementById('left'), {
+            topLeftEditor = monaco.editor.create(document.getElementById('left'), {
             value: [
                     '{'                         ,
                         '   "z": [{"a":1}],'    ,
@@ -346,7 +430,7 @@
         };
         var vm = new viewModel([]);
         ko.applyBindings(vm);
-        function diffUsingJS(viewType, baseObject, newObject) {
+        function diffView(viewType, baseObject, newObject) {
             var originalTxt = baseObject.TextBody;
             var modifiedTxt = newObject.TextBody;
             diffEditor.updateOptions({
