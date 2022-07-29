@@ -235,6 +235,13 @@
             });
         }
 
+        function help() {
+            if (!driver.isActivated) {
+                event.stopPropagation();
+                driver.start();
+            }
+        }
+
         function diff(diffViewType) {
             //debugger;
             $('#loading').fadeIn();
@@ -277,6 +284,10 @@
         <div class="box-taiji">
         </div>
     </div>
+        <div id="up0" align="right">
+            <button id="help"  accesskey="h" onclick="help();"><strong><u>H</u></strong>elp</button>
+        </div>
+        <hr>
         <div id="up" class="split" style="border: 1px solid black">
             <div id="left" class="split content split-horizontal" width="50%">
 
@@ -316,76 +327,82 @@
             cursor: 'col-resize',
         });
         // driver should be after split
-        var driver = new Driver();
+        var driver = new Driver({
+            animate: true,  // Animate while changing highlighted element
+            opacity: 0.75  // Background opacity (0 means only popovers and without overlay)
+        });
         driver.defineSteps([
-            {
-                element: '#left',
-                popover: {
-                    className: 'first-step-popover-class',
-                    title: 'Compare ...',
-                    description: 'Copy & Paste Text in to here for compare',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#right',
-                popover: {
-                    title: 'Compare with ...',
-                    description: 'Copy & Paste Text in to here for compare with left',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#swap',
-                popover: {
-                    title: 'Swap',
-                    description: 'Click here Swap Left and Right on above',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#reStringifyLabel',
-                popover: {
-                    title: 'Sorted key Stringify',
-                    description: 'Switch mode for whether base on Sorted key Stringify comparison',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#diffViewTypeLabel',
-                popover: {
-                    title: 'Diff View Type',
-                    description: 'Diff View Type selection',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#diffViewType0Label',
-                popover: {
-                    title: 'Side',
-                    description: 'Click here for Side diff View type selection and view it',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#diffViewType1Label',
-                popover: {
-                    title: 'Inline',
-                    description: 'Click here for Inline diff View type selection and view it',
-                    position: 'bottom-center'
-                }
-            },
-            {
-                element: '#diffoutput',
-                popover: {
-                    title: 'Diff View',
-                    description: 'Comparison Diff View',
-                    position: 'bottom-center'
-                }
-            },
-        ]);
-        // Start the introduction
+                {
+                    element: '#left',
+                    popover: {
+                        className: 'first-step-popover-class',
+                        title: 'Compare ...',
+                        description: 'Copy & Paste Text in to here for compare',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#right',
+                    popover: {
+                        title: 'Compare with ...',
+                        description: 'Copy & Paste Text in to here for compare with left',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#swap',
+                    popover: {
+                        title: 'Swap',
+                        description: 'Click here Swap Left and Right on above',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#reStringifyLabel',
+                    popover: {
+                        title: 'Sorted key Stringify',
+                        description: 'Switch mode for whether base on Sorted key Stringify comparison',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#diffViewTypeLabel',
+                    popover: {
+                        title: 'Diff View Type',
+                        description: 'Diff View Type selection',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#diffViewType0Label',
+                    popover: {
+                        title: 'Side',
+                        description: 'Click here for Side diff View type selection and view it',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#diffViewType1Label',
+                    popover: {
+                        title: 'Inline',
+                        description: 'Click here for Inline diff View type selection and view it',
+                        position: 'bottom-center'
+                    }
+                },
+                {
+                    element: '#diffoutput',
+                    popover: {
+                        title: 'Diff View',
+                        description: 'Comparison Diff View',
+                        position: 'mid-center'
+                    }
+                },
+            ]);
+            // Start the introduction
         driver.start();
+
+        
+
         var topLeftEditor;
         require.config({ paths: { 
                     'vs': 'libs/monaco-editor/min/vs'
