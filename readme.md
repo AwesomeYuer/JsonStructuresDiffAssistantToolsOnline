@@ -19,7 +19,7 @@ package.json
   "start"   : "lite-server",
   "dev"     : "lite-server",
   "crash"   : "lite-server",
-  "build"   : "echo Awesome.Yuer is Great!"
+  "build"   : "echo This is a Fake Build processing ..."
   }
 }
 ```
