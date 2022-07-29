@@ -1,22 +1,8 @@
 {
   
   "scripts": {
-  
-    
-  "test": "test",
-  
-    
   "start": "node app",
-  
-    
-  "dev": "lite-server"
-  
-  },
-  
-  "dependencies": {
-  
-    
-  "json-stable-stringify": "^1.0.1"
-  
+  "dev": "lite-server",
+  "build": "node --version"
   }
 }
