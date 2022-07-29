@@ -141,7 +141,7 @@
 
     <script type="text/javascript">
         // extract from fast-json-stable-stringify, thanks author
-        function stringify(data, opts) {
+        function fastJsonStableStringify(data, opts) {
             if (!opts) opts = {};
             if (typeof opts === 'function') opts = { cmp: opts };
             var cycles = (typeof opts.cycles === 'boolean') ? opts.cycles : false;
@@ -199,11 +199,10 @@
             })(data);
         };
 
-       
         function jsonStructureStringify(x, sorted) {
             var o = JSON.parse(x);
             if (sorted) {
-                o = JSON.parse(stringify(o));
+                o = JSON.parse(fastJsonStableStringify(o));
             }
             var j = JSON.stringify(o, function (k, v) {
             if (typeof v == 'string') {
