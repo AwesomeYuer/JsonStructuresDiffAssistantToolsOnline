@@ -1,8 +1,8 @@
 {
   
-  "scripts": {
-  "start": "lite-server",
-  "dev": "lite-server",
-  "build": "node --version"
+  "scripts" : {
+  "start"   : "lite-server",
+  "dev"     : "lite-server",
+  "build"   : "node --version"
   }
 }

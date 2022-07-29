@@ -3,3 +3,7 @@
 ```
 npm run dev
 ```
+Or
+```
+npm run start
+```
