@@ -1,7 +1,7 @@
 {
   
   "scripts": {
-  "start": "node app",
+  "start": "lite-server",
   "dev": "lite-server",
   "build": "node --version"
   }
