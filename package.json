@@ -1,8 +1,8 @@
 {
-  
   "scripts" : {
   "start"   : "lite-server",
   "dev"     : "lite-server",
-  "build"   : "node --version"
+  "crash"   : "lite-server",
+  "build"   : "echo Awesome.Yuer is Great!"
   }
 }
