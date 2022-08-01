@@ -19,7 +19,7 @@ npm run dev
         "start"   : "lite-server",
         "dev"     : "lite-server",
         "crash"   : "lite-server",
-        "build"   : "echo This is a Fake Build processing ..."
+        "build"   : "echo This is a Fake Building process ..."
     }
 }
 ```
