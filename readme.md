@@ -24,13 +24,13 @@ npm run dev
 }
 ```
 
-# Special Thanks
+## Special Thanks
 
 https://github.com/substack/json-stable-stringify
 
 https://github.com/epoberezkin/fast-json-stable-stringify
 
 
-# License
+## License
 
 MIT
