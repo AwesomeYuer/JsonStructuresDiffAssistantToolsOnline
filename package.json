@@ -1,8 +1,8 @@
 {
-  "scripts" : {
-  "start"   : "lite-server",
-  "dev"     : "lite-server",
-  "crash"   : "lite-server",
-  "build"   : "echo This is a Fake Build processing ..."
-  }
+    "scripts" : {
+        "start"   : "lite-server",
+        "dev"     : "lite-server",
+        "crash"   : "lite-server",
+        "build"   : "echo This is a Fake Build processing ..."
+    }
 }
