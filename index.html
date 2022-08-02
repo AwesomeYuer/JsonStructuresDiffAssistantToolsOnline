@@ -300,8 +300,8 @@
         <div class="viewType">
             <button id="swap" accesskey="w" onclick="swap();">↑ s<strong><u>w</u></strong>ap ↑</button>
             <hr>
-            <input type="checkbox" id="reStringify" value="1" data-bind="checked:SelectedSortedStringify" />
-            <label id="reStringifyLabel" accesskey="k" for="reStringify">Sorted by <strong><u>K</u></strong>ey stringify</label>
+            <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
+            <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">Sorted by <strong><u>K</u></strong>ey stringify</label>
             <br />
             <label id="diffViewTypeLabel">Diff View Type:</label>
             <br />
@@ -359,10 +359,10 @@
                     }
                 },
                 {
-                    element: '#reStringifyLabel',
+                    element: '#checkboxSortedStringifyLabel',
                     popover: {
                         title: 'Sorted key Stringify',
-                        description: 'Switch mode for whether base on Sorted key Stringify comparison',
+                        description: 'Click here for switch mode of whether base on Sorted key Stringify comparison',
                         position: 'bottom-center'
                     }
                 },
