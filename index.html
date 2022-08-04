@@ -466,7 +466,7 @@
                         ].join('\n')                                                    ,
                         language: 'json'                                                ,
                         automaticLayout: true                                           ,
-                        foldingStrategy: 'indentation'                                  ,
+                        foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
                         overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框           
                         folding: true                                                   , // 是否启用代码折叠
                         scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
@@ -486,7 +486,7 @@
                         ].join('\n')                                                    ,
                         language: 'json'                                                ,
                         automaticLayout: true                                           ,
-                        foldingStrategy: 'indentation'                                  ,
+                        foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
                         overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
                         folding: true                                                   , // 是否启用代码折叠
                         scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
@@ -498,7 +498,12 @@
         require(['vs/editor/editor.main'], function() {
                 diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'),{
                         language: 'json',
-                        automaticLayout: true
+                        automaticLayout: true                                           ,
+                        foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
+                        overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
+                        folding: true                                                   , // 是否启用代码折叠
+                        scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
+                        renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
                     });
         });
         var viewModel = function (data) {
