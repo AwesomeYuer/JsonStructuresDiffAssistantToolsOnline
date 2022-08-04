@@ -199,8 +199,17 @@
             })(data);
         };
 
-        function jsonStructureStringify(x, sorted) {
-            var o = JSON.parse(x);
+        function jsonStructureStringify(side, x, sorted) {
+            var o;
+            try {
+                o = JSON.parse(x);
+            }
+            catch (error) {
+                var e = "Text In Top " + side + " error:\n" + error;
+                //console.error(error);
+                alert(e);
+                return "";
+            }
             if (sorted) {
                 o = JSON.parse(fastJsonStableStringify(o));
             }
@@ -253,6 +262,7 @@
             //debugger;
             $('#loading').fadeIn();
             var jj = jsonStructureStringify(
+                        "Left",
                         topLeftEditor.getValue(),
                         vm.SelectedSortedStringify()
                     );
@@ -260,6 +270,7 @@
                 TextBody: jj
             };
             jj = jsonStructureStringify(
+                        "Right",
                         topRightEditor.getValue(),
                         vm.SelectedSortedStringify()
                     );
