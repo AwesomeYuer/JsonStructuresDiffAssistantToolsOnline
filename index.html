@@ -199,6 +199,12 @@
             })(data);
         };
 
+        function setDemoJson(editor, url) {
+            $.get(url, function(text) {
+                    editor.setValue(text);
+                },"text");
+        }
+
         function jsonStructureStringify(side, x, sorted) {
             var o;
             var jTokens = "";
@@ -448,43 +454,45 @@
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
                 topLeftEditor = monaco.editor.create(document.getElementById('left'), {
-                value: [
-                        '{'                                                     ,
-                            '   "z": [{"a":1}],'                                ,
-                            '   "y": [{"a":{"a":true}}],'                       ,
-                            '   "a": "11111",'                                  ,
-                            '   "b": "222",'                                    ,
-                            '   "c": false, trigger json syntax error'          ,
-                            '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'              ,
-                        '}'
-                ].join('\n')                                                    ,
-                language: 'json'                                                ,
-                automaticLayout: true                                           ,
-                foldingStrategy: 'indentation'                                  ,
-                overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框           
-                folding: true                                                   , // 是否启用代码折叠
-                scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
-            });
+                        value: [
+                                '{'                                                     ,
+                                    '   "z": [{"a":1}],'                                ,
+                                    '   "y": [{"a":{"a":true}}],'                       ,
+                                    '   "a": "11111",'                                  ,
+                                    '   "b": "222",'                                    ,
+                                    '   "c": false, trigger json syntax error'          ,
+                                    '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'              ,
+                                '}'
+                        ].join('\n')                                                    ,
+                        language: 'json'                                                ,
+                        automaticLayout: true                                           ,
+                        foldingStrategy: 'indentation'                                  ,
+                        overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框           
+                        folding: true                                                   , // 是否启用代码折叠
+                        scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
+                        renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                    });
+                setDemoJson(topLeftEditor, "/json1.json");
         });
 
         var topRightEditor;            
         require(['vs/editor/editor.main'], function () {
                 topRightEditor = monaco.editor.create(document.getElementById('right'), {
-                value: [
-                        '{'                                                     ,
-                            '   "b": 1000 trigger json syntax error,'           ,
-                            '   "a":"222"'                                      ,
-                        '}'
-                ].join('\n')                                                    ,
-                language: 'json'                                                ,
-                automaticLayout: true                                           ,
-                foldingStrategy: 'indentation'                                  ,
-                overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
-                folding: true                                                   , // 是否启用代码折叠
-                scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
-            });
+                        value: [
+                                '{'                                                     ,
+                                    '   "b": 1000 trigger json syntax error,'           ,
+                                    '   "a":"222"'                                      ,
+                                '}'
+                        ].join('\n')                                                    ,
+                        language: 'json'                                                ,
+                        automaticLayout: true                                           ,
+                        foldingStrategy: 'indentation'                                  ,
+                        overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
+                        folding: true                                                   , // 是否启用代码折叠
+                        scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
+                        renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                    });
+                setDemoJson(topRightEditor, "/json2.json");
         });
         var diffEditor;
         require(['vs/editor/editor.main'], function() {
@@ -514,6 +522,7 @@
             });
             $('#loading').fadeOut();
         }
+        
     </script>
 </body>
 </html>
