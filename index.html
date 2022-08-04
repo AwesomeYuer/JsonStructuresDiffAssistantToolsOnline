@@ -201,14 +201,22 @@
 
         function jsonStructureStringify(side, x, sorted) {
             var o;
+            var jTokens = "";
             try {
-                o = JSON.parse(x);
+                o = JSON.parse(x, function(k, v){
+                    jTokens += "\n(" + k + " : " + v + ")" ;
+                    return v;
+                });
             }
             catch (error) {
-                var e = "Text In Top " + side + " error:\n" + error;
-                //console.error(error);
+                var e = "Text In Top " + side + " error:";
+                e += "\n\n" + error;
+                if (jTokens.length > 0) {
+                    e += "\n\nin json tokens:";
+                    e += "\n" + jTokens;
+                }
                 alert(e);
-                return "";
+                return e;
             }
             if (sorted) {
                 o = JSON.parse(fastJsonStableStringify(o));
@@ -441,16 +449,16 @@
         require(['vs/editor/editor.main'], function () {
             topLeftEditor = monaco.editor.create(document.getElementById('left'), {
             value: [
-                    '{'                                         ,
-                        '   "z": [{"a":1}],'                    ,
-                        '   "y": [{"a":{"a":true}}],'           ,
-                        '   "a": "11111",'                      ,
-                        '   "b": "222",'                        ,
-                        '   "c": false,'                        ,
-                        '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'  ,
+                    '{'                                                     ,
+                        '   "z": [{"a":1}],'                                ,
+                        '   "y": [{"a":{"a":true}}],'                       ,
+                        '   "a": "11111",'                                  ,
+                        '   "b": "222",'                                    ,
+                        '   "c": false, trigger json syntax error'          ,
+                        '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'              ,
                     '}'
-                    ].join('\n')                                ,
-                    language: 'json'                            ,
+                    ].join('\n')                                            ,
+                    language: 'json'                                        ,
                     automaticLayout: true
             });
         });
@@ -458,12 +466,12 @@
         require(['vs/editor/editor.main'], function () {
             topRightEditor = monaco.editor.create(document.getElementById('right'), {
             value: [
-                    '{'                     ,
-                        '   "b": 1000,'     ,
-                        '   "a":"222"'      ,
+                    '{'                                                     ,
+                        '   "b": 1000 trigger json syntax error,'           ,
+                        '   "a":"222"'                                      ,
                     '}'
-                    ].join('\n')            ,
-                    language: 'json'        ,
+                ].join('\n')                                                ,
+            language: 'json'                                                ,
                     automaticLayout: true
             });
         });
