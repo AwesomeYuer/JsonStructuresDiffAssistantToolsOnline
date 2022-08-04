@@ -14,7 +14,7 @@
         {
             "type": "his_normal",
             "sa": "h_2",
-            "q": "app service 托管标识访问azure sql"
+            "q": true
         },
         {
             "type": "his_normal",
