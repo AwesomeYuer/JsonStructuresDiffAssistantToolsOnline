@@ -6,7 +6,7 @@ You'd better access it Over The GFW (Great Fire Wall).
 
 https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
-## Development Running Usage
+## Development Running/Debuging Usage
 
 1. Init Development Environment for using Lite-Server as Web Server.
     ```
