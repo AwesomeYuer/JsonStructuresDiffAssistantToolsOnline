@@ -8,12 +8,12 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
 ## Development Running/Debuging Usage
 
-1. Init Development Environment for using Lite-Server as Web Server.
+1. Init Development Environment for using Lite-Server as Web Server:
     ```
     npm init
     ```
 
-2. package.json Configuration for Running Web Server command line
+2. package.json Configuration for Running Web Server command line:
     ```json
     {
         "scripts" : {
@@ -25,7 +25,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     }
     ```
 
-3. Debug or Run Command Line.
+3. Debug or Run Command Line:
 
     ```
     npm run crash
