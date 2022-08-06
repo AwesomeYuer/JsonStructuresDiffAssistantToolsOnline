@@ -1,5 +1,10 @@
 # Json Structure Diff Assistant Tools Online
-## usage
+
+## Online Demo
+
+https://agreeable-flower-06c872700.1.azurestaticapps.net/
+
+## Development Usage
 ```
 npm run crash
 ```
@@ -30,10 +35,6 @@ https://github.com/substack/json-stable-stringify
 
 https://github.com/epoberezkin/fast-json-stable-stringify
 
-
-## Online Demo
-
-https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
 ## License
 
