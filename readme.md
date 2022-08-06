@@ -1,6 +1,6 @@
 # Json Structure Diff Assistant Tools Online
 
-### (powered by Pure HTML/JavaScript/CSS and monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui)
+#### powered by Pure HTML/JavaScript/CSS and monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui
 
 ## Online Demo
 
