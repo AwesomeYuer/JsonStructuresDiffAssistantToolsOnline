@@ -27,7 +27,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     }
     ```
 
-1. Debug or Run Command Line:
+1. Debug or Run Command Line in VSCode:
 
     ```
     npm run crash
