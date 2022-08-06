@@ -47,9 +47,9 @@ https://github.com/microsoft/monaco-editor
 
 <br>
     
-https://github.com/substack/json-stable-stringify
-
 https://github.com/epoberezkin/fast-json-stable-stringify
+
+https://github.com/substack/json-stable-stringify
 
 <br>
 
