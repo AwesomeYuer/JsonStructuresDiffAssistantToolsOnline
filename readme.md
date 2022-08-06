@@ -15,7 +15,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     npm init
     ```
 
-1. package.json Configuration for Running Web Server command line:
+1. package.json Configuration for Running Web Server command line in VSCode:
     ```json
     {
         "scripts" : {
