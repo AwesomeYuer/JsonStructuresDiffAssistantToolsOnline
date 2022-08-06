@@ -43,7 +43,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
 ## Special Thanks
 
-https://microsoft.github.io/monaco-editor/
+<https://microsoft.github.io/monaco-editor/>
 
 https://github.com/microsoft/monaco-editor
 
@@ -85,4 +85,4 @@ https://github.com/jquery/jquery-ui
 
 ## License
 
-MIT
+[MIT License](Microshaoft/JsonStructureDiffAssistantToolsOnline/LICENSE)
