@@ -319,12 +319,26 @@
         <div class="box-taiji">
         </div>
     </div>
-        <div id="up2" align="center" width="100%">
-            Json Structure Diff Assistant Tools Online (powered by Pure HTML/JavaScript/CSS) 
+        <div id="upCenter" align="center" width="100%">
+            <h4>
+                Json Structure Diff Assistant Tools Online
+                (powered by Pure HTML/JavaScript/CSS and monaco-editor/knockoutjs/splitjs/driverjs/jquery/jquery-ui)
+            </h4> 
         </div>
         <hr>
-        <div id="up3" align="right" width="50%">
-            <button id="help"  accesskey="h" onclick="help();"><strong><u>H</u></strong>elp</button>
+        <div id="upLeft" align="left" width="50%">
+            <span id="helpSpan">
+                <button id="help"  accesskey="h" onclick="help();"><strong><u>H</u></strong>elp</button>
+            </span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span id="themesSpan" align="right" >
+                <strong><u>T</u></strong>heme:&nbsp;
+                <select accesskey="t" data-bind="options: availableThemes,
+                                    optionsText: 'themeName',
+                                    value: selectedTheme
+                                    updateValue: 'afterkeydown'
+                                    "></select>
+            </span>                                
         </div>
         <hr>
         <div id="up" class="split" style="border: 1px solid black">
@@ -374,9 +388,26 @@
         });
         driver.defineSteps([
                 {
-                    element: '#left',
+                    element: '#helpSpan',
                     popover: {
                         className: 'first-step-popover-class',
+                        title: 'Help ...',
+                        description: 'Click here for start introductions help',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#themesSpan',
+                    popover: {
+                        className: 'first-step-popover-class',
+                        title: 'Editor Themes ...',
+                        description: "Click here for editor's Theme selection" ,
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#left',
+                    popover: {
                         title: 'Compare ...',
                         description: 'Copy & Paste Text in to here for compare',
                         position: 'bottom-center'
@@ -474,6 +505,7 @@
                         folding: true                                                   , // 是否启用代码折叠
                         scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
                         renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                        theme: "vs",
                     });
                 setDemoJson(topLeftEditor, "/json1.json");
         });
@@ -494,6 +526,7 @@
                         folding: true                                                   , // 是否启用代码折叠
                         scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
                         renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                        theme: "vs",
                     });
                 setDemoJson(topRightEditor, "/json2.json");
         });
@@ -507,16 +540,10 @@
                         folding: true                                                   , // 是否启用代码折叠
                         scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
                         renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                        theme: "vs",
                     });
         });
-        var viewModel = function (data) {
-            var self = this;
-            this.SelectedDiffViewType = ko.observable("0");
-            this.SelectedSortedStringify = ko.observable("0");
-        };
 
-        var vm = new viewModel([]);
-        ko.applyBindings(vm);
         function diffView(viewType, compareBaseObject, comparseWithObject) {
             var originalTxt = compareBaseObject.TextBody;
             var modifiedTxt = comparseWithObject.TextBody;
@@ -530,7 +557,28 @@
             });
             $('#loading').fadeOut();
         }
-        
+        var editorTheme = function(themeName, themeId) {
+            this.themeName = themeName;
+            this.themeId = themeId;
+        };
+        var viewModel = function (data) {
+            var self = this;
+            self.SelectedDiffViewType = ko.observable("0");
+            self.SelectedSortedStringify = ko.observable("0");
+            self.availableThemes = ko.observableArray([
+                new editorTheme("Visual Studio"             , "vs"),
+                new editorTheme("Dark Vsiual Studio"        , "vs-dark"),
+                new editorTheme("High Contrast Black"       , "hc-black")
+            ]);
+            self.selectedTheme = ko.observable();
+         };
+
+        var vm = new viewModel([]);
+        ko.applyBindings(vm);
+
+        vm.selectedTheme.subscribe(function(newValue) {
+            monaco.editor.setTheme(newValue.themeId);
+        });
     </script>
 </body>
 </html>
