@@ -10,7 +10,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
 ## Development Running/Debuging Usage
 
-1. Initialize Development Environment for using Node lite-server as Web Server:
+1. Initialize Development Environment for using Node lite-server as Web Server in VSCode:
     ```
     npm init
     ```
