@@ -41,21 +41,21 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
 ## Special Thanks
 
-    https://github.com/microsoft/monaco-editor
+https://github.com/microsoft/monaco-editor
     
-    https://github.com/substack/json-stable-stringify
+https://github.com/substack/json-stable-stringify
 
-    https://github.com/epoberezkin/fast-json-stable-stringify
+https://github.com/epoberezkin/fast-json-stable-stringify
 
-    https://github.com/nathancahill/split
+https://github.com/nathancahill/split
 
-    https://github.com/kamranahmedse/driver.js
+https://github.com/kamranahmedse/driver.js
 
-    https://github.com/knockout/knockout
+https://github.com/knockout/knockout
 
-    https://github.com/jquery/jquery
+https://github.com/jquery/jquery
 
-    https://github.com/jquery/jquery-ui
+https://github.com/jquery/jquery-ui
 
 ## License
 
