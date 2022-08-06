@@ -85,4 +85,4 @@ https://github.com/jquery/jquery-ui
 
 ## License
 
-[MIT License](Microshaoft/JsonStructureDiffAssistantToolsOnline/blob/master/LICENSE)
+[MIT License](blob/master/LICENSE)
