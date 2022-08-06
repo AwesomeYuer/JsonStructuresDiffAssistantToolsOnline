@@ -85,4 +85,4 @@ https://github.com/jquery/jquery-ui
 
 ## License
 
-[MIT License](blob/master/LICENSE)
+[MIT License](LICENSE)
