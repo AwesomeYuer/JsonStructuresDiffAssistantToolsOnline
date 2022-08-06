@@ -41,7 +41,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     npm run dev
     ```
 
-## Special Thanks
+## Special Thanks for Open Source
 
 
 <https://microsoft.github.io/monaco-editor/>
