@@ -15,7 +15,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     npm init
     ```
 
-2. package.json Configuration for Running Web Server command line:
+1. package.json Configuration for Running Web Server command line:
     ```json
     {
         "scripts" : {
@@ -27,7 +27,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     }
     ```
 
-3. Debug or Run Command Line:
+1. Debug or Run Command Line:
 
     ```
     npm run crash
@@ -42,6 +42,7 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     ```
 
 ## Special Thanks
+
 
 <https://microsoft.github.io/monaco-editor/>
 
