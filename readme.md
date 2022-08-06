@@ -12,7 +12,20 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     ```
     npm init
     ```
-2. Debug or Run.
+
+2. package.json Configuration for Running Web Server command line
+    ```json
+    {
+        "scripts" : {
+            "start"   : "lite-server",
+            "dev"     : "lite-server",
+            "crash"   : "lite-server",
+            "build"   : "echo This is a Fake Building process ..."
+        }
+    }
+    ```
+
+3. Debug or Run Command Line.
 
     ```
     npm run crash
@@ -25,24 +38,24 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
     ```
     npm run dev
     ```
-3. package.json Configuration for Running Web Server command line
-    ```json
-    {
-        "scripts" : {
-            "start"   : "lite-server",
-            "dev"     : "lite-server",
-            "crash"   : "lite-server",
-            "build"   : "echo This is a Fake Building process ..."
-        }
-    }
-    ```
 
 ## Special Thanks
 
-https://github.com/substack/json-stable-stringify
+    https://github.com/microsoft/monaco-editor
 
-https://github.com/epoberezkin/fast-json-stable-stringify
+    https://github.com/substack/json-stable-stringify
 
+    https://github.com/epoberezkin/fast-json-stable-stringify
+
+    https://github.com/nathancahill/split
+
+    https://github.com/kamranahmedse/driver.js
+
+    https://github.com/knockout/knockout
+
+    https://github.com/jquery/jquery
+
+    https://github.com/jquery/jquery-ui
 
 ## License
 
