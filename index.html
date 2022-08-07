@@ -512,7 +512,7 @@
                 renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
                 theme: "vs",
             });
-            setDemoJson(topLeftEditor, "/json1.json");
+            setDemoJson(topLeftEditor, "json1.json");
         });
 
         var topRightEditor;            
@@ -533,7 +533,7 @@
                 renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
                 theme: "vs",
             });
-            setDemoJson(topRightEditor, "/json2.json");
+            setDemoJson(topRightEditor, "json2.json");
         });
         var diffEditor;
         require(['vs/editor/editor.main'], function() {
