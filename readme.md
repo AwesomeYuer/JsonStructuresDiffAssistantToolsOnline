@@ -43,46 +43,26 @@ https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
 ## Special Thanks for Open Source
 
+<a href="https://microsoft.github.io/monaco-editor/" target="_blank">https://microsoft.github.io/monaco-editor/</a>
+<a href="https://github.com/microsoft/monaco-editor" target="_blank">https://github.com/microsoft/monaco-editor</a>
 
-[https://microsoft.github.io/monaco-editor/](https://microsoft.github.io/monaco-editor/)
+<a href="https://github.com/epoberezkin/fast-json-stable-stringify" target="_blank">https://github.com/epoberezkin/fast-json-stable-stringify</a>
+<a href="https://github.com/substack/json-stable-stringify" target="_blank">https://github.com/substack/json-stable-stringify</a>
 
-https://github.com/microsoft/monaco-editor
+<a href="https://split.js.org/" target="_blank">https://split.js.org/</a>
+<a href="https://github.com/nathancahill/split" target="_blank">https://github.com/nathancahill/split</a>
 
-<br>
-    
-https://github.com/epoberezkin/fast-json-stable-stringify
+<a href="https://kamranahmed.info/driver.js/" target="_blank">https://kamranahmed.info/driver.js/</a>
+<a href="https://github.com/kamranahmedse/driver.js" target="_blank">https://github.com/kamranahmedse/driver.js</a>
 
-https://github.com/substack/json-stable-stringify
+<a href="https://knockoutjs.com/" target="_blank">https://knockoutjs.com/</a>
+<a href="https://github.com/knockout/knockout" target="_blank">https://github.com/knockout/knockout</a>
 
-<br>
+<a href="https://jquery.com/" target="_blank">https://jquery.com/</a>
+<a href="https://github.com/jquery/jquery" target="_blank">https://github.com/jquery/jquery</a>
 
-https://split.js.org/
-
-https://github.com/nathancahill/split
-
-<br>
-
-https://kamranahmed.info/driver.js/
-
-https://github.com/kamranahmedse/driver.js
-
-<br>
-
-https://knockoutjs.com/
-
-https://github.com/knockout/knockout
-
-<br>
-
-https://jquery.com/
-
-https://github.com/jquery/jquery
-
-<br>
-
-https://jqueryui.com/
-
-https://github.com/jquery/jquery-ui
+<a href="https://jqueryui.com/" target="_blank">https://jqueryui.com/</a>
+<a href="https://github.com/jquery/jquery-ui" target="_blank">https://github.com/jquery/jquery-ui</a>
 
 ## License
 
