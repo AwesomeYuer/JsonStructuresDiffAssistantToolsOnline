@@ -1,10 +1,10 @@
 # Json Structure Diff Assistant Tools Online
 
-##### powered by pure HTML/JavaScript/CSS i.e., monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui
+##### powered by pure HTML/JavaScript/CSS i.e., monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.
 
 ## Online Demo
 
-You'd better access it Over The GFW (Great Fire Wall).
+May be you'd better access it Over The GFW (Great Fire Wall).
 
 https://agreeable-flower-06c872700.1.azurestaticapps.net/
 
