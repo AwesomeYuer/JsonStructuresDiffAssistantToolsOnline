@@ -334,10 +334,11 @@
             <span id="themesSpan" align="right" >
                 <strong><u>T</u></strong>heme:&nbsp;
                 <select accesskey="t" data-bind="options: availableThemes,
-                                    optionsText: 'themeName',
-                                    value: selectedTheme
-                                    updateValue: 'afterkeydown'
-                                    "></select>
+                                                    optionsText: 'themeName',
+                                                    value: selectedTheme,
+                                                    updateValue: 'afterkeydown'
+                                                    ">
+                </select>
             </span>                                
         </div>
         <hr>
@@ -389,164 +390,163 @@
         // driver should be after split
         var driver = new Driver({
             animate: true,  // Animate while changing highlighted element
-            opacity: 0.75  // Background opacity (0 means only popovers and without overlay)
+            opacity: 0.75   // Background opacity (0 means only popovers and without overlay)
         });
         driver.defineSteps([
-                {
-                    element: '#helpSpan',
-                    popover: {
-                        className: 'first-step-popover-class',
-                        title: 'Help ...',
-                        description: 'Click here or press key [Alt+h] for start introductions help',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#themesSpan',
-                    popover: {
-                        className: 'first-step-popover-class',
-                        title: 'Editor Themes ...',
-                        description: "Click here or press key [Alt+t] for editor's Theme selection" ,
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#left',
-                    popover: {
-                        title: 'Compare ...',
-                        description: 'Copy & Paste Text in to here for compare',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#right',
-                    popover: {
-                        title: 'Compare with ...',
-                        description: 'Copy & Paste Text in to here for compare with left',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#format',
-                    popover: {
-                        title: 'Format ...',
-                        description: 'Click here or press key [Alt+f] for Format Left and Right on above',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#swap',
-                    popover: {
-                        title: 'Swap ...',
-                        description: 'Click here or press key [Alt+w] for Swap Left and Right on above',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#checkboxSortedStringifySpan',
-                    popover: {
-                        title: 'Sorted key Stringify',
-                        description: 'Click here or press key [Alt+k] for switch mode of whether base on Sorted key Stringify comparison',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#diffViewTypeLabel',
-                    popover: {
-                        title: 'Diff View Type',
-                        description: 'Diff View Type selection',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#diffViewType0Span',
-                    popover: {
-                        title: 'Side',
-                        description: 'Click here or press key [Alt+s] for Side diff View type selection and view diff on below',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#diffViewType1Span',
-                    popover: {
-                        title: 'Inline',
-                        description: 'Click here or press key [Alt+i] for Inline diff View type selection and view diff on below',
-                        position: 'bottom-center'
-                    }
-                },
-                {
-                    element: '#diffoutput',
-                    popover: {
-                        title: 'Diff View',
-                        description: 'Comparison Diff View',
-                        position: 'mid-center'
-                    }
-                },
-            ]);
-            // Start the introduction
+            {
+                element: '#helpSpan',
+                popover: {
+                    className: 'first-step-popover-class',
+                    title: 'Help ...',
+                    description: 'Click here or press key [Alt+h] for start introductions help',
+                    position: 'right'
+                }
+            },
+            {
+                element: '#themesSpan',
+                popover: {
+                    className: 'first-step-popover-class',
+                    title: 'Editor Themes ...',
+                    description: "Click here or press key [Alt+t] for editor's Theme selection" ,
+                    position: 'right'
+                }
+            },
+            {
+                element: '#left',
+                popover: {
+                    title: 'Compare ...',
+                    description: 'Copy & Paste Text in to here for compare',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#right',
+                popover: {
+                    title: 'Compare with ...',
+                    description: 'Copy & Paste Text in to here for compare with left',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#format',
+                popover: {
+                    title: 'Format ...',
+                    description: 'Click here or press key [Alt+f] for Format Left and Right on above',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#swap',
+                popover: {
+                    title: 'Swap ...',
+                    description: 'Click here or press key [Alt+w] for Swap Left and Right on above',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#checkboxSortedStringifySpan',
+                popover: {
+                    title: 'Sorted key Stringify',
+                    description: 'Click here or press key [Alt+k] for switch mode of whether base on Sorted key Stringify comparison',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffViewTypeLabel',
+                popover: {
+                    title: 'Diff View Type',
+                    description: 'Diff View Type selection',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffViewType0Span',
+                popover: {
+                    title: 'Side',
+                    description: 'Click here or press key [Alt+s] for Side diff View type selection and view diff on below',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffViewType1Span',
+                popover: {
+                    title: 'Inline',
+                    description: 'Click here or press key [Alt+i] for Inline diff View type selection and view diff on below',
+                    position: 'bottom-center'
+                }
+            },
+            {
+                element: '#diffoutput',
+                popover: {
+                    title: 'Diff View',
+                    description: 'Comparison Diff View',
+                    position: 'mid-center'
+                }
+            },
+        ]);
+        // Start the introduction
         driver.start();
-
         
         require.config({ paths: { 
-                'vs': 'libs/monaco-editor/min/vs'
-            }});
+            'vs': 'libs/monaco-editor/min/vs'
+        }});
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
-                topLeftEditor = monaco.editor.create(document.getElementById('left'), {
-                        value: [
-                                '{'                                                     ,
-                                    '   "z": [{"a":1}],'                                ,
-                                    '   "y": [{"a":{"a":true}}],'                       ,
-                                    '   "a": "11111",'                                  ,
-                                    '   "b": "222",'                                    ,
-                                    '   "c": false, trigger json syntax error'          ,
-                                    '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'              ,
-                                '}'
-                        ].join('\n')                                                    ,
-                        language: 'json'                                                ,
-                        automaticLayout: true                                           ,
-                        foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                        overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框           
-                        folding: true                                                   , // 是否启用代码折叠
-                        scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                        renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
-                        theme: "vs",
-                    });
-                setDemoJson(topLeftEditor, "/json1.json");
+            topLeftEditor = monaco.editor.create(document.getElementById('left'), {
+                value: [
+                        '{'                                                     ,
+                            '   "z": [{"a":1}],'                                ,
+                            '   "y": [{"a":{"a":true}}],'                       ,
+                            '   "a": "11111",'                                  ,
+                            '   "b": "222",'                                    ,
+                            '   "c": false, trigger json syntax error'          ,
+                            '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'              ,
+                        '}'
+                ].join('\n')                                                    ,
+                language: 'json'                                                ,
+                automaticLayout: true                                           ,
+                foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
+                overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框           
+                folding: true                                                   , // 是否启用代码折叠
+                scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
+                renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                theme: "vs",
+            });
+            setDemoJson(topLeftEditor, "/json1.json");
         });
 
         var topRightEditor;            
         require(['vs/editor/editor.main'], function () {
-                topRightEditor = monaco.editor.create(document.getElementById('right'), {
-                        value: [
-                                '{'                                                     ,
-                                    '   "b": 1000 trigger json syntax error,'           ,
-                                    '   "a":"222"'                                      ,
-                                '}'
-                        ].join('\n')                                                    ,
-                        language: 'json'                                                ,
-                        automaticLayout: true                                           ,
-                        foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                        overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
-                        folding: true                                                   , // 是否启用代码折叠
-                        scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                        renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
-                        theme: "vs",
-                    });
-                setDemoJson(topRightEditor, "/json2.json");
+            topRightEditor = monaco.editor.create(document.getElementById('right'), {
+                value: [
+                        '{'                                                     ,
+                            '   "b": 1000 trigger json syntax error,'           ,
+                            '   "a":"222"'                                      ,
+                        '}'
+                ].join('\n')                                                    ,
+                language: 'json'                                                ,
+                automaticLayout: true                                           ,
+                foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
+                overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
+                folding: true                                                   , // 是否启用代码折叠
+                scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
+                renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                theme: "vs",
+            });
+            setDemoJson(topRightEditor, "/json2.json");
         });
         var diffEditor;
         require(['vs/editor/editor.main'], function() {
-                diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'),{
-                        language: 'json',
-                        automaticLayout: true                                           ,
-                        foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                        overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
-                        folding: true                                                   , // 是否启用代码折叠
-                        scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                        renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
-                        theme: "vs",
-                    });
+            diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'),{
+                    language: 'json',
+                    automaticLayout: true                                           ,
+                    foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
+                    overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
+                    folding: true                                                   , // 是否启用代码折叠
+                    scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
+                    renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                    theme: "vs",
+            });
         });
 
         function diffView(viewType, compareBaseObject, comparseWithObject) {
@@ -576,7 +576,7 @@
                 new editorTheme("High Contrast Black"       , "hc-black")
             ]);
             self.selectedTheme = ko.observable();
-         };
+        };
 
         var vm = new viewModel([]);
         ko.applyBindings(vm);
