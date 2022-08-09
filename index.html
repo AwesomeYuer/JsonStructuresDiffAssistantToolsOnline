@@ -383,7 +383,9 @@
         <div id="up" class="split" style="border: 1px solid black">
             <div id="left" class="split content split-horizontal" width="50%">
                 <div style="height: 25px;">
-                    &nbsp;(<strong><u>L</u></strong>)&nbsp;<input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
+                    <span id="chooseFileLeftSpan">
+                        &nbsp;(<strong><u>L</u></strong>)&nbsp;<input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
+                    </span>
                 </div>                
                 
                 <div id="topLeftEditorDiv" style="height: 100%;">
@@ -393,7 +395,9 @@
             
             <div id="right" class="split content split-horizontal" width="50%">
                 <div style="height: 25px;">
-                    &nbsp;(<strong><u>R</u></strong>)&nbsp;<input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
+                    <span id="chooseFileRightSpan">
+                        &nbsp;(<strong><u>R</u></strong>)&nbsp;<input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
+                    </span>
                 </div>
                 
                 <div id="topRightEditorDiv" style="height: 100%;">
@@ -477,7 +481,7 @@
                 }
             },
             {
-                element: '#chooseFileLeft',
+                element: '#chooseFileLeftSpan',
                 popover: {
                     title: 'Choose File ...',
                     description: "Click here or press key [Alt+l] for choose file content into Left" ,
@@ -501,7 +505,7 @@
                 }
             },
             {
-                element: '#chooseFileRight',
+                element: '#chooseFileRightSpan',
                 popover: {
                     title: 'Choose File ...',
                     description: "Click here or press key [Alt+r] for choose file content into Right" ,
