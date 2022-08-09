@@ -141,10 +141,101 @@
     <link href="styles/text-magic.css" rel="stylesheet" />
 
     <script type="text/javascript">
+        (function($, h, c) {
+            var a = $([]),
+            e = $.resize = $.extend($.resize, {}),
+            i,
+            k = "setTimeout",
+            j = "resize",
+            d = j + "-special-event",
+            b = "delay",
+            f = "throttleWindow";
+            e[b] = 250;
+            e[f] = true;
+            $.event.special[j] = {
+                setup: function() {
+                    if (!e[f] && this[k]) {
+                        return false;
+                    }
+                    var l = $(this);
+                    a = a.add(l);
+                    $.data(this, d, {
+                        w: l.width(),
+                        h: l.height()
+                    });
+                    if (a.length === 1) {
+                        g();
+                    }
+                },
+                teardown: function() {
+                    if (!e[f] && this[k]) {
+                        return false;
+                    }
+                    var l = $(this);
+                    a = a.not(l);
+                    l.removeData(d);
+                    if (!a.length) {
+                        clearTimeout(i);
+                    }
+                },
+                add: function(l) {
+                    if (!e[f] && this[k]) {
+                        return false;
+                    }
+                    var n;
+                    function m(s, o, p) {
+                        var q = $(this),
+                        r = $.data(this, d);
+                        r.w = o !== c ? o: q.width();
+                        r.h = p !== c ? p: q.height();
+                        n.apply(this, arguments);
+                    }
+                    if ($.isFunction(l)) {
+                        n = l;
+                        return m;
+                    } else {
+                        n = l.handler;
+                        l.handler = m;
+                    }
+                }
+            };
+            function g() {
+                i = h[k](function() {
+                    a.each(function() {
+                        var n = $(this),
+                        m = n.width(),
+                        l = n.height(),
+                        o = $.data(this, d);
+                        if (m !== o.w || l !== o.h) {
+                            n.trigger(j, [o.w = m, o.h = l]);
+                        }
+                    });
+                    g();
+                },
+                e[b]);
+            }
+        })(jQuery, this);
+
+        function getStyle(element1, element2) {
+            return element1.currentStyle ? element1.currentStyle[element2] : getComputedStyle(element1)[element2];  //element1,要改变的元素代替名;element2,要改变的属性名
+        }
+
         function setDemoJson(editor, url) {
             $.get(url, function(text) {
                     editor.setValue(text);
                 },"text");
+        }
+
+        function readFileToEditor(input, editor) {
+            var file = input.files[0]; 
+            var fileReader = new FileReader(); 
+            fileReader.readAsText(file); 
+            fileReader.onload = function() {
+                editor.setValue(fileReader.result);
+            }; 
+            fileReader.onerror = function() {
+                editor.setValue(fileReader.error);
+            }; 
         }
 
         function jsonStructureStringify(side, x, sorted) {
@@ -189,12 +280,18 @@
             return j;
         }
 
-        $(document).keyup(function (e) {
-            if (e.key === "Escape") { // escape key maps to keycode `27`
-                $('#loading').hide();
-            }
-        });
-        
+        function resizeTopEditors() {
+            var div1 = document.getElementById("left");
+            var div2 = document.getElementById("topLeftEditorDiv");
+            var height = parseInt(getStyle(div1,"height"));
+            div2.style.height = height - 28 + "px";
+            div1 = document.getElementById("right");
+            div2 = document.getElementById("topRightEditorDiv");
+            height = parseInt(getStyle(div1,"height"));
+            div2.style.height = height - 28 + "px";
+        }
+
+       
         function swap() {
             var s = topLeftEditor.getValue();
             topLeftEditor.setValue(topRightEditor.getValue());
@@ -281,22 +378,39 @@
                                                     updateValue: 'afterkeydown'
                                                     ">
                 </select>
-            </span>                                
+            </span>             
         </div>
-        <hr>
         <div id="up" class="split" style="border: 1px solid black">
             <div id="left" class="split content split-horizontal" width="50%">
+                <div style="height: 25px;">
+                    &nbsp;(<strong><u>L</u></strong>)&nbsp;<input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
+                </div>                
+                
+                <div id="topLeftEditorDiv" style="height: 100%;">
 
+                </div>
             </div>
+            
             <div id="right" class="split content split-horizontal" width="50%">
+                <div style="height: 25px;">
+                    &nbsp;(<strong><u>R</u></strong>)&nbsp;<input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
+                </div>
+                
+                <div id="topRightEditorDiv" style="height: 100%;">
+                    
+                </div>
             </div>
         </div>
     
     <div id="down" class="split content">
-        <div class="viewType">
+        <br>
+        <div align="center">
             <button id="format"  accesskey="m" onclick="format();">↑ For<strong><u>m</u></strong>at ↑</button>
             <button id="swap" accesskey="w" onclick="swap();">↑ S<strong><u>w</u></strong>ap ↑</button>
-            <hr>
+        </div>
+        <hr>
+        <div class="viewType">
+
             <span id="checkboxSortedStringifySpan">
                 <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
                 <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">↓ Sorted by <strong><u>K</u></strong>ey stringify ↓</label>
@@ -318,6 +432,16 @@
         </div>
     </div>
     <script>
+        $(document).keyup(function (e) {
+            if (e.key === "Escape") { // escape key maps to keycode `27`
+                $('#loading').hide();
+            }
+        });
+
+        $("#left").resize(function() {
+            resizeTopEditors();
+        });
+
         Split(['#up', '#down'], {
             gutterSize: 10,
             cursor: 'row-resize',
@@ -347,14 +471,21 @@
             {
                 element: '#themesSpan',
                 popover: {
-                    className: 'first-step-popover-class',
                     title: 'Editor Themes ...',
                     description: "Click here or press key [Alt+t] for editor's Theme selection" ,
                     position: 'right'
                 }
             },
             {
-                element: '#left',
+                element: '#chooseFileLeft',
+                popover: {
+                    title: 'Choose File ...',
+                    description: "Click here or press key [Alt+l] for choose file content into Left" ,
+                    position: 'right'
+                }
+            },
+            {
+                element: '#topLeftEditorDiv',
                 popover: {
                     title: 'Compare ...',
                     description: 'Copy & Paste Text in to here for compare',
@@ -370,7 +501,15 @@
                 }
             },
             {
-                element: '#right',
+                element: '#chooseFileRight',
+                popover: {
+                    title: 'Choose File ...',
+                    description: "Click here or press key [Alt+r] for choose file content into Right" ,
+                    position: 'right'
+                }
+            },
+            {
+                element: '#topRightEditorDiv',
                 popover: {
                     title: 'Compare with ...',
                     description: 'Copy & Paste Text in to here for compare with left',
@@ -450,7 +589,7 @@
         }});
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
-            topLeftEditor = monaco.editor.create(document.getElementById('left'), {
+            topLeftEditor = monaco.editor.create(document.getElementById('topLeftEditorDiv'), {
                 value: [
                         '{'                                                     ,
                             '   "z": [{"a":1}],'                                ,
@@ -475,7 +614,7 @@
 
         var topRightEditor;            
         require(['vs/editor/editor.main'], function () {
-            topRightEditor = monaco.editor.create(document.getElementById('right'), {
+            topRightEditor = monaco.editor.create(document.getElementById('topRightEditorDiv'), {
                 value: [
                         '{'                                                     ,
                             '   "b": 1000 trigger json syntax error,'           ,
@@ -542,6 +681,7 @@
         vm.selectedTheme.subscribe(function(newValue) {
             monaco.editor.setTheme(newValue.themeId);
         });
+        resizeTopEditors();
     </script>
 </body>
 </html>
