@@ -12,6 +12,7 @@
     <script src="libs/fast-json-stable-stringify/fast-json-stable-stringify.js" type="text/javascript"></script>
     <script src="libs/knockout/knockout-3.5.1.debug.js" type="text/javascript"></script>
     <script src="libs/jquery/jquery-3.5.1.js" type="text/javascript"></script>
+    <script src="libs/jquery/resizer.js" type="text/javascript"></script>
 
     <link rel="stylesheet" href="libs/jquery-ui/jquery-ui-1.12.1.css">
     <script src="libs/jquery-ui/jquery-ui-1.12.1.js"></script>
@@ -141,81 +142,6 @@
     <link href="styles/text-magic.css" rel="stylesheet" />
 
     <script type="text/javascript">
-        (function($, h, c) {
-            var a = $([]),
-            e = $.resize = $.extend($.resize, {}),
-            i,
-            k = "setTimeout",
-            j = "resize",
-            d = j + "-special-event",
-            b = "delay",
-            f = "throttleWindow";
-            e[b] = 250;
-            e[f] = true;
-            $.event.special[j] = {
-                setup: function() {
-                    if (!e[f] && this[k]) {
-                        return false;
-                    }
-                    var l = $(this);
-                    a = a.add(l);
-                    $.data(this, d, {
-                        w: l.width(),
-                        h: l.height()
-                    });
-                    if (a.length === 1) {
-                        g();
-                    }
-                },
-                teardown: function() {
-                    if (!e[f] && this[k]) {
-                        return false;
-                    }
-                    var l = $(this);
-                    a = a.not(l);
-                    l.removeData(d);
-                    if (!a.length) {
-                        clearTimeout(i);
-                    }
-                },
-                add: function(l) {
-                    if (!e[f] && this[k]) {
-                        return false;
-                    }
-                    var n;
-                    function m(s, o, p) {
-                        var q = $(this),
-                        r = $.data(this, d);
-                        r.w = o !== c ? o: q.width();
-                        r.h = p !== c ? p: q.height();
-                        n.apply(this, arguments);
-                    }
-                    if ($.isFunction(l)) {
-                        n = l;
-                        return m;
-                    } else {
-                        n = l.handler;
-                        l.handler = m;
-                    }
-                }
-            };
-            function g() {
-                i = h[k](function() {
-                    a.each(function() {
-                        var n = $(this),
-                        m = n.width(),
-                        l = n.height(),
-                        o = $.data(this, d);
-                        if (m !== o.w || l !== o.h) {
-                            n.trigger(j, [o.w = m, o.h = l]);
-                        }
-                    });
-                    g();
-                },
-                e[b]);
-            }
-        })(jQuery, this);
-
         function getStyle(element1, element2) {
             return element1.currentStyle ? element1.currentStyle[element2] : getComputedStyle(element1)[element2];  //element1,要改变的元素代替名;element2,要改变的属性名
         }
@@ -236,6 +162,17 @@
             fileReader.onerror = function() {
                 editor.setValue(fileReader.error);
             }; 
+        }
+
+        function clearEditor(editor) {
+            editor.setValue("");
+        }
+
+        function clearDiffEditor() {
+            diffEditor.setModel({
+                original: monaco.editor.createModel(null, 'json'),
+                modified: monaco.editor.createModel(null, 'json')
+            });
         }
 
         function jsonStructureStringify(side, x, sorted) {
@@ -280,26 +217,28 @@
             return j;
         }
 
-        function resizeTopEditors() {
+        function resizeEditors() {
             var div1 = document.getElementById("left");
             var div2 = document.getElementById("topLeftEditorDiv");
             var height = parseInt(getStyle(div1,"height"));
             div2.style.height = height - 28 + "px";
+
             div1 = document.getElementById("right");
             div2 = document.getElementById("topRightEditorDiv");
             height = parseInt(getStyle(div1,"height"));
             div2.style.height = height - 28 + "px";
-        }
 
+            div1 = document.getElementById("down");
+            div2 = document.getElementById("container");
+            height = parseInt(getStyle(div1,"height"));
+            div2.style.height = height - 175 + "px";
+        }
        
         function swap() {
             var s = topLeftEditor.getValue();
             topLeftEditor.setValue(topRightEditor.getValue());
             topRightEditor.setValue(s);
-            diffEditor.setModel({
-                original: monaco.editor.createModel("", 'json'),
-                modified: monaco.editor.createModel("", 'json')
-            });
+            clearDiffEditor();
         }
 
         function help() {
@@ -386,6 +325,9 @@
                     <span id="chooseFileLeftSpan">
                         &nbsp;(<strong><u>L</u></strong>)&nbsp;<input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
                     </span>
+                    <span id="clearLeftSpan" >
+                        <button accesskey="1" onclick="clearEditor(topLeftEditor);">Clear (<strong><u>1</u></strong>)</button>
+                    </span>
                 </div>                
                 
                 <div id="topLeftEditorDiv" style="height: 100%;">
@@ -397,6 +339,9 @@
                 <div style="height: 25px;">
                     <span id="chooseFileRightSpan">
                         &nbsp;(<strong><u>R</u></strong>)&nbsp;<input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
+                    </span>
+                    <span id="clearRightSpan">
+                        <button accesskey="2" onclick="clearEditor(topRightEditor);">Clear (<strong><u>2</u></strong>)</button>
                     </span>
                 </div>
                 
@@ -419,9 +364,9 @@
                 <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
                 <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">↓ Sorted by <strong><u>K</u></strong>ey stringify ↓</label>
             </span>
-            <br />
+            <br>
             <label id="diffViewTypeLabel">↓ Diff View Type: ↓</label>
-            <br />
+            <br>
             <span id="diffViewType0Span">
                 <input type="radio" name="diffViewType" id="diffViewType0" onclick="diff(0);" value="0" data-bind="checked:SelectedDiffViewType" />
                 <label id="diffViewType0Label" accesskey="s" for="diffViewType0"><strong><u>S</u></strong>ide</label>
@@ -430,9 +375,16 @@
                 <input type="radio" name="diffViewType" id="diffViewType1" onclick="diff(1);" value="1" data-bind="checked:SelectedDiffViewType" />
                 <label id="diffViewType1Label" accesskey="i" for="diffViewType1">Inl<strong><u>i</u></strong>ne</label>
             </span>
+            <br>
+            <div width="100%" style="text-align: right">
+                <span id="clearDiffSpan">
+                    <button accesskey="c" onclick="clearDiffEditor();">↓ <strong><u>C</u></strong>lear ↓</button>
+                </span>
+            </div>
+
         </div>
-        <div id="diffoutput">
-            <div id="container" style="width:100%;height:400px;border:1px solid grey"></div>
+        <div id="diffOutput">
+            <div id="container" style="width:100%;height:380px;border:1px solid grey"></div>
         </div>
     </div>
     <script>
@@ -443,19 +395,21 @@
         });
 
         $("#left").resize(function() {
-            resizeTopEditors();
+            resizeEditors();
         });
 
         Split(['#up', '#down'], {
-            gutterSize: 10,
+            gutterSize: 5,
             cursor: 'row-resize',
             direction: 'vertical',
-            sizes: [20, 80]
+            sizes: [20, 70],
+            minSize: 100
         });
         Split(['#left', '#right'], {
             sizes: [50, 50],
-            gutterSize: 10,
+            gutterSize: 5,
             cursor: 'col-resize',
+            minSize: 100
         });
         // driver should be after split
         var driver = new Driver({
@@ -489,6 +443,14 @@
                 }
             },
             {
+                element: '#clearLeftSpan',
+                popover: {
+                    title: 'Choose File ...',
+                    description: "Click here or press key [Alt+1] for clear content in Left editor" ,
+                    position: 'right'
+                }
+            },
+            {
                 element: '#topLeftEditorDiv',
                 popover: {
                     title: 'Compare ...',
@@ -508,7 +470,15 @@
                 element: '#chooseFileRightSpan',
                 popover: {
                     title: 'Choose File ...',
-                    description: "Click here or press key [Alt+r] for choose file content into Right" ,
+                    description: "Click here or press key [Alt+r] for choose file content into Right editor" ,
+                    position: 'right'
+                }
+            },
+            {
+                element: '#clearRightSpan',
+                popover: {
+                    title: 'Choose File ...',
+                    description: "Click here or press key [Alt+2] for clear content in Right" ,
                     position: 'right'
                 }
             },
@@ -577,7 +547,15 @@
                 }
             },
             {
-                element: '#diffoutput',
+                element: '#clearDiffSpan',
+                popover: {
+                    title: 'Choose File ...',
+                    description: "Click here or press key [Alt+c] for clear content in Diff editor" ,
+                    position: 'left'
+                }
+            },
+            {
+                element: '#diffOutput',
                 popover: {
                     title: 'Diff View',
                     description: 'Comparison Diff View',
@@ -685,7 +663,7 @@
         vm.selectedTheme.subscribe(function(newValue) {
             monaco.editor.setTheme(newValue.themeId);
         });
-        resizeTopEditors();
+        resizeEditors();
     </script>
 </body>
 </html>
