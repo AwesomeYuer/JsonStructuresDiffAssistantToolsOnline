@@ -464,7 +464,7 @@
                 language: 'json'                                                ,
                 automaticLayout: true                                           ,
                 foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框           
+                overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框
                 folding: true                                                   , // 是否启用代码折叠
                 scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
                 renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
@@ -484,25 +484,25 @@
                 ].join('\n')                                                    ,
                 language: 'json'                                                ,
                 automaticLayout: true                                           ,
-                foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
-                folding: true                                                   , // 是否启用代码折叠
-                scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                foldingStrategy: 'indentation'                                  ,
+                overviewRulerBorder: true                                       ,
+                folding: true                                                   ,
+                scrollBeyondLastLine: false                                     ,
+                renderLineHighlight: 'line'                                     ,
                 theme: "vs",
             });
             setDemoJson(topRightEditor, "json2.json");
         });
         var diffEditor;
         require(['vs/editor/editor.main'], function() {
-            diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'),{
+            diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'), {
                     language: 'json',
-                    automaticLayout: true                                           ,
-                    foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                    overviewRulerBorder: true                                       , // 是否应围绕概览标尺绘制边框           
-                    folding: true                                                   , // 是否启用代码折叠
-                    scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                    renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                    automaticLayout: true                                       ,
+                    foldingStrategy: 'indentation'                              ,
+                    overviewRulerBorder: true                                   ,
+                    folding: true                                               ,
+                    scrollBeyondLastLine: false                                 ,
+                    renderLineHighlight: 'line'                                 ,
                     theme: "vs",
             });
         });
@@ -529,9 +529,9 @@
             self.SelectedDiffViewType = ko.observable("0");
             self.SelectedSortedStringify = ko.observable("0");
             self.availableThemes = ko.observableArray([
-                new editorTheme("Visual Studio"             , "vs"),
-                new editorTheme("Dark Vsiual Studio"        , "vs-dark"),
-                new editorTheme("High Contrast Black"       , "hc-black")
+                new editorTheme("Visual Studio",        "vs"),
+                new editorTheme("Dark Vsiual Studio",   "vs-dark"),
+                new editorTheme("High Contrast Black",  "hc-black")
             ]);
             self.selectedTheme = ko.observable();
         };
