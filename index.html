@@ -219,7 +219,7 @@
             return element1.currentStyle ? element1.currentStyle[element2] : getComputedStyle(element1)[element2];  //element1,要改变的元素代替名;element2,要改变的属性名
         }
 
-        function setDemoJson(editor, url) {
+        function setEditorJson(editor, url) {
             $.get(url, function(text) {
                     editor.setValue(text);
                 },"text");
@@ -687,7 +687,7 @@
                 renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
                 theme: "vs",
             });
-            setDemoJson(topLeftEditor, "json1.json");
+            setEditorJson(topLeftEditor, "json1.json");
         });
 
         var topRightEditor;            
@@ -708,7 +708,7 @@
                 renderLineHighlight: 'line'                                     ,
                 theme: "vs",
             });
-            setDemoJson(topRightEditor, "json2.json");
+            setEditorJson(topRightEditor, "json2.json");
         });
         var diffEditor;
         require(['vs/editor/editor.main'], function() {
