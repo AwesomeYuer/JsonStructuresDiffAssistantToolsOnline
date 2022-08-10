@@ -8,7 +8,7 @@ May be you'd better access it Over The GFW (Great Fire Wall).
 
 https://microshaoft.github.io/JsonStructureDiffAssistantToolsOnline/
 
-https://agreeable-flower-06c872700.1.azurestaticapps.net/
+https://lemon-mushroom-030d23500.1.azurestaticapps.net/
 
 
 ## Development Running/Debuging Usage
