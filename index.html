@@ -231,6 +231,7 @@
             fileReader.readAsText(file); 
             fileReader.onload = function() {
                 editor.setValue(fileReader.result);
+                clearDiffEditor();
             }; 
             fileReader.onerror = function() {
                 editor.setValue(fileReader.error);
