@@ -394,13 +394,20 @@
         </div>
         <div id="up" class="split" style="border: 1px solid black">
             <div id="left" class="split content split-horizontal" width="50%">
-                <div style="height: 25px;">
-                    <span id="chooseFileLeftSpan">
-                        &nbsp;(<strong><u>L</u></strong>)&nbsp;<input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
-                    </span>
-                    <span id="clearLeftSpan" >
-                        <button accesskey="1" onclick="clearEditor(topLeftEditor);">Clear (<strong><u>1</u></strong>)</button>
-                    </span>
+                <div style="height: 25px;background-color: lightgray;">
+                    <table width="100%">
+                        <tr>
+                            <td align="left">
+                                <span id="chooseFileLeftSpan">
+                                    &nbsp;(<strong><u>L</u></strong>)&nbsp;<input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
+                                </span>                            </td>
+                            <td align="right">
+                                <span id="clearLeftSpan" >
+                                    <button accesskey="1" onclick="clearEditor(topLeftEditor);">Clear (<strong><u>1</u></strong>)</button>
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
                 </div>                
                 
                 <div id="topLeftEditorDiv" style="height: 100%;">
@@ -409,13 +416,21 @@
             </div>
             
             <div id="right" class="split content split-horizontal" width="50%">
-                <div style="height: 25px;">
-                    <span id="chooseFileRightSpan">
-                        &nbsp;(<strong><u>R</u></strong>)&nbsp;<input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
-                    </span>
-                    <span id="clearRightSpan">
-                        <button accesskey="2" onclick="clearEditor(topRightEditor);">Clear (<strong><u>2</u></strong>)</button>
-                    </span>
+                <div style="height: 25px; background-color: lightgray;">
+                    <table width="100%">
+                        <tr>
+                            <td align="left">
+                                <span id="chooseFileRightSpan">
+                                    &nbsp;(<strong><u>R</u></strong>)&nbsp;<input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
+                                </span>
+                            </td>
+                            <td align="right">
+                                <span id="clearRightSpan">
+                                    <button accesskey="2" onclick="clearEditor(topRightEditor);">Clear (<strong><u>2</u></strong>)</button>
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
                 
                 <div id="topRightEditorDiv" style="height: 100%;">
@@ -482,7 +497,7 @@
             sizes: [50, 50],
             gutterSize: 5,
             cursor: 'col-resize',
-            minSize: 100
+            minSize: 400
         });
         // driver should be after split
         var driver = new Driver({
