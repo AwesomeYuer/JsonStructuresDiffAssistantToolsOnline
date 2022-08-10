@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="Generator" content="EditPlus®,Microshaoft">
     <meta name="Author" content="EditPlus®,Microshaoft">
-    <meta name="Keywords" content="json,Json Structure,diff,jsondiff,stringify,json-stable-stringify,fast-json-stable-stringify,monaco-editor,splitjs,split.js,driverjs,driver.js,EditPlus®,EditPlus,Microshaoft,AwesomeYuer,Awesome Yuer,Awesome-Yuer,于斯人也,于斯人野">
-    <meta name="Description" content="Json Structure Diff Assistant Tools Online (powered by pure HTML/JavaScript/CSS i.e., monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)">
+    <meta name="Keywords" content="json,Json Structures,diff,jsondiff,stringify,json-stable-stringify,fast-json-stable-stringify,monaco-editor,splitjs,split.js,driverjs,driver.js,EditPlus®,EditPlus,Microshaoft,AwesomeYuer,Awesome Yuer,Awesome-Yuer,于斯人也,于斯人野">
+    <meta name="Description" content="Json Structures Diff Assistant Tools Online (powered by pure HTML/JavaScript/CSS i.e., monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-    <title>Json Structure Diff Assistant Tools Online</title>
+    <title>Json Structures Diff Assistant Tools Online</title>
 
     <script src="libs/fast-json-stable-stringify/fast-json-stable-stringify.js" type="text/javascript"></script>
     <script src="libs/knockout/knockout-3.5.1.debug.js" type="text/javascript"></script>
@@ -249,7 +249,7 @@
             });
         }
 
-        function jsonStructureStringify(side, x, sorted) {
+        function jsonStructuresStringify(side, x, sorted) {
             var o;
             var jTokens = "";
             try {
@@ -330,7 +330,7 @@
         function diff(diffViewType) {
             //debugger;
             $('#loading').fadeIn();
-            var jj = jsonStructureStringify(
+            var jj = jsonStructuresStringify(
                         "Left",
                         topLeftEditor.getValue(),
                         vm.SelectedSortedStringify()
@@ -338,7 +338,7 @@
             var j1 = {
                 TextBody: jj
             };
-            jj = jsonStructureStringify(
+            jj = jsonStructuresStringify(
                         "Right",
                         topRightEditor.getValue(),
                         vm.SelectedSortedStringify()
@@ -373,7 +373,7 @@
     </div>
         <div id="up1Div" align="center" width="100%">
             <h4>
-                Json Structure Diff Assistant Tools Online
+                Json Structures Diff Assistant Tools Online
                 (powered by pure HTML/JavaScript/CSS i.e., monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)
             </h4> 
         </div>
