@@ -462,10 +462,14 @@
 
             <span id="checkboxSortedStringifySpan">
                 <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
-                <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">↓ Sorted by <strong><u>K</u></strong>ey stringify ↓</label>
+                <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">
+                    ↓ Sorted by <strong><u>K</u></strong>ey stringify ↓
+                </label>
             </span>
             <br>
-            <label id="diffViewTypeLabel">↓ Diff View Type: ↓</label>
+            <label id="diffViewTypeLabel">
+                ↓ Diff View Type: ↓
+            </label>
             <br>
             <table width="100%">
                 <tr>
@@ -474,11 +478,15 @@
                     <td>
                         <span id="diffViewType0Span">
                             <input type="radio" name="diffViewType" id="diffViewType0" onclick="diff(0);" value="0" data-bind="checked:SelectedDiffViewType" />
-                            <label id="diffViewType0Label" accesskey="s" for="diffViewType0"><strong><u>S</u></strong>ide</label>
+                            <label id="diffViewType0Label" accesskey="s" for="diffViewType0">
+                                <strong><u>S</u></strong>ide
+                            </label>
                         </span>
                         <span id="diffViewType1Span">
                             <input type="radio" name="diffViewType" id="diffViewType1" onclick="diff(1);" value="1" data-bind="checked:SelectedDiffViewType" />
-                            <label id="diffViewType1Label" accesskey="i" for="diffViewType1">Inl<strong><u>i</u></strong>ne</label>
+                            <label id="diffViewType1Label" accesskey="i" for="diffViewType1">
+                                Inl<strong><u>i</u></strong>ne
+                            </label>
                         </span>
                     </td>
                     <td width="20%" align="right">
