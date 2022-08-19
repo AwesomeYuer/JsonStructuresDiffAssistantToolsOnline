@@ -1,4 +1,4 @@
-# Json Structure Diff Assistant Tools Online
+# Json Structures Diff Assistant Tools Online
 
 ##### powered by pure HTML/JavaScript/CSS i.e., monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.
 
