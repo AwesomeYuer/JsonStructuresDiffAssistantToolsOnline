@@ -6,7 +6,7 @@
 
 May be you'd better access it Over The GFW (Great Fire Wall).
 
-https://microshaoft.github.io/JsonStructureDiffAssistantToolsOnline/
+https://microshaoft.github.io/JsonStructuresDiffAssistantToolsOnline/
 
 https://lemon-mushroom-030d23500.1.azurestaticapps.net/
 
