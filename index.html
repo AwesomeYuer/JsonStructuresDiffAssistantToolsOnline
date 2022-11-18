@@ -464,18 +464,27 @@
         </div>
         <hr>
         <div class="viewType">
-            <span id="checkboxSortedStringifySpan">
-                <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
-                <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">
-                    ↓ Sorted by <strong><u>K</u></strong>ey stringify ↓
-                </label>
-            </span>
-            <span id="checkboxKeepKeyWithValueStringifySpan">
-                <input type="checkbox" id="checkboxKeepKeyWithValueStringify" data-bind="checked:SelectedKeepKeyWithValueStringify" />
-                <label id="checkboxKeepKeyWithValueStringifyLabel" accesskey="v" for="checkboxKeepKeyWithValueStringify">
-                    ↓ Keep Key With <strong><u>V</u></strong>alue Stringify ↓
-                </label>
-            </span>
+            <table width="100%">
+                <tr>
+                    <td align="right" width="50%">
+                        <span id="checkboxSortedStringifySpan">
+                            <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
+                            <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">
+                                ↓ Sorted by <strong><u>K</u></strong>ey stringify ↓
+                            </label>
+                        </span>
+                    </td>
+                    <td align="left">
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span id="checkboxKeepKeyWithValueStringifySpan">
+                            <input type="checkbox" id="checkboxKeepKeyWithValueStringify" data-bind="checked:SelectedKeepKeyWithValueStringify" />
+                            <label id="checkboxKeepKeyWithValueStringifyLabel" accesskey="v" for="checkboxKeepKeyWithValueStringify">
+                                ↓ Keep Key With <strong><u>V</u></strong>alue Stringify ↓
+                            </label>
+                        </span>
+                    </td>
+                </tr>
+            </table>
             <br>
             <label id="diffViewTypeLabel">
                 ↓ Diff View Type: ↓
