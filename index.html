@@ -275,14 +275,16 @@
                 o = JSON.parse(fastJsonStableStringify(o));
             }
             var j = JSON.stringify(o, function (k, v) {
-                    if (typeof v == 'string') {
-                        return '*****';
-                    } else if (typeof v == 'number') {
-                        return -1;
-                    } else if (typeof v == 'boolean') {
-                        return true;
-                    } else if (typeof v == 'undeclaredVariable') {
-                        return undefined;
+                    if (!vm.SelectedKeepKeyWithValueStringify()) {
+                        if (typeof v == 'string') {
+                            return '*****';
+                        } else if (typeof v == 'number') {
+                            return -1;
+                        } else if (typeof v == 'boolean') {
+                            return true;
+                        } else if (typeof v == 'undeclaredVariable') {
+                            return undefined;
+                        }
                     }
                     return v;
                 },
@@ -462,11 +464,16 @@
         </div>
         <hr>
         <div class="viewType">
-
             <span id="checkboxSortedStringifySpan">
                 <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
                 <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">
                     ↓ Sorted by <strong><u>K</u></strong>ey stringify ↓
+                </label>
+            </span>
+            <span id="checkboxKeepKeyWithValueStringifySpan">
+                <input type="checkbox" id="checkboxKeepKeyWithValueStringify" data-bind="checked:SelectedKeepKeyWithValueStringify" />
+                <label id="checkboxKeepKeyWithValueStringifyLabel" accesskey="v" for="checkboxKeepKeyWithValueStringify">
+                    ↓ Keep Key With <strong><u>V</u></strong>alue Stringify ↓
                 </label>
             </span>
             <br>
@@ -642,6 +649,14 @@
                 }
             },
             {
+                element: '#checkboxKeepKeyWithValueStringifySpan',
+                popover: {
+                    title: 'Keep Key With Value Stringify',
+                    description: 'Click here or press key [Alt+v] for switch mode of whether base on Keep Key With Value Stringify comparison',
+                    position: 'bottom-center'
+                }
+            },
+            {
                 element: '#diffViewTypeLabel',
                 popover: {
                     title: 'Diff View Type',
@@ -768,12 +783,14 @@
             var self = this;
             self.SelectedDiffViewType = ko.observable("0");
             self.SelectedSortedStringify = ko.observable("0");
+            self.SelectedKeepKeyWithValueStringify = ko.observable("0");
             self.availableThemes = ko.observableArray([
                 new editorTheme("Visual Studio",        "vs"),
                 new editorTheme("Dark Vsiual Studio",   "vs-dark"),
                 new editorTheme("High Contrast Black",  "hc-black")
             ]);
             self.selectedTheme = ko.observable();
+            self.SelectedKeepKeyWithValueStringify(0);
         };
 
         var vm = new viewModel([]);
