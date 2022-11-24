@@ -43,7 +43,7 @@ export class PairAstNode extends BaseAstNode {
         return new PairAstNode(length, openingBracket, child, closingBracket, child ? child.missingOpeningBracketIds : SmallImmutableSet.getEmpty());
     }
     get kind() {
-        return 2 /* Pair */;
+        return 2 /* AstNodeKind.Pair */;
     }
     get listHeight() {
         return 0;
@@ -130,7 +130,7 @@ export class ListAstNode extends BaseAstNode {
         return new ImmutableArrayListAstNode(lengthZero, 0, [], SmallImmutableSet.getEmpty());
     }
     get kind() {
-        return 4 /* List */;
+        return 4 /* AstNodeKind.List */;
     }
     get missingOpeningBracketIds() {
         return this._missingOpeningBracketIds;
@@ -145,7 +145,7 @@ export class ListAstNode extends BaseAstNode {
             return undefined;
         }
         const lastChild = this.getChild(childCount - 1);
-        const mutable = lastChild.kind === 4 /* List */ ? lastChild.toMutable() : lastChild;
+        const mutable = lastChild.kind === 4 /* AstNodeKind.List */ ? lastChild.toMutable() : lastChild;
         if (lastChild !== mutable) {
             this.setChild(childCount - 1, mutable);
         }
@@ -158,7 +158,7 @@ export class ListAstNode extends BaseAstNode {
             return undefined;
         }
         const firstChild = this.getChild(0);
-        const mutable = firstChild.kind === 4 /* List */ ? firstChild.toMutable() : firstChild;
+        const mutable = firstChild.kind === 4 /* AstNodeKind.List */ ? firstChild.toMutable() : firstChild;
         if (firstChild !== mutable) {
             this.setChild(0, mutable);
         }
@@ -170,7 +170,7 @@ export class ListAstNode extends BaseAstNode {
         }
         let lastChild = this;
         let lastLength;
-        while (lastChild.kind === 4 /* List */ && (lastLength = lastChild.childrenLength) > 0) {
+        while (lastChild.kind === 4 /* AstNodeKind.List */ && (lastLength = lastChild.childrenLength) > 0) {
             lastChild = lastChild.getChild(lastLength - 1);
         }
         return lastChild.canBeReused(openBracketIds);
@@ -392,7 +392,7 @@ class ImmutableLeafAstNode extends BaseAstNode {
 }
 export class TextAstNode extends ImmutableLeafAstNode {
     get kind() {
-        return 0 /* Text */;
+        return 0 /* AstNodeKind.Text */;
     }
     get missingOpeningBracketIds() {
         return SmallImmutableSet.getEmpty();
@@ -420,25 +420,31 @@ export class TextAstNode extends ImmutableLeafAstNode {
     }
 }
 export class BracketAstNode extends ImmutableLeafAstNode {
-    constructor(length, languageId, 
+    constructor(length, bracketInfo, 
     /**
      * In case of a opening bracket, this is the id of the opening bracket.
      * In case of a closing bracket, this contains the ids of all opening brackets it can close.
     */
     bracketIds) {
         super(length);
-        this.languageId = languageId;
+        this.bracketInfo = bracketInfo;
         this.bracketIds = bracketIds;
     }
-    static create(length, languageId, bracketIds) {
-        const node = new BracketAstNode(length, languageId, bracketIds);
+    static create(length, bracketInfo, bracketIds) {
+        const node = new BracketAstNode(length, bracketInfo, bracketIds);
         return node;
     }
     get kind() {
-        return 1 /* Bracket */;
+        return 1 /* AstNodeKind.Bracket */;
     }
     get missingOpeningBracketIds() {
         return SmallImmutableSet.getEmpty();
+    }
+    get text() {
+        return this.bracketInfo.bracketText;
+    }
+    get languageId() {
+        return this.bracketInfo.languageId;
     }
     canBeReused(_openedBracketIds) {
         // These nodes could be reused,
@@ -456,7 +462,7 @@ export class InvalidBracketAstNode extends ImmutableLeafAstNode {
         this.missingOpeningBracketIds = closingBrackets;
     }
     get kind() {
-        return 3 /* UnexpectedClosingBracket */;
+        return 3 /* AstNodeKind.UnexpectedClosingBracket */;
     }
     canBeReused(openedBracketIds) {
         return !openedBracketIds.intersects(this.missingOpeningBracketIds);

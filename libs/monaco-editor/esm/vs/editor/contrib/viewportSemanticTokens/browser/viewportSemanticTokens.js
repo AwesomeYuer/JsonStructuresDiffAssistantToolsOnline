@@ -84,18 +84,18 @@ let ViewportSemanticTokensContribution = class ViewportSemanticTokensContributio
             return;
         }
         const model = this._editor.getModel();
-        if (model.hasCompleteSemanticTokens()) {
+        if (model.tokenization.hasCompleteSemanticTokens()) {
             return;
         }
         if (!isSemanticColoringEnabled(model, this._themeService, this._configurationService)) {
-            if (model.hasSomeSemanticTokens()) {
-                model.setSemanticTokens(null, false);
+            if (model.tokenization.hasSomeSemanticTokens()) {
+                model.tokenization.setSemanticTokens(null, false);
             }
             return;
         }
         if (!hasDocumentRangeSemanticTokensProvider(this._provider, model)) {
-            if (model.hasSomeSemanticTokens()) {
-                model.setSemanticTokens(null, false);
+            if (model.tokenization.hasSomeSemanticTokens()) {
+                model.tokenization.setSemanticTokens(null, false);
             }
             return;
         }
@@ -113,7 +113,7 @@ let ViewportSemanticTokensContribution = class ViewportSemanticTokensContributio
             }
             const { provider, tokens: result } = r;
             const styling = this._modelService.getSemanticTokensProviderStyling(provider);
-            model.setPartialSemanticTokens(range, toMultilineTokens2(result, styling, model.getLanguageId()));
+            model.tokenization.setPartialSemanticTokens(range, toMultilineTokens2(result, styling, model.getLanguageId()));
         }).then(() => this._removeOutstandingRequest(request), () => this._removeOutstandingRequest(request));
         return request;
     }

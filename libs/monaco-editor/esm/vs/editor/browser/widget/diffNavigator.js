@@ -59,7 +59,7 @@ export class DiffNavigator extends Disposable {
             if (this._editor.getLineChanges() !== null) {
                 this.revealFirst = false;
                 this.nextIdx = -1;
-                this.next(1 /* Immediate */);
+                this.next(1 /* ScrollType.Immediate */);
             }
         }
     }
@@ -155,10 +155,10 @@ export class DiffNavigator extends Disposable {
     canNavigate() {
         return this.ranges && this.ranges.length > 0;
     }
-    next(scrollType = 0 /* Smooth */) {
+    next(scrollType = 0 /* ScrollType.Smooth */) {
         this._move(true, scrollType);
     }
-    previous(scrollType = 0 /* Smooth */) {
+    previous(scrollType = 0 /* ScrollType.Smooth */) {
         this._move(false, scrollType);
     }
     dispose() {

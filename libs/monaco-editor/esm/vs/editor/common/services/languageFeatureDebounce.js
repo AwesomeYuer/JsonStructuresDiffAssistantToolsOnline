@@ -17,6 +17,7 @@ import { clamp, MovingAverage, SlidingWindowAverage } from '../../../base/common
 import { registerSingleton } from '../../../platform/instantiation/common/extensions.js';
 import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
 import { ILogService } from '../../../platform/log/common/log.js';
+import { matchesScheme } from '../../../platform/opener/common/opener.js';
 export const ILanguageFeatureDebounceService = createDecorator('ILanguageFeatureDebounceService');
 var IdentityHash;
 (function (IdentityHash) {
@@ -60,7 +61,9 @@ class FeatureDebounceInformation {
             this._cache.set(key, avg);
         }
         const newValue = clamp(avg.update(value), this._min, this._max);
-        this._logService.trace(`[DEBOUNCE: ${this._name}] for ${model.uri.toString()} is ${newValue}ms`);
+        if (!matchesScheme(model.uri, 'output')) {
+            this._logService.trace(`[DEBOUNCE: ${this._name}] for ${model.uri.toString()} is ${newValue}ms`);
+        }
         return newValue;
     }
     _overall() {
@@ -96,8 +99,8 @@ let LanguageFeatureDebounceService = class LanguageFeatureDebounceService {
     }
     _overallAverage() {
         // Average of all language features. Not a great value but an approximation
-        let result = new MovingAverage();
-        for (let info of this._data.values()) {
+        const result = new MovingAverage();
+        for (const info of this._data.values()) {
             result.update(info.default());
         }
         return result.value;

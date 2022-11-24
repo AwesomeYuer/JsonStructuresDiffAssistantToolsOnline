@@ -6,13 +6,13 @@ export class HoverRangeAnchor {
     constructor(priority, range) {
         this.priority = priority;
         this.range = range;
-        this.type = 1 /* Range */;
+        this.type = 1 /* HoverAnchorType.Range */;
     }
     equals(other) {
-        return (other.type === 1 /* Range */ && this.range.equalsRange(other.range));
+        return (other.type === 1 /* HoverAnchorType.Range */ && this.range.equalsRange(other.range));
     }
     canAdoptVisibleHover(lastAnchor, showAtPosition) {
-        return (lastAnchor.type === 1 /* Range */ && showAtPosition.lineNumber === this.range.startLineNumber);
+        return (lastAnchor.type === 1 /* HoverAnchorType.Range */ && showAtPosition.lineNumber === this.range.startLineNumber);
     }
 }
 export class HoverForeignElementAnchor {
@@ -20,13 +20,13 @@ export class HoverForeignElementAnchor {
         this.priority = priority;
         this.owner = owner;
         this.range = range;
-        this.type = 2 /* ForeignElement */;
+        this.type = 2 /* HoverAnchorType.ForeignElement */;
     }
     equals(other) {
-        return (other.type === 2 /* ForeignElement */ && this.owner === other.owner);
+        return (other.type === 2 /* HoverAnchorType.ForeignElement */ && this.owner === other.owner);
     }
     canAdoptVisibleHover(lastAnchor, showAtPosition) {
-        return (lastAnchor.type === 2 /* ForeignElement */ && this.owner === lastAnchor.owner);
+        return (lastAnchor.type === 2 /* HoverAnchorType.ForeignElement */ && this.owner === lastAnchor.owner);
     }
 }
 export const HoverParticipantRegistry = (new class HoverParticipantRegistry {

@@ -27,6 +27,21 @@ CodeActionKind.Refactor = new CodeActionKind('refactor');
 CodeActionKind.Source = new CodeActionKind('source');
 CodeActionKind.SourceOrganizeImports = CodeActionKind.Source.append('organizeImports');
 CodeActionKind.SourceFixAll = CodeActionKind.Source.append('fixAll');
+export var CodeActionTriggerSource;
+(function (CodeActionTriggerSource) {
+    CodeActionTriggerSource["Refactor"] = "refactor";
+    CodeActionTriggerSource["RefactorPreview"] = "refactor preview";
+    CodeActionTriggerSource["Lightbulb"] = "lightbulb";
+    CodeActionTriggerSource["Default"] = "other (default)";
+    CodeActionTriggerSource["SourceAction"] = "source action";
+    CodeActionTriggerSource["QuickFix"] = "quick fix action";
+    CodeActionTriggerSource["FixAll"] = "fix all";
+    CodeActionTriggerSource["OrganizeImports"] = "organize imports";
+    CodeActionTriggerSource["AutoFix"] = "auto fix";
+    CodeActionTriggerSource["QuickFixHover"] = "quick fix hover window";
+    CodeActionTriggerSource["OnSave"] = "save participants";
+    CodeActionTriggerSource["ProblemsView"] = "problems view";
+})(CodeActionTriggerSource || (CodeActionTriggerSource = {}));
 export function mayIncludeActionsOfKind(filter, providedKind) {
     // A provided kind may be a subset or superset of our filtered kind.
     if (filter.include && !filter.include.intersects(providedKind)) {
@@ -93,9 +108,9 @@ export class CodeActionCommandArgs {
     }
     static getApplyFromUser(arg, defaultAutoApply) {
         switch (typeof arg.apply === 'string' ? arg.apply.toLowerCase() : '') {
-            case 'first': return "first" /* First */;
-            case 'never': return "never" /* Never */;
-            case 'ifsingle': return "ifSingle" /* IfSingle */;
+            case 'first': return "first" /* CodeActionAutoApply.First */;
+            case 'never': return "never" /* CodeActionAutoApply.Never */;
+            case 'ifsingle': return "ifSingle" /* CodeActionAutoApply.IfSingle */;
             default: return defaultAutoApply;
         }
     }

@@ -1,6 +1,6 @@
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.33.0(4b1abad427e58dbedc1215d99a0902ffc885fcd4)
+ * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
@@ -10,14 +10,15 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __reExport = (target, module, copyDefault, desc) => {
-  if (module && typeof module === "object" || typeof module === "function") {
-    for (let key of __getOwnPropNames(module))
-      if (!__hasOwnProp.call(target, key) && (copyDefault || key !== "default"))
-        __defProp(target, key, { get: () => module[key], enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable });
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
-  return target;
+  return to;
 };
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
 var __publicField = (obj, key, value) => {
   __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
   return value;
@@ -30,21 +31,24 @@ import * as monaco_editor_core_star from "../../editor/editor.api.js";
 
 // src/language/typescript/workerManager.ts
 var WorkerManager = class {
-  _modeId;
-  _defaults;
-  _configChangeListener;
-  _updateExtraLibsToken;
-  _extraLibsChangeListener;
-  _worker;
-  _client;
-  constructor(modeId, defaults) {
-    this._modeId = modeId;
-    this._defaults = defaults;
+  constructor(_modeId, _defaults) {
+    this._modeId = _modeId;
+    this._defaults = _defaults;
     this._worker = null;
     this._client = null;
     this._configChangeListener = this._defaults.onDidChange(() => this._stopWorker());
     this._updateExtraLibsToken = 0;
     this._extraLibsChangeListener = this._defaults.onDidExtraLibsChange(() => this._updateExtraLibs());
+  }
+  _configChangeListener;
+  _updateExtraLibsToken;
+  _extraLibsChangeListener;
+  _worker;
+  _client;
+  dispose() {
+    this._configChangeListener.dispose();
+    this._extraLibsChangeListener.dispose();
+    this._stopWorker();
   }
   _stopWorker() {
     if (this._worker) {
@@ -52,11 +56,6 @@ var WorkerManager = class {
       this._worker = null;
     }
     this._client = null;
-  }
-  dispose() {
-    this._configChangeListener.dispose();
-    this._extraLibsChangeListener.dispose();
-    this._stopWorker();
   }
   async _updateExtraLibs() {
     if (!this._worker) {
@@ -71,39 +70,32 @@ var WorkerManager = class {
   }
   _getClient() {
     if (!this._client) {
-      this._worker = monaco_editor_core_exports.editor.createWebWorker({
-        moduleId: "vs/language/typescript/tsWorker",
-        label: this._modeId,
-        keepIdleModels: true,
-        createData: {
-          compilerOptions: this._defaults.getCompilerOptions(),
-          extraLibs: this._defaults.getExtraLibs(),
-          customWorkerPath: this._defaults.workerOptions.customWorkerPath,
-          inlayHintsOptions: this._defaults.inlayHintsOptions
-        }
-      });
-      let p = this._worker.getProxy();
-      if (this._defaults.getEagerModelSync()) {
-        p = p.then((worker) => {
-          if (this._worker) {
-            return this._worker.withSyncedResources(monaco_editor_core_exports.editor.getModels().filter((model) => model.getLanguageId() === this._modeId).map((model) => model.uri));
+      this._client = (async () => {
+        this._worker = monaco_editor_core_exports.editor.createWebWorker({
+          moduleId: "vs/language/typescript/tsWorker",
+          label: this._modeId,
+          keepIdleModels: true,
+          createData: {
+            compilerOptions: this._defaults.getCompilerOptions(),
+            extraLibs: this._defaults.getExtraLibs(),
+            customWorkerPath: this._defaults.workerOptions.customWorkerPath,
+            inlayHintsOptions: this._defaults.inlayHintsOptions
           }
-          return worker;
         });
-      }
-      this._client = p;
+        if (this._defaults.getEagerModelSync()) {
+          return await this._worker.withSyncedResources(monaco_editor_core_exports.editor.getModels().filter((model) => model.getLanguageId() === this._modeId).map((model) => model.uri));
+        }
+        return await this._worker.getProxy();
+      })();
     }
     return this._client;
   }
-  getLanguageServiceWorker(...resources) {
-    let _client;
-    return this._getClient().then((client) => {
-      _client = client;
-    }).then((_) => {
-      if (this._worker) {
-        return this._worker.withSyncedResources(resources);
-      }
-    }).then((_) => _client);
+  async getLanguageServiceWorker(...resources) {
+    const client = await this._getClient();
+    if (this._worker) {
+      await this._worker.withSyncedResources(resources);
+    }
+    return client;
   }
 };
 
@@ -944,7 +936,8 @@ var CodeActionAdaptor = class extends FormatHelper {
       for (const textChange of change.textChanges) {
         edits.push({
           resource: model.uri,
-          edit: {
+          versionId: void 0,
+          textEdit: {
             range: this._textSpanToRange(model, textChange.span),
             text: textChange.newText
           }
@@ -995,7 +988,8 @@ var RenameAdapter = class extends Adapter {
       if (model2) {
         edits.push({
           resource: model2.uri,
-          edit: {
+          versionId: void 0,
+          textEdit: {
             range: this._textSpanToRange(model2, renameLocation.textSpan),
             text: newName
           }

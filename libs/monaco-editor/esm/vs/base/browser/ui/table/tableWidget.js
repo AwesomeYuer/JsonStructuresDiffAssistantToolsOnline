@@ -107,8 +107,8 @@ export class Table {
             views: headers.map(view => ({ size: view.column.weight, view }))
         };
         this.splitview = this.disposables.add(new SplitView(this.domNode, {
-            orientation: 1 /* HORIZONTAL */,
-            scrollbarVisibility: 2 /* Hidden */,
+            orientation: 1 /* Orientation.HORIZONTAL */,
+            scrollbarVisibility: 2 /* ScrollbarVisibility.Hidden */,
             getSashOrthogonalSize: () => this.cachedHeight,
             descriptor
         }));

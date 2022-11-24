@@ -36,9 +36,12 @@ export class ColorizedBracketPairsDecorationProvider extends Disposable {
         for (const bracket of bracketsInRange) {
             result.push({
                 id: `bracket${bracket.range.toString()}-${bracket.nestingLevel}`,
-                options: { description: 'BracketPairColorization', inlineClassName: this.colorProvider.getInlineClassName(bracket) },
+                options: {
+                    description: 'BracketPairColorization',
+                    inlineClassName: this.colorProvider.getInlineClassName(bracket, this.colorizationOptions.independentColorPoolPerBracketType),
+                },
                 ownerId: 0,
-                range: bracket.range
+                range: bracket.range,
             });
         }
         return result;
@@ -57,11 +60,11 @@ class ColorProvider {
     constructor() {
         this.unexpectedClosingBracketClassName = 'unexpected-closing-bracket';
     }
-    getInlineClassName(bracket) {
+    getInlineClassName(bracket, independentColorPoolPerBracketType) {
         if (bracket.isInvalid) {
             return this.unexpectedClosingBracketClassName;
         }
-        return this.getInlineClassNameOfLevel(bracket.nestingLevel);
+        return this.getInlineClassNameOfLevel(independentColorPoolPerBracketType ? bracket.nestingLevelOfEqualBracketType : bracket.nestingLevel);
     }
     getInlineClassNameOfLevel(level) {
         // To support a dynamic amount of colors up to 6 colors,

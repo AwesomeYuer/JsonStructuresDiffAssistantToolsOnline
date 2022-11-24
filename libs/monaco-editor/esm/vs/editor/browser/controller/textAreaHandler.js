@@ -65,7 +65,7 @@ class VisibleTextAreaData {
             }
             else {
                 this._previousPresentation = {
-                    foreground: 1 /* DefaultForeground */,
+                    foreground: 1 /* ColorId.DefaultForeground */,
                     italic: false,
                     bold: false,
                     underline: false,
@@ -88,22 +88,22 @@ export class TextAreaHandler extends ViewPart {
         this._scrollLeft = 0;
         this._scrollTop = 0;
         const options = this._context.configuration.options;
-        const layoutInfo = options.get(131 /* layoutInfo */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
         this._setAccessibilityOptions(options);
         this._contentLeft = layoutInfo.contentLeft;
         this._contentWidth = layoutInfo.contentWidth;
         this._contentHeight = layoutInfo.height;
-        this._fontInfo = options.get(44 /* fontInfo */);
-        this._lineHeight = options.get(59 /* lineHeight */);
-        this._emptySelectionClipboard = options.get(32 /* emptySelectionClipboard */);
-        this._copyWithSyntaxHighlighting = options.get(21 /* copyWithSyntaxHighlighting */);
+        this._fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
+        this._emptySelectionClipboard = options.get(33 /* EditorOption.emptySelectionClipboard */);
+        this._copyWithSyntaxHighlighting = options.get(21 /* EditorOption.copyWithSyntaxHighlighting */);
         this._visibleTextArea = null;
         this._selections = [new Selection(1, 1, 1, 1)];
         this._modelSelections = [new Selection(1, 1, 1, 1)];
         this._lastRenderPosition = null;
         // Text Area (The focus will always be in the textarea when the cursor is blinking)
         this.textArea = createFastDomNode(document.createElement('textarea'));
-        PartFingerprints.write(this.textArea, 6 /* TextArea */);
+        PartFingerprints.write(this.textArea, 6 /* PartFingerprint.TextArea */);
         this.textArea.setClassName(`inputarea ${MOUSE_CURSOR_TEXT_CSS_CLASS_NAME}`);
         this.textArea.setAttribute('wrap', 'off');
         this.textArea.setAttribute('autocorrect', 'off');
@@ -111,13 +111,13 @@ export class TextAreaHandler extends ViewPart {
         this.textArea.setAttribute('autocomplete', 'off');
         this.textArea.setAttribute('spellcheck', 'false');
         this.textArea.setAttribute('aria-label', this._getAriaLabel(options));
-        this.textArea.setAttribute('tabindex', String(options.get(112 /* tabIndex */)));
+        this.textArea.setAttribute('tabindex', String(options.get(114 /* EditorOption.tabIndex */)));
         this.textArea.setAttribute('role', 'textbox');
         this.textArea.setAttribute('aria-roledescription', nls.localize('editor', "editor"));
         this.textArea.setAttribute('aria-multiline', 'true');
         this.textArea.setAttribute('aria-haspopup', 'false');
         this.textArea.setAttribute('aria-autocomplete', 'both');
-        if (options.get(30 /* domReadOnly */) && options.get(81 /* readOnly */)) {
+        if (options.get(30 /* EditorOption.domReadOnly */) && options.get(83 /* EditorOption.readOnly */)) {
             this.textArea.setAttribute('readonly', 'true');
         }
         this.textAreaCover = createFastDomNode(document.createElement('div'));
@@ -158,22 +158,27 @@ export class TextAreaHandler extends ViewPart {
                 };
             },
             getScreenReaderContent: (currentState) => {
-                if (this._accessibilitySupport === 1 /* Disabled */) {
+                if (this._accessibilitySupport === 1 /* AccessibilitySupport.Disabled */) {
                     // We know for a fact that a screen reader is not attached
                     // On OSX, we write the character before the cursor to allow for "long-press" composition
                     // Also on OSX, we write the word before the cursor to allow for the Accessibility Keyboard to give good hints
-                    if (platform.isMacintosh) {
-                        const selection = this._selections[0];
-                        if (selection.isEmpty()) {
-                            const position = selection.getStartPosition();
-                            let textBefore = this._getWordBeforePosition(position);
-                            if (textBefore.length === 0) {
-                                textBefore = this._getCharacterBeforePosition(position);
-                            }
-                            if (textBefore.length > 0) {
-                                return new TextAreaState(textBefore, textBefore.length, textBefore.length, position, position);
-                            }
+                    const selection = this._selections[0];
+                    if (platform.isMacintosh && selection.isEmpty()) {
+                        const position = selection.getStartPosition();
+                        let textBefore = this._getWordBeforePosition(position);
+                        if (textBefore.length === 0) {
+                            textBefore = this._getCharacterBeforePosition(position);
                         }
+                        if (textBefore.length > 0) {
+                            return new TextAreaState(textBefore, textBefore.length, textBefore.length, position, position);
+                        }
+                    }
+                    // on Safari, document.execCommand('cut') and document.execCommand('copy') will just not work
+                    // if the textarea has no content selected. So if there is an editor selection, ensure something
+                    // is selected in the textarea.
+                    if (browser.isSafari && !selection.isEmpty()) {
+                        const placeholderText = 'vscode-placeholder';
+                        return new TextAreaState(placeholderText, 0, placeholderText.length, null, null);
                     }
                     return TextAreaState.EMPTY;
                 }
@@ -192,7 +197,7 @@ export class TextAreaHandler extends ViewPart {
                     }
                     return TextAreaState.EMPTY;
                 }
-                return PagedScreenReaderStrategy.fromEditorSelection(currentState, simpleModel, this._selections[0], this._accessibilityPageSize, this._accessibilitySupport === 0 /* Unknown */);
+                return PagedScreenReaderStrategy.fromEditorSelection(currentState, simpleModel, this._selections[0], this._accessibilityPageSize, this._accessibilitySupport === 0 /* AccessibilitySupport.Unknown */);
             },
             deduceModelPosition: (viewAnchorPosition, deltaOffset, lineFeedCnt) => {
                 return this._context.viewModel.deduceModelPositionRelativeToViewPosition(viewAnchorPosition, deltaOffset, lineFeedCnt);
@@ -287,7 +292,7 @@ export class TextAreaHandler extends ViewPart {
                 return { distanceToModelLineEnd };
             })();
             // Scroll to reveal the location in the editor where composition occurs
-            this._context.viewModel.revealRange('keyboard', true, Range.fromPositions(this._selections[0].getStartPosition()), 0 /* Simple */, 1 /* Immediate */);
+            this._context.viewModel.revealRange('keyboard', true, Range.fromPositions(this._selections[0].getStartPosition()), 0 /* viewEvents.VerticalRevealType.Simple */, 1 /* ScrollType.Immediate */);
             this._visibleTextArea = new VisibleTextAreaData(this._context, modelSelection.startLineNumber, distanceToModelLineStart, widthOfHiddenTextBefore, distanceToModelLineEnd);
             this._visibleTextArea.prepareRender(this._visibleRangeProvider);
             this._render();
@@ -336,7 +341,7 @@ export class TextAreaHandler extends ViewPart {
             if (goingLeft) {
                 const charCode = lineContent.charCodeAt(startColumn - 2);
                 const charClass = wordSeparators.get(charCode);
-                if (charClass !== 0 /* Regular */) {
+                if (charClass !== 0 /* WordCharacterClass.Regular */) {
                     goingLeft = false;
                 }
                 else {
@@ -349,7 +354,7 @@ export class TextAreaHandler extends ViewPart {
             if (goingRight) {
                 const charCode = lineContent.charCodeAt(endColumn - 1);
                 const charClass = wordSeparators.get(charCode);
-                if (charClass !== 0 /* Regular */) {
+                if (charClass !== 0 /* WordCharacterClass.Regular */) {
                     goingRight = false;
                 }
                 else {
@@ -362,13 +367,13 @@ export class TextAreaHandler extends ViewPart {
     }
     _getWordBeforePosition(position) {
         const lineContent = this._context.viewModel.getLineContent(position.lineNumber);
-        const wordSeparators = getMapForWordSeparators(this._context.configuration.options.get(117 /* wordSeparators */));
+        const wordSeparators = getMapForWordSeparators(this._context.configuration.options.get(119 /* EditorOption.wordSeparators */));
         let column = position.column;
         let distance = 0;
         while (column > 1) {
             const charCode = lineContent.charCodeAt(column - 2);
             const charClass = wordSeparators.get(charCode);
-            if (charClass !== 0 /* Regular */ || distance > 50) {
+            if (charClass !== 0 /* WordCharacterClass.Regular */ || distance > 50) {
                 return lineContent.substring(column - 1, position.column - 1);
             }
             distance++;
@@ -387,17 +392,17 @@ export class TextAreaHandler extends ViewPart {
         return '';
     }
     _getAriaLabel(options) {
-        const accessibilitySupport = options.get(2 /* accessibilitySupport */);
-        if (accessibilitySupport === 1 /* Disabled */) {
+        const accessibilitySupport = options.get(2 /* EditorOption.accessibilitySupport */);
+        if (accessibilitySupport === 1 /* AccessibilitySupport.Disabled */) {
             return nls.localize('accessibilityOffAriaLabel', "The editor is not accessible at this time. Press {0} for options.", platform.isLinux ? 'Shift+Alt+F1' : 'Alt+F1');
         }
-        return options.get(4 /* ariaLabel */);
+        return options.get(4 /* EditorOption.ariaLabel */);
     }
     _setAccessibilityOptions(options) {
-        this._accessibilitySupport = options.get(2 /* accessibilitySupport */);
-        const accessibilityPageSize = options.get(3 /* accessibilityPageSize */);
-        if (this._accessibilitySupport === 2 /* Enabled */ && accessibilityPageSize === EditorOptions.accessibilityPageSize.defaultValue) {
-            // If a screen reader is attached and the default value is not set we shuold automatically increase the page size to 500 for a better experience
+        this._accessibilitySupport = options.get(2 /* EditorOption.accessibilitySupport */);
+        const accessibilityPageSize = options.get(3 /* EditorOption.accessibilityPageSize */);
+        if (this._accessibilitySupport === 2 /* AccessibilitySupport.Enabled */ && accessibilityPageSize === EditorOptions.accessibilityPageSize.defaultValue) {
+            // If a screen reader is attached and the default value is not set we should automatically increase the page size to 500 for a better experience
             this._accessibilityPageSize = 500;
         }
         else {
@@ -407,26 +412,26 @@ export class TextAreaHandler extends ViewPart {
     // --- begin event handlers
     onConfigurationChanged(e) {
         const options = this._context.configuration.options;
-        const layoutInfo = options.get(131 /* layoutInfo */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
         this._setAccessibilityOptions(options);
         this._contentLeft = layoutInfo.contentLeft;
         this._contentWidth = layoutInfo.contentWidth;
         this._contentHeight = layoutInfo.height;
-        this._fontInfo = options.get(44 /* fontInfo */);
-        this._lineHeight = options.get(59 /* lineHeight */);
-        this._emptySelectionClipboard = options.get(32 /* emptySelectionClipboard */);
-        this._copyWithSyntaxHighlighting = options.get(21 /* copyWithSyntaxHighlighting */);
+        this._fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
+        this._emptySelectionClipboard = options.get(33 /* EditorOption.emptySelectionClipboard */);
+        this._copyWithSyntaxHighlighting = options.get(21 /* EditorOption.copyWithSyntaxHighlighting */);
         this.textArea.setAttribute('aria-label', this._getAriaLabel(options));
-        this.textArea.setAttribute('tabindex', String(options.get(112 /* tabIndex */)));
-        if (e.hasChanged(30 /* domReadOnly */) || e.hasChanged(81 /* readOnly */)) {
-            if (options.get(30 /* domReadOnly */) && options.get(81 /* readOnly */)) {
+        this.textArea.setAttribute('tabindex', String(options.get(114 /* EditorOption.tabIndex */)));
+        if (e.hasChanged(30 /* EditorOption.domReadOnly */) || e.hasChanged(83 /* EditorOption.readOnly */)) {
+            if (options.get(30 /* EditorOption.domReadOnly */) && options.get(83 /* EditorOption.readOnly */)) {
                 this.textArea.setAttribute('readonly', 'true');
             }
             else {
                 this.textArea.removeAttribute('readonly');
             }
         }
-        if (e.hasChanged(2 /* accessibilitySupport */)) {
+        if (e.hasChanged(2 /* EditorOption.accessibilitySupport */)) {
             this._textAreaInput.writeScreenReaderContent('strategy changed');
         }
         return true;
@@ -488,11 +493,10 @@ export class TextAreaHandler extends ViewPart {
         }
     }
     prepareRender(ctx) {
+        var _a;
         this._primaryCursorPosition = new Position(this._selections[0].positionLineNumber, this._selections[0].positionColumn);
         this._primaryCursorVisibleRange = ctx.visibleRangeForPosition(this._primaryCursorPosition);
-        if (this._visibleTextArea) {
-            this._visibleTextArea.prepareRender(ctx);
-        }
+        (_a = this._visibleTextArea) === null || _a === void 0 ? void 0 : _a.prepareRender(ctx);
     }
     render(ctx) {
         this._textAreaInput.writeScreenReaderContent('render');
@@ -646,11 +650,11 @@ export class TextAreaHandler extends ViewPart {
         tac.setWidth(renderData.useCover ? renderData.width : 0);
         tac.setHeight(renderData.useCover ? renderData.height : 0);
         const options = this._context.configuration.options;
-        if (options.get(50 /* glyphMargin */)) {
+        if (options.get(52 /* EditorOption.glyphMargin */)) {
             tac.setClassName('monaco-editor-background textAreaCover ' + Margin.OUTER_CLASS_NAME);
         }
         else {
-            if (options.get(60 /* lineNumbers */).renderType !== 0 /* Off */) {
+            if (options.get(62 /* EditorOption.lineNumbers */).renderType !== 0 /* RenderLineNumbersType.Off */) {
                 tac.setClassName('monaco-editor-background textAreaCover ' + LineNumbersOverlay.CLASS_NAME);
             }
             else {

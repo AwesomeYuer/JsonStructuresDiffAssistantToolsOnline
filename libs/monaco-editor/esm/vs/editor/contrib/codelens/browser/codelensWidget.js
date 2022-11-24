@@ -13,7 +13,7 @@ class CodeLensViewZone {
          * We want that this view zone, which reserves space for a code lens appears
          * as close as possible to the next line, so we use a very large value here.
          */
-        this.afterColumn = 1073741824 /* MAX_SAFE_SMALL_INTEGER */;
+        this.afterColumn = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */;
         this.afterLineNumber = afterLineNumber;
         this.heightInPx = heightInPx;
         this._onHeight = onHeight;
@@ -49,7 +49,7 @@ class CodeLensContentWidget {
     }
     withCommands(lenses, animate) {
         this._commands.clear();
-        let children = [];
+        const children = [];
         let hasSymbol = false;
         for (let i = 0; i < lenses.length; i++) {
             const lens = lenses[i];
@@ -60,7 +60,7 @@ class CodeLensContentWidget {
             if (lens.command) {
                 const title = renderLabelWithIcons(lens.command.title.trim());
                 if (lens.command.id) {
-                    children.push(dom.$('a', { id: String(i), title: lens.command.tooltip }, ...title));
+                    children.push(dom.$('a', { id: String(i), title: lens.command.tooltip, role: 'button' }, ...title));
                     this._commands.set(String(i), lens.command);
                 }
                 else {
@@ -99,7 +99,7 @@ class CodeLensContentWidget {
         const column = this._editor.getModel().getLineFirstNonWhitespaceColumn(line);
         this._widgetPosition = {
             position: { lineNumber: line, column: column },
-            preference: [1 /* ABOVE */]
+            preference: [1 /* ContentWidgetPositionPreference.ABOVE */]
         };
     }
     getPosition() {
@@ -121,7 +121,7 @@ export class CodeLensHelper {
         this._removeDecorations.push(decorationId);
     }
     commit(changeAccessor) {
-        let resultingDecorations = changeAccessor.deltaDecorations(this._removeDecorations, this._addDecorations);
+        const resultingDecorations = changeAccessor.deltaDecorations(this._removeDecorations, this._addDecorations);
         for (let i = 0, len = resultingDecorations.length; i < len; i++) {
             this._addDecorationsCallbacks[i](resultingDecorations[i]);
         }
@@ -137,7 +137,7 @@ export class CodeLensWidget {
         // check if there is already something to render
         this._decorationIds = [];
         let range;
-        let lenses = [];
+        const lenses = [];
         this._data.forEach((codeLensData, i) => {
             if (codeLensData.symbol.command) {
                 lenses.push(codeLensData.symbol);
@@ -173,9 +173,7 @@ export class CodeLensWidget {
     dispose(helper, viewZoneChangeAccessor) {
         this._decorationIds.forEach(helper.removeDecoration, helper);
         this._decorationIds = [];
-        if (viewZoneChangeAccessor) {
-            viewZoneChangeAccessor.removeZone(this._viewZoneId);
-        }
+        viewZoneChangeAccessor === null || viewZoneChangeAccessor === void 0 ? void 0 : viewZoneChangeAccessor.removeZone(this._viewZoneId);
         if (this._contentWidget) {
             this._editor.removeContentWidget(this._contentWidget);
             this._contentWidget = undefined;

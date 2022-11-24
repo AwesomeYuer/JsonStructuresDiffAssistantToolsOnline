@@ -101,7 +101,7 @@ let SymbolNavigationService = class SymbolNavigationService {
             resource: reference.uri,
             options: {
                 selection: Range.collapseToStart(reference.range),
-                selectionRevealType: 3 /* NearTopIfOutsideViewport */
+                selectionRevealType: 3 /* TextEditorSelectionRevealType.NearTopIfOutsideViewport */
             }
         }, source).finally(() => {
             this._ignoreEditorChange = false;
@@ -130,8 +130,8 @@ registerEditorCommand(new class extends EditorCommand {
             id: 'editor.gotoNextSymbolFromResult',
             precondition: ctxHasSymbols,
             kbOpts: {
-                weight: 100 /* EditorContrib */,
-                primary: 70 /* F12 */
+                weight: 100 /* KeybindingWeight.EditorContrib */,
+                primary: 70 /* KeyCode.F12 */
             }
         });
     }
@@ -141,9 +141,9 @@ registerEditorCommand(new class extends EditorCommand {
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'editor.gotoNextSymbolFromResult.cancel',
-    weight: 100 /* EditorContrib */,
+    weight: 100 /* KeybindingWeight.EditorContrib */,
     when: ctxHasSymbols,
-    primary: 9 /* Escape */,
+    primary: 9 /* KeyCode.Escape */,
     handler(accessor) {
         accessor.get(ISymbolNavigationService).reset();
     }

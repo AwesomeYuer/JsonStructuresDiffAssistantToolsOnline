@@ -21,7 +21,7 @@ import './sash.css';
  * Allow the sashes to be visible at runtime.
  * @remark Use for development purposes only.
  */
-let DEBUG = false;
+const DEBUG = false;
 export var OrthogonalEdge;
 (function (OrthogonalEdge) {
     OrthogonalEdge["North"] = "north";
@@ -113,7 +113,7 @@ export class Sash extends Disposable {
         super();
         this.hoverDelay = globalHoverDelay;
         this.hoverDelayer = this._register(new Delayer(this.hoverDelay));
-        this._state = 3 /* Enabled */;
+        this._state = 3 /* SashState.Enabled */;
         this.onDidEnablementChange = this._register(new Emitter());
         this._onDidStart = this._register(new Emitter());
         this._onDidChange = this._register(new Emitter());
@@ -170,7 +170,7 @@ export class Sash extends Disposable {
         this._register(onDoubleTap(this.onPointerDoublePress, this));
         if (typeof options.size === 'number') {
             this.size = options.size;
-            if (options.orientation === 0 /* VERTICAL */) {
+            if (options.orientation === 0 /* Orientation.VERTICAL */) {
                 this.el.style.width = `${this.size}px`;
             }
             else {
@@ -188,8 +188,8 @@ export class Sash extends Disposable {
         this.layoutProvider = layoutProvider;
         this.orthogonalStartSash = options.orthogonalStartSash;
         this.orthogonalEndSash = options.orthogonalEndSash;
-        this.orientation = options.orientation || 0 /* VERTICAL */;
-        if (this.orientation === 1 /* HORIZONTAL */) {
+        this.orientation = options.orientation || 0 /* Orientation.VERTICAL */;
+        if (this.orientation === 1 /* Orientation.HORIZONTAL */) {
             this.el.classList.add('horizontal');
             this.el.classList.remove('vertical');
         }
@@ -211,9 +211,9 @@ export class Sash extends Disposable {
         if (this._state === state) {
             return;
         }
-        this.el.classList.toggle('disabled', state === 0 /* Disabled */);
-        this.el.classList.toggle('minimum', state === 1 /* AtMinimum */);
-        this.el.classList.toggle('maximum', state === 2 /* AtMaximum */);
+        this.el.classList.toggle('disabled', state === 0 /* SashState.Disabled */);
+        this.el.classList.toggle('minimum', state === 1 /* SashState.AtMinimum */);
+        this.el.classList.toggle('maximum', state === 2 /* SashState.AtMaximum */);
         this._state = state;
         this.onDidEnablementChange.fire(state);
     }
@@ -231,7 +231,7 @@ export class Sash extends Disposable {
         if (sash) {
             const onChange = (state) => {
                 this.orthogonalStartDragHandleDisposables.clear();
-                if (state !== 0 /* Disabled */) {
+                if (state !== 0 /* SashState.Disabled */) {
                     this._orthogonalStartDragHandle = append(this.el, $('.orthogonal-drag-handle.start'));
                     this.orthogonalStartDragHandleDisposables.add(toDisposable(() => this._orthogonalStartDragHandle.remove()));
                     this.orthogonalStartDragHandleDisposables.add(new DomEmitter(this._orthogonalStartDragHandle, 'mouseenter')).event(() => Sash.onMouseEnter(sash), undefined, this.orthogonalStartDragHandleDisposables);
@@ -257,7 +257,7 @@ export class Sash extends Disposable {
         if (sash) {
             const onChange = (state) => {
                 this.orthogonalEndDragHandleDisposables.clear();
-                if (state !== 0 /* Disabled */) {
+                if (state !== 0 /* SashState.Disabled */) {
                     this._orthogonalEndDragHandle = append(this.el, $('.orthogonal-drag-handle.end'));
                     this.orthogonalEndDragHandleDisposables.add(toDisposable(() => this._orthogonalEndDragHandle.remove()));
                     this.orthogonalEndDragHandleDisposables.add(new DomEmitter(this._orthogonalEndDragHandle, 'mouseenter')).event(() => Sash.onMouseEnter(sash), undefined, this.orthogonalEndDragHandleDisposables);
@@ -304,11 +304,11 @@ export class Sash extends Disposable {
             if (isMultisashResize) {
                 cursor = 'all-scroll';
             }
-            else if (this.orientation === 1 /* HORIZONTAL */) {
-                if (this.state === 1 /* AtMinimum */) {
+            else if (this.orientation === 1 /* Orientation.HORIZONTAL */) {
+                if (this.state === 1 /* SashState.AtMinimum */) {
                     cursor = 's-resize';
                 }
-                else if (this.state === 2 /* AtMaximum */) {
+                else if (this.state === 2 /* SashState.AtMaximum */) {
                     cursor = 'n-resize';
                 }
                 else {
@@ -316,10 +316,10 @@ export class Sash extends Disposable {
                 }
             }
             else {
-                if (this.state === 1 /* AtMinimum */) {
+                if (this.state === 1 /* SashState.AtMinimum */) {
                     cursor = 'e-resize';
                 }
-                else if (this.state === 2 /* AtMaximum */) {
+                else if (this.state === 2 /* SashState.AtMaximum */) {
                     cursor = 'w-resize';
                 }
                 else {
@@ -394,7 +394,7 @@ export class Sash extends Disposable {
      * based on its provided {@link ISashLayoutProvider layout provider}.
      */
     layout() {
-        if (this.orientation === 0 /* VERTICAL */) {
+        if (this.orientation === 0 /* Orientation.VERTICAL */) {
             const verticalProvider = this.layoutProvider;
             this.el.style.left = verticalProvider.getVerticalSashLeft(this) - (this.size / 2) + 'px';
             if (verticalProvider.getVerticalSashTop) {

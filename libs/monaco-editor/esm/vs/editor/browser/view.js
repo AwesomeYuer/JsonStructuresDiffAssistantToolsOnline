@@ -40,6 +40,7 @@ import { ViewportData } from '../common/viewLayout/viewLinesViewportData.js';
 import { ViewEventHandler } from '../common/viewEventHandler.js';
 import { getThemeTypeSelector } from '../../platform/theme/common/themeService.js';
 import { PointerHandlerLastRenderData } from './controller/mouseTarget.js';
+import { BlockDecorations } from './viewParts/blockDecorations/blockDecorations.js';
 export class View extends ViewEventHandler {
     constructor(commandDelegate, configuration, colorTheme, model, userInputEvents, overflowWidgetsDomNode) {
         super();
@@ -63,7 +64,7 @@ export class View extends ViewEventHandler {
         // Set role 'code' for better screen reader support https://github.com/microsoft/vscode/issues/93438
         this.domNode.setAttribute('role', 'code');
         this._overflowGuardContainer = createFastDomNode(document.createElement('div'));
-        PartFingerprints.write(this._overflowGuardContainer, 3 /* OverflowGuard */);
+        PartFingerprints.write(this._overflowGuardContainer, 3 /* PartFingerprint.OverflowGuard */);
         this._overflowGuardContainer.setClassName('overflow-guard');
         this._scrollbar = new EditorScrollbar(this._context, this._linesContent, this.domNode, this._overflowGuardContainer);
         this._viewParts.push(this._scrollbar);
@@ -104,6 +105,8 @@ export class View extends ViewEventHandler {
         this._viewParts.push(this._overlayWidgets);
         const rulers = new Rulers(this._context);
         this._viewParts.push(rulers);
+        const blockOutline = new BlockDecorations(this._context);
+        this._viewParts.push(blockOutline);
         const minimap = new Minimap(this._context);
         this._viewParts.push(minimap);
         // -------------- Wire dom nodes up
@@ -113,6 +116,7 @@ export class View extends ViewEventHandler {
         }
         this._linesContent.appendChild(contentViewOverlays.getDomNode());
         this._linesContent.appendChild(rulers.domNode);
+        this._linesContent.appendChild(blockOutline.domNode);
         this._linesContent.appendChild(this._viewZones.domNode);
         this._linesContent.appendChild(this._viewLines.getDomNode());
         this._linesContent.appendChild(this._contentWidgets.domNode);
@@ -142,6 +146,7 @@ export class View extends ViewEventHandler {
         return {
             viewDomNode: this.domNode.domNode,
             linesContentDomNode: this._linesContent.domNode,
+            viewLinesDomNode: this._viewLines.getDomNode().domNode,
             focusTextArea: () => {
                 this.focus();
             },
@@ -183,7 +188,7 @@ export class View extends ViewEventHandler {
     }
     _applyLayout() {
         const options = this._context.configuration.options;
-        const layoutInfo = options.get(131 /* layoutInfo */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
         this.domNode.setWidth(layoutInfo.width);
         this.domNode.setHeight(layoutInfo.height);
         this._overflowGuardContainer.setWidth(layoutInfo.width);
@@ -193,7 +198,7 @@ export class View extends ViewEventHandler {
     }
     _getEditorClassName() {
         const focused = this._textAreaHandler.isFocused() ? ' focused' : '';
-        return this._context.configuration.options.get(128 /* editorClassName */) + ' ' + getThemeTypeSelector(this._context.theme.type) + focused;
+        return this._context.configuration.options.get(130 /* EditorOption.editorClassName */) + ' ' + getThemeTypeSelector(this._context.theme.type) + focused;
     }
     // --- begin event handlers
     handleEvents(events) {
@@ -288,15 +293,15 @@ export class View extends ViewEventHandler {
         }
     }
     // --- BEGIN CodeEditor helpers
-    delegateVerticalScrollbarMouseDown(browserEvent) {
-        this._scrollbar.delegateVerticalScrollbarMouseDown(browserEvent);
+    delegateVerticalScrollbarPointerDown(browserEvent) {
+        this._scrollbar.delegateVerticalScrollbarPointerDown(browserEvent);
     }
     restoreState(scrollPosition) {
-        this._context.viewModel.viewLayout.setScrollPosition({ scrollTop: scrollPosition.scrollTop }, 1 /* Immediate */);
+        this._context.viewModel.viewLayout.setScrollPosition({ scrollTop: scrollPosition.scrollTop }, 1 /* ScrollType.Immediate */);
         this._context.viewModel.tokenizeViewport();
         this._renderNow();
         this._viewLines.updateLineWidths();
-        this._context.viewModel.viewLayout.setScrollPosition({ scrollLeft: scrollPosition.scrollLeft }, 1 /* Immediate */);
+        this._context.viewModel.viewLayout.setScrollPosition({ scrollLeft: scrollPosition.scrollLeft }, 1 /* ScrollType.Immediate */);
     }
     getOffsetForColumn(modelLineNumber, modelColumn) {
         const modelPosition = this._context.viewModel.model.validatePosition({
@@ -355,6 +360,7 @@ export class View extends ViewEventHandler {
         this._scheduleRender();
     }
     layoutContentWidget(widgetData) {
+        var _a, _b;
         let newRange = widgetData.position ? widgetData.position.range || null : null;
         if (newRange === null) {
             const newPosition = widgetData.position ? widgetData.position.position : null;
@@ -363,7 +369,7 @@ export class View extends ViewEventHandler {
             }
         }
         const newPreference = widgetData.position ? widgetData.position.preference : null;
-        this._contentWidgets.setWidgetPosition(widgetData.widget, newRange, newPreference);
+        this._contentWidgets.setWidgetPosition(widgetData.widget, newRange, newPreference, (_b = (_a = widgetData.position) === null || _a === void 0 ? void 0 : _a.positionAffinity) !== null && _b !== void 0 ? _b : null);
         this._scheduleRender();
     }
     removeContentWidget(widgetData) {

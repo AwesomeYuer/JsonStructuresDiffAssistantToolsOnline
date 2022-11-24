@@ -37,7 +37,7 @@ class UpdatableHoverWidget {
         this.target = target;
         this.fadeInAnimation = fadeInAnimation;
     }
-    update(content, focus) {
+    update(content, focus, options) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             if (this._cancellationTokenSource) {
@@ -74,19 +74,13 @@ class UpdatableHoverWidget {
                     return;
                 }
             }
-            this.show(resolvedContent, focus);
+            this.show(resolvedContent, focus, options);
         });
     }
-    show(content, focus) {
+    show(content, focus, options) {
         const oldHoverWidget = this._hoverWidget;
         if (this.hasContent(content)) {
-            const hoverOptions = {
-                content,
-                target: this.target,
-                showPointer: this.hoverDelegate.placement === 'element',
-                hoverPosition: 2 /* BELOW */,
-                skipFadeInAnimation: !this.fadeInAnimation || !!oldHoverWidget // do not fade in if the hover is already showing
-            };
+            const hoverOptions = Object.assign({ content, target: this.target, showPointer: this.hoverDelegate.placement === 'element', hoverPosition: 2 /* HoverPosition.BELOW */, skipFadeInAnimation: !this.fadeInAnimation || !!oldHoverWidget }, options);
             this._hoverWidget = this.hoverDelegate.showHover(hoverOptions, focus);
         }
         oldHoverWidget === null || oldHoverWidget === void 0 ? void 0 : oldHoverWidget.dispose();
@@ -111,7 +105,7 @@ class UpdatableHoverWidget {
         this._cancellationTokenSource = undefined;
     }
 }
-export function setupCustomHover(hoverDelegate, htmlElement, content) {
+export function setupCustomHover(hoverDelegate, htmlElement, content, options) {
     let hoverPreparation;
     let hoverWidget;
     const hideHover = (disposeWidget, disposePreparation) => {
@@ -130,7 +124,7 @@ export function setupCustomHover(hoverDelegate, htmlElement, content) {
         return new TimeoutTimer(() => __awaiter(this, void 0, void 0, function* () {
             if (!hoverWidget || hoverWidget.isDisposed) {
                 hoverWidget = new UpdatableHoverWidget(hoverDelegate, target || htmlElement, delay > 0);
-                yield hoverWidget.update(content, focus);
+                yield hoverWidget.update(content, focus, options);
             }
         }), delay);
     };
@@ -149,7 +143,12 @@ export function setupCustomHover(hoverDelegate, htmlElement, content) {
         };
         if (hoverDelegate.placement === undefined || hoverDelegate.placement === 'mouse') {
             // track the mouse position
-            const onMouseMove = (e) => target.x = e.x + 10;
+            const onMouseMove = (e) => {
+                target.x = e.x + 10;
+                if ((e.target instanceof HTMLElement) && e.target.classList.contains('action-label')) {
+                    hideHover(true, true);
+                }
+            };
             toDispose.add(dom.addDisposableListener(htmlElement, dom.EventType.MOUSE_MOVE, onMouseMove, true));
         }
         toDispose.add(triggerShowHover(hoverDelegate.delay, false, target));
@@ -164,9 +163,9 @@ export function setupCustomHover(hoverDelegate, htmlElement, content) {
         hide: () => {
             hideHover(true, true);
         },
-        update: (newContent) => __awaiter(this, void 0, void 0, function* () {
+        update: (newContent, hoverOptions) => __awaiter(this, void 0, void 0, function* () {
             content = newContent;
-            yield (hoverWidget === null || hoverWidget === void 0 ? void 0 : hoverWidget.update(content));
+            yield (hoverWidget === null || hoverWidget === void 0 ? void 0 : hoverWidget.update(content, undefined, hoverOptions));
         }),
         dispose: () => {
             mouseOverDomEmitter.dispose();

@@ -5,13 +5,13 @@ import { StopWatch } from './stopwatch.js';
 // -----------------------------------------------------------------------------------------------------------------------
 // Uncomment the next line to print warnings whenever an emitter with listeners is disposed. That is a sign of code smell.
 // -----------------------------------------------------------------------------------------------------------------------
-let _enableDisposeWithListenerWarning = false;
+const _enableDisposeWithListenerWarning = false;
 // _enableDisposeWithListenerWarning = Boolean("TRUE"); // causes a linter warning so that it cannot be pushed
 // -----------------------------------------------------------------------------------------------------------------------
 // Uncomment the next line to print warnings whenever a snapshotted event is used repeatedly without cleanup.
 // See https://github.com/microsoft/vscode/issues/142851
 // -----------------------------------------------------------------------------------------------------------------------
-let _enableSnapshotPotentialLeakWarning = false;
+const _enableSnapshotPotentialLeakWarning = false;
 export var Event;
 (function (Event) {
     Event.None = () => Disposable.None;
@@ -36,7 +36,7 @@ export var Event;
         return (listener, thisArgs = null, disposables) => {
             // we need this, in case the event fires during the listener call
             let didFire = false;
-            let result;
+            let result = undefined;
             result = event(e => {
                 if (didFire) {
                     return;
@@ -109,16 +109,14 @@ export var Event;
                 listener = event(emitter.fire, emitter);
             },
             onLastListenerRemove() {
-                listener.dispose();
+                listener === null || listener === void 0 ? void 0 : listener.dispose();
             }
         };
         if (!disposable) {
             _addLeakageTraceLogic(options);
         }
         const emitter = new Emitter(options);
-        if (disposable) {
-            disposable.add(emitter);
-        }
+        disposable === null || disposable === void 0 ? void 0 : disposable.add(emitter);
         return emitter.event;
     }
     function debounce(event, merge, delay = 100, leading = false, leakWarningThreshold, disposable) {
@@ -156,9 +154,7 @@ export var Event;
             _addLeakageTraceLogic(options);
         }
         const emitter = new Emitter(options);
-        if (disposable) {
-            disposable.add(emitter);
-        }
+        disposable === null || disposable === void 0 ? void 0 : disposable.add(emitter);
         return emitter.event;
     }
     Event.debounce = debounce;
@@ -206,9 +202,7 @@ export var Event;
             }
         });
         const flush = () => {
-            if (buffer) {
-                buffer.forEach(e => emitter.fire(e));
-            }
+            buffer === null || buffer === void 0 ? void 0 : buffer.forEach(e => emitter.fire(e));
             buffer = null;
         };
         const emitter = new Emitter({
@@ -240,24 +234,25 @@ export var Event;
     class ChainableEvent {
         constructor(event) {
             this.event = event;
+            this.disposables = new DisposableStore();
         }
         map(fn) {
-            return new ChainableEvent(map(this.event, fn));
+            return new ChainableEvent(map(this.event, fn, this.disposables));
         }
         forEach(fn) {
-            return new ChainableEvent(forEach(this.event, fn));
+            return new ChainableEvent(forEach(this.event, fn, this.disposables));
         }
         filter(fn) {
-            return new ChainableEvent(filter(this.event, fn));
+            return new ChainableEvent(filter(this.event, fn, this.disposables));
         }
         reduce(merge, initial) {
-            return new ChainableEvent(reduce(this.event, merge, initial));
+            return new ChainableEvent(reduce(this.event, merge, initial, this.disposables));
         }
         latch() {
-            return new ChainableEvent(latch(this.event));
+            return new ChainableEvent(latch(this.event, undefined, this.disposables));
         }
         debounce(merge, delay = 100, leading = false, leakWarningThreshold) {
-            return new ChainableEvent(debounce(this.event, merge, delay, leading, leakWarningThreshold));
+            return new ChainableEvent(debounce(this.event, merge, delay, leading, leakWarningThreshold, this.disposables));
         }
         on(listener, thisArgs, disposables) {
             return this.event(listener, thisArgs, disposables);
@@ -265,10 +260,10 @@ export var Event;
         once(listener, thisArgs, disposables) {
             return once(this.event)(listener, thisArgs, disposables);
         }
+        dispose() {
+            this.disposables.dispose();
+        }
     }
-    /**
-     * @deprecated DO NOT use, this leaks memory
-     */
     function chain(event) {
         return new ChainableEvent(event);
     }
@@ -313,6 +308,48 @@ export var Event;
         });
     }
     Event.runAndSubscribeWithStore = runAndSubscribeWithStore;
+    class EmitterObserver {
+        constructor(obs, store) {
+            this.obs = obs;
+            this._counter = 0;
+            this._hasChanged = false;
+            const options = {
+                onFirstListenerAdd: () => {
+                    obs.addObserver(this);
+                },
+                onLastListenerRemove: () => {
+                    obs.removeObserver(this);
+                }
+            };
+            if (!store) {
+                _addLeakageTraceLogic(options);
+            }
+            this.emitter = new Emitter(options);
+            if (store) {
+                store.add(this.emitter);
+            }
+        }
+        beginUpdate(_observable) {
+            // console.assert(_observable === this.obs);
+            this._counter++;
+        }
+        handleChange(_observable, _change) {
+            this._hasChanged = true;
+        }
+        endUpdate(_observable) {
+            if (--this._counter === 0) {
+                if (this._hasChanged) {
+                    this._hasChanged = false;
+                    this.emitter.fire(this.obs.get());
+                }
+            }
+        }
+    }
+    function fromObservable(obs, store) {
+        const observer = new EmitterObserver(obs, store);
+        return observer.emitter.event;
+    }
+    Event.fromObservable = fromObservable;
 })(Event || (Event = {}));
 class EventProfiling {
     constructor(name) {
@@ -430,11 +467,12 @@ class Listener {
  */
 export class Emitter {
     constructor(options) {
-        var _a;
+        var _a, _b;
         this._disposed = false;
         this._options = options;
         this._leakageMon = _globalLeakWarningThreshold > 0 ? new LeakageMonitor(this._options && this._options.leakWarningThreshold) : undefined;
         this._perfMon = ((_a = this._options) === null || _a === void 0 ? void 0 : _a._profName) ? new EventProfiling(this._options._profName) : undefined;
+        this._deliveryQueue = (_b = this._options) === null || _b === void 0 ? void 0 : _b.deliveryQueue;
     }
     dispose() {
         var _a, _b, _c, _d;
@@ -464,7 +502,7 @@ export class Emitter {
                 }
                 this._listeners.clear();
             }
-            (_a = this._deliveryQueue) === null || _a === void 0 ? void 0 : _a.clear();
+            (_a = this._deliveryQueue) === null || _a === void 0 ? void 0 : _a.clear(this);
             (_c = (_b = this._options) === null || _b === void 0 ? void 0 : _b.onLastListenerRemove) === null || _c === void 0 ? void 0 : _c.call(_b);
             (_d = this._leakageMon) === null || _d === void 0 ? void 0 : _d.dispose();
         }
@@ -503,9 +541,7 @@ export class Emitter {
                     this._options.onListenerDidAdd(this, callback, thisArgs);
                 }
                 const result = listener.subscription.set(() => {
-                    if (removeMonitor) {
-                        removeMonitor();
-                    }
+                    removeMonitor === null || removeMonitor === void 0 ? void 0 : removeMonitor();
                     if (!this._disposed) {
                         removeListener();
                         if (this._options && this._options.onLastListenerRemove) {
@@ -538,24 +574,64 @@ export class Emitter {
             // then emit all event. an inner/nested event might be
             // the driver of this
             if (!this._deliveryQueue) {
-                this._deliveryQueue = new LinkedList();
+                this._deliveryQueue = new PrivateEventDeliveryQueue();
             }
-            for (let listener of this._listeners) {
-                this._deliveryQueue.push([listener, event]);
+            for (const listener of this._listeners) {
+                this._deliveryQueue.push(this, listener, event);
             }
             // start/stop performance insight collection
             (_a = this._perfMon) === null || _a === void 0 ? void 0 : _a.start(this._deliveryQueue.size);
-            while (this._deliveryQueue.size > 0) {
-                const [listener, event] = this._deliveryQueue.shift();
-                try {
-                    listener.invoke(event);
-                }
-                catch (e) {
-                    onUnexpectedError(e);
-                }
-            }
+            this._deliveryQueue.deliver();
             (_b = this._perfMon) === null || _b === void 0 ? void 0 : _b.stop();
         }
+    }
+}
+export class EventDeliveryQueue {
+    constructor() {
+        this._queue = new LinkedList();
+    }
+    get size() {
+        return this._queue.size;
+    }
+    push(emitter, listener, event) {
+        this._queue.push(new EventDeliveryQueueElement(emitter, listener, event));
+    }
+    clear(emitter) {
+        const newQueue = new LinkedList();
+        for (const element of this._queue) {
+            if (element.emitter !== emitter) {
+                newQueue.push(element);
+            }
+        }
+        this._queue = newQueue;
+    }
+    deliver() {
+        while (this._queue.size > 0) {
+            const element = this._queue.shift();
+            try {
+                element.listener.invoke(element.event);
+            }
+            catch (e) {
+                onUnexpectedError(e);
+            }
+        }
+    }
+}
+/**
+ * An `EventDeliveryQueue` that is guaranteed to be used by a single `Emitter`.
+ */
+class PrivateEventDeliveryQueue extends EventDeliveryQueue {
+    clear(emitter) {
+        // Here we can just clear the entire linked list because
+        // all elements are guaranteed to belong to this emitter
+        this._queue.clear();
+    }
+}
+class EventDeliveryQueueElement {
+    constructor(emitter, listener, event) {
+        this.emitter = emitter;
+        this.listener = listener;
+        this.event = event;
     }
 }
 export class PauseableEmitter extends Emitter {

@@ -164,7 +164,7 @@ let OpenerService = class OpenerService {
             // validate against the original URI that this URI resolves to, if one exists
             const validationTarget = (_a = this._resolvedUriTargets.get(targetURI)) !== null && _a !== void 0 ? _a : target;
             for (const validator of this._validators) {
-                if (!(yield validator.shouldOpen(validationTarget))) {
+                if (!(yield validator.shouldOpen(validationTarget, options))) {
                     return false;
                 }
             }

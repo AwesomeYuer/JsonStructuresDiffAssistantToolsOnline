@@ -97,7 +97,7 @@ let AccessibilityHelpWidget = class AccessibilityHelpWidget extends Widget {
             if (!this._isVisible) {
                 return;
             }
-            if (e.equals(2048 /* CtrlCmd */ | 35 /* KeyE */)) {
+            if (e.equals(2048 /* KeyMod.CtrlCmd */ | 35 /* KeyCode.KeyE */)) {
                 alert(AccessibilityHelpNLS.emergencyConfOn);
                 this._editor.updateOptions({
                     accessibilitySupport: 'on'
@@ -108,7 +108,7 @@ let AccessibilityHelpWidget = class AccessibilityHelpWidget extends Widget {
                 e.preventDefault();
                 e.stopPropagation();
             }
-            if (e.equals(2048 /* CtrlCmd */ | 38 /* KeyH */)) {
+            if (e.equals(2048 /* KeyMod.CtrlCmd */ | 38 /* KeyCode.KeyH */)) {
                 alert(AccessibilityHelpNLS.openingDocs);
                 let url = this._editor.getRawOptions().accessibilityHelpUrl;
                 if (typeof url === 'undefined') {
@@ -172,8 +172,8 @@ let AccessibilityHelpWidget = class AccessibilityHelpWidget extends Widget {
             }
         }
         let text = getSelectionLabel(selections, charactersSelected);
-        if (options.get(54 /* inDiffEditor */)) {
-            if (options.get(81 /* readOnly */)) {
+        if (options.get(56 /* EditorOption.inDiffEditor */)) {
+            if (options.get(83 /* EditorOption.readOnly */)) {
                 text += AccessibilityHelpNLS.readonlyDiffEditor;
             }
             else {
@@ -181,7 +181,7 @@ let AccessibilityHelpWidget = class AccessibilityHelpWidget extends Widget {
             }
         }
         else {
-            if (options.get(81 /* readOnly */)) {
+            if (options.get(83 /* EditorOption.readOnly */)) {
                 text += AccessibilityHelpNLS.readonlyEditor;
             }
             else {
@@ -191,19 +191,19 @@ let AccessibilityHelpWidget = class AccessibilityHelpWidget extends Widget {
         const turnOnMessage = (platform.isMacintosh
             ? AccessibilityHelpNLS.changeConfigToOnMac
             : AccessibilityHelpNLS.changeConfigToOnWinLinux);
-        switch (options.get(2 /* accessibilitySupport */)) {
-            case 0 /* Unknown */:
+        switch (options.get(2 /* EditorOption.accessibilitySupport */)) {
+            case 0 /* AccessibilitySupport.Unknown */:
                 text += '\n\n - ' + turnOnMessage;
                 break;
-            case 2 /* Enabled */:
+            case 2 /* AccessibilitySupport.Enabled */:
                 text += '\n\n - ' + AccessibilityHelpNLS.auto_on;
                 break;
-            case 1 /* Disabled */:
+            case 1 /* AccessibilitySupport.Disabled */:
                 text += '\n\n - ' + AccessibilityHelpNLS.auto_off;
                 text += ' ' + turnOnMessage;
                 break;
         }
-        if (options.get(130 /* tabFocusMode */)) {
+        if (options.get(132 /* EditorOption.tabFocusMode */)) {
             text += '\n\n - ' + this._descriptionForCommand(ToggleTabFocusModeAction.ID, AccessibilityHelpNLS.tabFocusModeOnMsg, AccessibilityHelpNLS.tabFocusModeOnMsgNoKb);
         }
         else {
@@ -258,11 +258,11 @@ class ShowAccessibilityHelpAction extends EditorAction {
             alias: 'Show Accessibility Help',
             precondition: undefined,
             kbOpts: {
-                primary: 512 /* Alt */ | 59 /* F1 */,
-                weight: 100 /* EditorContrib */,
+                primary: 512 /* KeyMod.Alt */ | 59 /* KeyCode.F1 */,
+                weight: 100 /* KeybindingWeight.EditorContrib */,
                 linux: {
-                    primary: 512 /* Alt */ | 1024 /* Shift */ | 59 /* F1 */,
-                    secondary: [512 /* Alt */ | 59 /* F1 */]
+                    primary: 512 /* KeyMod.Alt */ | 1024 /* KeyMod.Shift */ | 59 /* KeyCode.F1 */,
+                    secondary: [512 /* KeyMod.Alt */ | 59 /* KeyCode.F1 */]
                 }
             }
         });
@@ -282,10 +282,10 @@ registerEditorCommand(new AccessibilityHelpCommand({
     precondition: CONTEXT_ACCESSIBILITY_WIDGET_VISIBLE,
     handler: x => x.hide(),
     kbOpts: {
-        weight: 100 /* EditorContrib */ + 100,
+        weight: 100 /* KeybindingWeight.EditorContrib */ + 100,
         kbExpr: EditorContextKeys.focus,
-        primary: 9 /* Escape */,
-        secondary: [1024 /* Shift */ | 9 /* Escape */]
+        primary: 9 /* KeyCode.Escape */,
+        secondary: [1024 /* KeyMod.Shift */ | 9 /* KeyCode.Escape */]
     }
 }));
 registerThemingParticipant((theme, collector) => {

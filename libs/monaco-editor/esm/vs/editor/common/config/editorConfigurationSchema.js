@@ -12,7 +12,7 @@ export const editorConfigurationBaseNode = Object.freeze({
     order: 5,
     type: 'object',
     title: nls.localize('editorConfigurationTitle', "Editor"),
-    scope: 5 /* LANGUAGE_OVERRIDABLE */,
+    scope: 5 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
 });
 const editorConfiguration = Object.assign(Object.assign({}, editorConfigurationBaseNode), { properties: {
         'editor.tabSize': {
@@ -91,8 +91,8 @@ const editorConfiguration = Object.assign(Object.assign({}, editorConfigurationB
             description: nls.localize('maxTokenizationLineLength', "Lines above this length will not be tokenized for performance reasons")
         },
         'editor.language.brackets': {
-            type: 'array',
-            default: false,
+            type: ['array', 'null'],
+            default: null,
             description: nls.localize('schema.brackets', 'Defines the bracket symbols that increase or decrease the indentation.'),
             items: {
                 type: 'array',
@@ -109,8 +109,8 @@ const editorConfiguration = Object.assign(Object.assign({}, editorConfigurationB
             }
         },
         'editor.language.colorizedBracketPairs': {
-            type: 'array',
-            default: false,
+            type: ['array', 'null'],
+            default: null,
             description: nls.localize('schema.colorizedBracketPairs', 'Defines the bracket pairs that are colorized by their nesting level if bracket pair colorization is enabled.'),
             items: {
                 type: 'array',
@@ -140,6 +140,11 @@ const editorConfiguration = Object.assign(Object.assign({}, editorConfigurationB
             type: 'boolean',
             default: true,
             description: nls.localize('sideBySide', "Controls whether the diff editor shows the diff side by side or inline.")
+        },
+        'diffEditor.renderMarginRevertIcon': {
+            type: 'boolean',
+            default: true,
+            description: nls.localize('renderMarginRevertIcon', "When enabled, the diff editor shows arrows in its glyph margin to revert changes.")
         },
         'diffEditor.ignoreTrimWhitespace': {
             type: 'boolean',

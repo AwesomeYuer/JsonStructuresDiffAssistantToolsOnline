@@ -26,9 +26,9 @@ import { registerThemingParticipant } from '../../../../platform/theme/common/th
 import { InPlaceReplaceCommand } from './inPlaceReplaceCommand.js';
 let InPlaceReplaceController = class InPlaceReplaceController {
     constructor(editor, editorWorkerService) {
-        this.decorationIds = [];
         this.editor = editor;
         this.editorWorkerService = editorWorkerService;
+        this.decorations = this.editor.createDecorationsCollection();
     }
     static get(editor) {
         return editor.getContribution(InPlaceReplaceController.ID);
@@ -50,7 +50,7 @@ let InPlaceReplaceController = class InPlaceReplaceController {
             // Can't accept multiline selection
             return undefined;
         }
-        const state = new EditorState(this.editor, 1 /* Value */ | 4 /* Position */);
+        const state = new EditorState(this.editor, 1 /* CodeEditorStateFlag.Value */ | 4 /* CodeEditorStateFlag.Position */);
         const modelURI = model.uri;
         if (!this.editorWorkerService.canNavigateValueSet(modelURI)) {
             return Promise.resolve(undefined);
@@ -66,9 +66,9 @@ let InPlaceReplaceController = class InPlaceReplaceController {
                 return;
             }
             // Selection
-            let editRange = Range.lift(result.range);
+            const editRange = Range.lift(result.range);
             let highlightRange = result.range;
-            let diff = result.value.length - (selection.endColumn - selection.startColumn);
+            const diff = result.value.length - (selection.endColumn - selection.startColumn);
             // highlight
             highlightRange = {
                 startLineNumber: highlightRange.startLineNumber,
@@ -85,7 +85,7 @@ let InPlaceReplaceController = class InPlaceReplaceController {
             this.editor.executeCommand(source, command);
             this.editor.pushUndoStop();
             // add decoration
-            this.decorationIds = this.editor.deltaDecorations(this.decorationIds, [{
+            this.decorations.set([{
                     range: highlightRange,
                     options: InPlaceReplaceController.DECORATION
                 }]);
@@ -94,7 +94,7 @@ let InPlaceReplaceController = class InPlaceReplaceController {
                 this.decorationRemover.cancel();
             }
             this.decorationRemover = timeout(350);
-            this.decorationRemover.then(() => this.decorationIds = this.editor.deltaDecorations(this.decorationIds, [])).catch(onUnexpectedError);
+            this.decorationRemover.then(() => this.decorations.clear()).catch(onUnexpectedError);
         }).catch(onUnexpectedError);
     }
 };
@@ -115,8 +115,8 @@ class InPlaceReplaceUp extends EditorAction {
             precondition: EditorContextKeys.writable,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 82 /* Comma */,
-                weight: 100 /* EditorContrib */
+                primary: 2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 82 /* KeyCode.Comma */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             }
         });
     }
@@ -137,8 +137,8 @@ class InPlaceReplaceDown extends EditorAction {
             precondition: EditorContextKeys.writable,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 84 /* Period */,
-                weight: 100 /* EditorContrib */
+                primary: 2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 84 /* KeyCode.Period */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             }
         });
     }

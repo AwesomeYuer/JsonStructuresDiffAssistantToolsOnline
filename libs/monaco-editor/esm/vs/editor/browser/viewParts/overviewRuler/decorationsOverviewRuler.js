@@ -12,29 +12,35 @@ import { OverviewRulerDecorationsGroup } from '../../../common/viewModel.js';
 class Settings {
     constructor(config, theme) {
         const options = config.options;
-        this.lineHeight = options.get(59 /* lineHeight */);
-        this.pixelRatio = options.get(129 /* pixelRatio */);
-        this.overviewRulerLanes = options.get(74 /* overviewRulerLanes */);
-        this.renderBorder = options.get(73 /* overviewRulerBorder */);
+        this.lineHeight = options.get(61 /* EditorOption.lineHeight */);
+        this.pixelRatio = options.get(131 /* EditorOption.pixelRatio */);
+        this.overviewRulerLanes = options.get(76 /* EditorOption.overviewRulerLanes */);
+        this.renderBorder = options.get(75 /* EditorOption.overviewRulerBorder */);
         const borderColor = theme.getColor(editorOverviewRulerBorder);
         this.borderColor = borderColor ? borderColor.toString() : null;
-        this.hideCursor = options.get(52 /* hideCursorInOverviewRuler */);
+        this.hideCursor = options.get(54 /* EditorOption.hideCursorInOverviewRuler */);
         const cursorColor = theme.getColor(editorCursorForeground);
         this.cursorColor = cursorColor ? cursorColor.transparent(0.7).toString() : null;
         this.themeType = theme.type;
-        const minimapOpts = options.get(65 /* minimap */);
+        const minimapOpts = options.get(67 /* EditorOption.minimap */);
         const minimapEnabled = minimapOpts.enabled;
         const minimapSide = minimapOpts.side;
-        const backgroundColor = minimapEnabled
-            ? theme.getColor(editorOverviewRulerBackground) || TokenizationRegistry.getDefaultBackground()
-            : null;
+        const themeColor = theme.getColor(editorOverviewRulerBackground);
+        const defaultBackground = TokenizationRegistry.getDefaultBackground();
+        let backgroundColor = null;
+        if (themeColor !== undefined) {
+            backgroundColor = themeColor;
+        }
+        else if (minimapEnabled) {
+            backgroundColor = defaultBackground;
+        }
         if (backgroundColor === null || minimapSide === 'left') {
             this.backgroundColor = null;
         }
         else {
             this.backgroundColor = Color.Format.CSS.formatHex(backgroundColor);
         }
-        const layoutInfo = options.get(131 /* layoutInfo */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
         const position = layoutInfo.overviewRuler;
         this.top = position.top;
         this.right = position.right;
@@ -249,7 +255,7 @@ export class DecorationsOverviewRuler extends ViewPart {
         const outerHeight = this._context.viewLayout.getScrollHeight();
         const heightRatio = canvasHeight / outerHeight;
         const decorations = this._context.viewModel.getAllOverviewRulerDecorations(this._context.theme);
-        const minDecorationHeight = (6 /* MIN_DECORATION_HEIGHT */ * this._settings.pixelRatio) | 0;
+        const minDecorationHeight = (6 /* Constants.MIN_DECORATION_HEIGHT */ * this._settings.pixelRatio) | 0;
         const halfMinDecorationHeight = (minDecorationHeight / 2) | 0;
         const canvasCtx = this._domNode.domNode.getContext('2d');
         if (this._settings.backgroundColor === null) {
@@ -309,8 +315,8 @@ export class DecorationsOverviewRuler extends ViewPart {
         if (!this._settings.hideCursor && this._settings.cursorColor) {
             const cursorHeight = (2 * this._settings.pixelRatio) | 0;
             const halfCursorHeight = (cursorHeight / 2) | 0;
-            const cursorX = this._settings.x[7 /* Full */];
-            const cursorW = this._settings.w[7 /* Full */];
+            const cursorX = this._settings.x[7 /* OverviewRulerLane.Full */];
+            const cursorW = this._settings.w[7 /* OverviewRulerLane.Full */];
             canvasCtx.fillStyle = this._settings.cursorColor;
             let prevY1 = -100;
             let prevY2 = -100;

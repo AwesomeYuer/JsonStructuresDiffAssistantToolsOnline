@@ -27,7 +27,7 @@ export class Memory {
         if (items.length === 0) {
             return 0;
         }
-        let topScore = items[0].score[0];
+        const topScore = items[0].score[0];
         for (let i = 0; i < items.length; i++) {
             const { score, completion: suggestion } = items[i];
             if (score[0] !== topScore) {
@@ -78,7 +78,7 @@ export class LRUMemory extends Memory {
         if (/\s$/.test(lineSuffix)) {
             return super.select(model, pos, items);
         }
-        let topScore = items[0].score[0];
+        const topScore = items[0].score[0];
         let indexPreselect = -1;
         let indexRecency = -1;
         let seq = -1;
@@ -113,7 +113,7 @@ export class LRUMemory extends Memory {
     }
     fromJSON(data) {
         this._cache.clear();
-        let seq = 0;
+        const seq = 0;
         for (const [key, value] of data) {
             value.touch = seq;
             value.type = typeof value.type === 'number' ? value.type : CompletionItemKinds.fromString(value.type);
@@ -138,18 +138,18 @@ export class PrefixMemory extends Memory {
         });
     }
     select(model, pos, items) {
-        let { word } = model.getWordUntilPosition(pos);
+        const { word } = model.getWordUntilPosition(pos);
         if (!word) {
             return super.select(model, pos, items);
         }
-        let key = `${model.getLanguageId()}/${word}`;
+        const key = `${model.getLanguageId()}/${word}`;
         let item = this._trie.get(key);
         if (!item) {
             item = this._trie.findSubstr(key);
         }
         if (item) {
             for (let i = 0; i < items.length; i++) {
-                let { kind, insertText } = items[i].completion;
+                const { kind, insertText } = items[i].completion;
                 if (kind === item.type && insertText === item.insertText) {
                     return i;
                 }
@@ -158,7 +158,7 @@ export class PrefixMemory extends Memory {
         return super.select(model, pos, items);
     }
     toJSON() {
-        let entries = [];
+        const entries = [];
         this._trie.forEach((value, key) => entries.push([key, value]));
         // sort by last recently used (touch), then
         // take the top 200 item and normalize their
@@ -214,7 +214,7 @@ let SuggestMemoryService = class SuggestMemoryService {
             this._strategy = new ctor();
             try {
                 const share = this._configService.getValue('editor.suggest.shareSuggestSelections');
-                const scope = share ? 0 /* GLOBAL */ : 1 /* WORKSPACE */;
+                const scope = share ? 0 /* StorageScope.PROFILE */ : 1 /* StorageScope.WORKSPACE */;
                 const raw = this._storageService.get(`${SuggestMemoryService._storagePrefix}/${mode}`, scope);
                 if (raw) {
                     this._strategy.fromJSON(JSON.parse(raw));
@@ -229,9 +229,9 @@ let SuggestMemoryService = class SuggestMemoryService {
     _saveState() {
         if (this._strategy) {
             const share = this._configService.getValue('editor.suggest.shareSuggestSelections');
-            const scope = share ? 0 /* GLOBAL */ : 1 /* WORKSPACE */;
+            const scope = share ? 0 /* StorageScope.PROFILE */ : 1 /* StorageScope.WORKSPACE */;
             const raw = JSON.stringify(this._strategy);
-            this._storageService.store(`${SuggestMemoryService._storagePrefix}/${this._strategy.name}`, raw, scope, 1 /* MACHINE */);
+            this._storageService.store(`${SuggestMemoryService._storagePrefix}/${this._strategy.name}`, raw, scope, 1 /* StorageTarget.MACHINE */);
         }
     }
 };

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Range } from '../../../common/core/range.js';
+import { applyEdits } from './utils.js';
 export class GhostText {
     constructor(lineNumber, parts, additionalReservedLineCount = 0) {
         this.lineNumber = lineNumber;
@@ -23,36 +23,9 @@ export class GhostText {
         })));
         return text.substring(this.parts[0].column - 1);
     }
-}
-class PositionOffsetTransformer {
-    constructor(text) {
-        this.lineStartOffsetByLineIdx = [];
-        this.lineStartOffsetByLineIdx.push(0);
-        for (let i = 0; i < text.length; i++) {
-            if (text.charAt(i) === '\n') {
-                this.lineStartOffsetByLineIdx.push(i + 1);
-            }
-        }
+    isEmpty() {
+        return this.parts.every(p => p.lines.length === 0);
     }
-    getOffset(position) {
-        return this.lineStartOffsetByLineIdx[position.lineNumber - 1] + position.column - 1;
-    }
-}
-function applyEdits(text, edits) {
-    const transformer = new PositionOffsetTransformer(text);
-    const offsetEdits = edits.map(e => {
-        const range = Range.lift(e.range);
-        return ({
-            startOffset: transformer.getOffset(range.getStartPosition()),
-            endOffset: transformer.getOffset(range.getEndPosition()),
-            text: e.text
-        });
-    });
-    offsetEdits.sort((a, b) => b.startOffset - a.startOffset);
-    for (const edit of offsetEdits) {
-        text = text.substring(0, edit.startOffset) + edit.text + text.substring(edit.endOffset);
-    }
-    return text;
 }
 export class GhostTextPart {
     constructor(column, lines, 
@@ -65,6 +38,21 @@ export class GhostTextPart {
         this.preview = preview;
     }
 }
+export class GhostTextReplacement {
+    constructor(lineNumber, columnStart, length, newLines, additionalReservedLineCount = 0) {
+        this.lineNumber = lineNumber;
+        this.columnStart = columnStart;
+        this.length = length;
+        this.newLines = newLines;
+        this.additionalReservedLineCount = additionalReservedLineCount;
+        this.parts = [
+            new GhostTextPart(this.columnStart + this.length, this.newLines, false),
+        ];
+    }
+    renderForScreenReader(_lineText) {
+        return this.newLines.join('\n');
+    }
+}
 export class BaseGhostTextWidgetModel extends Disposable {
     constructor(editor) {
         super();
@@ -73,7 +61,7 @@ export class BaseGhostTextWidgetModel extends Disposable {
         this.onDidChangeEmitter = new Emitter();
         this.onDidChange = this.onDidChangeEmitter.event;
         this._register(editor.onDidChangeConfiguration((e) => {
-            if (e.hasChanged(106 /* suggest */) && this._expanded === undefined) {
+            if (e.hasChanged(108 /* EditorOption.suggest */) && this._expanded === undefined) {
                 this.onDidChangeEmitter.fire();
             }
         }));

@@ -18,12 +18,12 @@ export class KeybindingResolver {
         this._lookupMap = new Map();
         this._keybindings = KeybindingResolver.handleRemovals([].concat(defaultKeybindings).concat(overrides));
         for (let i = 0, len = this._keybindings.length; i < len; i++) {
-            let k = this._keybindings[i];
+            const k = this._keybindings[i];
             if (k.keypressParts.length === 0) {
                 // unbound
                 continue;
             }
-            if (k.when && k.when.type === 0 /* False */) {
+            if (k.when && k.when.type === 0 /* ContextKeyExprType.False */) {
                 // when condition is false
                 continue;
             }
@@ -115,7 +115,7 @@ export class KeybindingResolver {
             return;
         }
         for (let i = conflicts.length - 1; i >= 0; i--) {
-            let conflict = conflicts[i];
+            const conflict = conflicts[i];
             if (conflict.command === item.command) {
                 continue;
             }
@@ -152,7 +152,7 @@ export class KeybindingResolver {
         if (!item.command) {
             return;
         }
-        let arr = this._lookupMap.get(item.command);
+        const arr = this._lookupMap.get(item.command);
         if (typeof arr === 'undefined') {
             return;
         }
@@ -167,10 +167,10 @@ export class KeybindingResolver {
      * Returns true if it is provable `a` implies `b`.
      */
     static whenIsEntirelyIncluded(a, b) {
-        if (!b || b.type === 1 /* True */) {
+        if (!b || b.type === 1 /* ContextKeyExprType.True */) {
             return true;
         }
-        if (!a || a.type === 1 /* True */) {
+        if (!a || a.type === 1 /* ContextKeyExprType.True */) {
             return false;
         }
         return implies(a, b);
@@ -207,7 +207,7 @@ export class KeybindingResolver {
             }
             lookupMap = [];
             for (let i = 0, len = candidates.length; i < len; i++) {
-                let candidate = candidates[i];
+                const candidate = candidates[i];
                 // TODO@chords
                 if (candidate.keypressParts[1] === keypress) {
                     lookupMap.push(candidate);
@@ -223,7 +223,7 @@ export class KeybindingResolver {
             }
             lookupMap = candidates;
         }
-        let result = this._findCommand(context, lookupMap);
+        const result = this._findCommand(context, lookupMap);
         if (!result) {
             this._log(`\\ From ${lookupMap.length} keybinding entries, no when clauses matched the context.`);
             return null;
@@ -250,7 +250,7 @@ export class KeybindingResolver {
     }
     _findCommand(context, matches) {
         for (let i = matches.length - 1; i >= 0; i--) {
-            let k = matches[i];
+            const k = matches[i];
             if (!KeybindingResolver._contextMatchesRules(context, k.when)) {
                 continue;
             }

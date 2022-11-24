@@ -5,6 +5,8 @@
 import { RunOnceScheduler } from '../../../base/common/async.js';
 import { Codicon, CSSIcon } from '../../../base/common/codicons.js';
 import { Emitter } from '../../../base/common/event.js';
+import { isString } from '../../../base/common/types.js';
+import { URI } from '../../../base/common/uri.js';
 import { localize } from '../../../nls.js';
 import { Extensions as JSONExtensions } from '../../jsonschemas/common/jsonContributionRegistry.js';
 import * as platform from '../../registry/common/platform.js';
@@ -28,6 +30,29 @@ export var IconContribution;
     }
     IconContribution.getDefinition = getDefinition;
 })(IconContribution || (IconContribution = {}));
+export var IconFontDefinition;
+(function (IconFontDefinition) {
+    function toJSONObject(iconFont) {
+        return {
+            weight: iconFont.weight,
+            style: iconFont.style,
+            src: iconFont.src.map(s => ({ format: s.format, location: s.location.toString() }))
+        };
+    }
+    IconFontDefinition.toJSONObject = toJSONObject;
+    function fromJSONObject(json) {
+        const stringOrUndef = (s) => isString(s) ? s : undefined;
+        if (json && Array.isArray(json.src) && json.src.every((s) => isString(s.format) && isString(s.location))) {
+            return {
+                weight: stringOrUndef(json.weight),
+                style: stringOrUndef(json.style),
+                src: json.src.map((s) => ({ format: s.format, location: URI.parse(s.location) }))
+            };
+        }
+        return undefined;
+    }
+    IconFontDefinition.fromJSONObject = fromJSONObject;
+})(IconFontDefinition || (IconFontDefinition = {}));
 class IconRegistry {
     constructor() {
         this._onDidChange = new Emitter();
@@ -65,9 +90,9 @@ class IconRegistry {
             }
             return existing;
         }
-        let iconContribution = { id, description, defaults, deprecationMessage };
+        const iconContribution = { id, description, defaults, deprecationMessage };
         this.iconsById[id] = iconContribution;
-        let propertySchema = { $ref: '#/definitions/icons' };
+        const propertySchema = { $ref: '#/definitions/icons' };
         if (deprecationMessage) {
             propertySchema.deprecationMessage = deprecationMessage;
         }
@@ -99,7 +124,7 @@ class IconRegistry {
             }
             return `codicon codicon-${i ? i.id : ''}`;
         };
-        let reference = [];
+        const reference = [];
         reference.push(`| preview     | identifier                        | default codicon ID                | description`);
         reference.push(`| ----------- | --------------------------------- | --------------------------------- | --------------------------------- |`);
         const contributions = Object.keys(this.iconsById).map(key => this.iconsById[key]);
@@ -129,7 +154,7 @@ function initialize() {
 }
 initialize();
 export const iconsSchemaId = 'vscode://schemas/icons';
-let schemaRegistry = platform.Registry.as(JSONExtensions.JSONContribution);
+const schemaRegistry = platform.Registry.as(JSONExtensions.JSONContribution);
 schemaRegistry.registerSchema(iconsSchemaId, iconRegistry.getIconSchema());
 const delayer = new RunOnceScheduler(() => schemaRegistry.notifySchemaChanged(iconsSchemaId), 200);
 iconRegistry.onDidChange(() => {

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { illegalArgument } from './errors.js';
 import { escapeIcons } from './iconLabels.js';
+import { escapeRegExpCharacters } from './strings.js';
 export class MarkdownString {
     constructor(value = '', isTrustedOrOptions = false) {
         var _a, _b, _c;
@@ -22,11 +23,11 @@ export class MarkdownString {
             this.supportHtml = (_c = isTrustedOrOptions.supportHtml) !== null && _c !== void 0 ? _c : false;
         }
     }
-    appendText(value, newlineStyle = 0 /* Paragraph */) {
+    appendText(value, newlineStyle = 0 /* MarkdownStringTextNewlineStyle.Paragraph */) {
         this.value += escapeMarkdownSyntaxTokens(this.supportThemeIcons ? escapeIcons(value) : value)
             .replace(/([ \t]+)/g, (_match, g1) => '&nbsp;'.repeat(g1.length))
             .replace(/\>/gm, '\\>')
-            .replace(/\n/g, newlineStyle === 1 /* Break */ ? '\\\n' : '\n\n');
+            .replace(/\n/g, newlineStyle === 1 /* MarkdownStringTextNewlineStyle.Break */ ? '\\\n' : '\n\n');
         return this;
     }
     appendMarkdown(value) {
@@ -40,6 +41,28 @@ export class MarkdownString {
         this.value += code;
         this.value += '\n```\n';
         return this;
+    }
+    appendLink(target, label, title) {
+        this.value += '[';
+        this.value += this._escape(label, ']');
+        this.value += '](';
+        this.value += this._escape(String(target), ')');
+        if (title) {
+            this.value += ` "${this._escape(this._escape(title, '"'), ')')}"`;
+        }
+        this.value += ')';
+        return this;
+    }
+    _escape(value, ch) {
+        const r = new RegExp(escapeRegExpCharacters(ch), 'g');
+        return value.replace(r, (match, offset) => {
+            if (value.charAt(offset - 1) !== '\\') {
+                return `\\${match}`;
+            }
+            else {
+                return match;
+            }
+        });
     }
 }
 export function isEmptyMarkdownString(oneOrMany) {
@@ -67,6 +90,9 @@ export function isMarkdownString(thing) {
 export function escapeMarkdownSyntaxTokens(text) {
     // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
     return text.replace(/[\\`*_{}[\]()#+\-!]/g, '\\$&');
+}
+export function escapeDoubleQuotes(input) {
+    return input.replace(/"/g, '&quot;');
 }
 export function removeMarkdownEscapes(text) {
     if (!text) {

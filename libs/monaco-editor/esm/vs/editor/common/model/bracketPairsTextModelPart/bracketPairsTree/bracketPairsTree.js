@@ -8,7 +8,7 @@ import { Range } from '../../../core/range.js';
 import { BracketInfo, BracketPairWithMinIndentationInfo } from '../../../textModelBracketPairs.js';
 import { TextEditInfo } from './beforeEditPositionMapper.js';
 import { LanguageAgnosticBracketTokens } from './brackets.js';
-import { lengthAdd, lengthGreaterThanEqual, lengthLessThanEqual, lengthOfString, lengthsToRange, lengthZero, positionToLength, toLength } from './length.js';
+import { lengthAdd, lengthGreaterThanEqual, lengthLessThan, lengthLessThanEqual, lengthOfString, lengthsToRange, lengthZero, positionToLength, toLength } from './length.js';
 import { parseDocument } from './parser.js';
 import { DenseKeyProvider } from './smallImmutableSet.js';
 import { FastTokenizer, TextBufferTokenizer } from './tokenizer.js';
@@ -21,20 +21,20 @@ export class BracketPairsTree extends Disposable {
         this.denseKeyProvider = new DenseKeyProvider();
         this.brackets = new LanguageAgnosticBracketTokens(this.denseKeyProvider, this.getLanguageConfiguration);
         this.onDidChange = this.didChangeEmitter.event;
-        if (textModel.backgroundTokenizationState === 0 /* Uninitialized */) {
+        if (textModel.tokenization.backgroundTokenizationState === 0 /* BackgroundTokenizationState.Uninitialized */) {
             // There are no token information yet
             const brackets = this.brackets.getSingleLanguageBracketTokens(this.textModel.getLanguageId());
             const tokenizer = new FastTokenizer(this.textModel.getValue(), brackets);
             this.initialAstWithoutTokens = parseDocument(tokenizer, [], undefined, true);
             this.astWithTokens = this.initialAstWithoutTokens;
         }
-        else if (textModel.backgroundTokenizationState === 2 /* Completed */) {
+        else if (textModel.tokenization.backgroundTokenizationState === 2 /* BackgroundTokenizationState.Completed */) {
             // Skip the initial ast, as there is no flickering.
             // Directly create the tree with token information.
             this.initialAstWithoutTokens = undefined;
             this.astWithTokens = this.parseDocumentFromTextBuffer([], undefined, false);
         }
-        else if (textModel.backgroundTokenizationState === 1 /* InProgress */) {
+        else if (textModel.tokenization.backgroundTokenizationState === 1 /* BackgroundTokenizationState.InProgress */) {
             this.initialAstWithoutTokens = this.parseDocumentFromTextBuffer([], undefined, true);
             this.astWithTokens = this.initialAstWithoutTokens;
         }
@@ -44,7 +44,7 @@ export class BracketPairsTree extends Disposable {
     }
     //#region TextModel events
     handleDidChangeBackgroundTokenizationState() {
-        if (this.textModel.backgroundTokenizationState === 2 /* Completed */) {
+        if (this.textModel.tokenization.backgroundTokenizationState === 2 /* BackgroundTokenizationState.Completed */) {
             const wasUndefined = this.initialAstWithoutTokens === undefined;
             // Clear the initial tree as we can use the tree with token information now.
             this.initialAstWithoutTokens = undefined;
@@ -87,7 +87,7 @@ export class BracketPairsTree extends Disposable {
         const endOffset = toLength(range.endLineNumber - 1, range.endColumn - 1);
         const result = new Array();
         const node = this.initialAstWithoutTokens || this.astWithTokens;
-        collectBrackets(node, lengthZero, node.length, startOffset, endOffset, result);
+        collectBrackets(node, lengthZero, node.length, startOffset, endOffset, result, 0, new Map());
         return result;
     }
     getBracketPairsInRange(range, includeMinIndentation) {
@@ -96,57 +96,139 @@ export class BracketPairsTree extends Disposable {
         const endLength = positionToLength(range.getEndPosition());
         const node = this.initialAstWithoutTokens || this.astWithTokens;
         const context = new CollectBracketPairsContext(result, includeMinIndentation, this.textModel);
-        collectBracketPairs(node, lengthZero, node.length, startLength, endLength, context);
+        collectBracketPairs(node, lengthZero, node.length, startLength, endLength, context, 0, new Map());
         return result;
     }
+    getFirstBracketAfter(position) {
+        const node = this.initialAstWithoutTokens || this.astWithTokens;
+        return getFirstBracketAfter(node, lengthZero, node.length, positionToLength(position));
+    }
+    getFirstBracketBefore(position) {
+        const node = this.initialAstWithoutTokens || this.astWithTokens;
+        return getFirstBracketBefore(node, lengthZero, node.length, positionToLength(position));
+    }
 }
-function collectBrackets(node, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, result, level = 0) {
-    if (node.kind === 4 /* List */) {
+function getFirstBracketBefore(node, nodeOffsetStart, nodeOffsetEnd, position) {
+    if (node.kind === 4 /* AstNodeKind.List */ || node.kind === 2 /* AstNodeKind.Pair */) {
+        const lengths = [];
         for (const child of node.children) {
             nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
-            if (lengthLessThanEqual(nodeOffsetStart, endOffset) && lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
-                collectBrackets(child, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, result, level);
+            lengths.push({ nodeOffsetStart, nodeOffsetEnd });
+            nodeOffsetStart = nodeOffsetEnd;
+        }
+        for (let i = lengths.length - 1; i >= 0; i--) {
+            const { nodeOffsetStart, nodeOffsetEnd } = lengths[i];
+            if (lengthLessThan(nodeOffsetStart, position)) {
+                const result = getFirstBracketBefore(node.children[i], nodeOffsetStart, nodeOffsetEnd, position);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+    else if (node.kind === 3 /* AstNodeKind.UnexpectedClosingBracket */) {
+        return null;
+    }
+    else if (node.kind === 1 /* AstNodeKind.Bracket */) {
+        const range = lengthsToRange(nodeOffsetStart, nodeOffsetEnd);
+        return {
+            bracketInfo: node.bracketInfo,
+            range
+        };
+    }
+    return null;
+}
+function getFirstBracketAfter(node, nodeOffsetStart, nodeOffsetEnd, position) {
+    if (node.kind === 4 /* AstNodeKind.List */ || node.kind === 2 /* AstNodeKind.Pair */) {
+        for (const child of node.children) {
+            nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
+            if (lengthLessThan(position, nodeOffsetEnd)) {
+                const result = getFirstBracketAfter(child, nodeOffsetStart, nodeOffsetEnd, position);
+                if (result) {
+                    return result;
+                }
+            }
+            nodeOffsetStart = nodeOffsetEnd;
+        }
+        return null;
+    }
+    else if (node.kind === 3 /* AstNodeKind.UnexpectedClosingBracket */) {
+        return null;
+    }
+    else if (node.kind === 1 /* AstNodeKind.Bracket */) {
+        const range = lengthsToRange(nodeOffsetStart, nodeOffsetEnd);
+        return {
+            bracketInfo: node.bracketInfo,
+            range
+        };
+    }
+    return null;
+}
+function collectBrackets(node, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, result, level, levelPerBracketType) {
+    if (level > 200) {
+        return;
+    }
+    if (node.kind === 4 /* AstNodeKind.List */) {
+        for (const child of node.children) {
+            nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
+            if (lengthLessThanEqual(nodeOffsetStart, endOffset) &&
+                lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
+                collectBrackets(child, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, result, level, levelPerBracketType);
             }
             nodeOffsetStart = nodeOffsetEnd;
         }
     }
-    else if (node.kind === 2 /* Pair */) {
+    else if (node.kind === 2 /* AstNodeKind.Pair */) {
+        let levelPerBracket = 0;
+        if (levelPerBracketType) {
+            let existing = levelPerBracketType.get(node.openingBracket.text);
+            if (existing === undefined) {
+                existing = 0;
+            }
+            levelPerBracket = existing;
+            existing++;
+            levelPerBracketType.set(node.openingBracket.text, existing);
+        }
         // Don't use node.children here to improve performance
-        level++;
         {
             const child = node.openingBracket;
             nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
-            if (lengthLessThanEqual(nodeOffsetStart, endOffset) && lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
+            if (lengthLessThanEqual(nodeOffsetStart, endOffset) &&
+                lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
                 const range = lengthsToRange(nodeOffsetStart, nodeOffsetEnd);
-                result.push(new BracketInfo(range, level - 1, !node.closingBracket));
+                result.push(new BracketInfo(range, level, levelPerBracket, !node.closingBracket));
             }
             nodeOffsetStart = nodeOffsetEnd;
         }
         if (node.child) {
             const child = node.child;
             nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
-            if (lengthLessThanEqual(nodeOffsetStart, endOffset) && lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
-                collectBrackets(child, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, result, level);
+            if (lengthLessThanEqual(nodeOffsetStart, endOffset) &&
+                lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
+                collectBrackets(child, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, result, level + 1, levelPerBracketType);
             }
             nodeOffsetStart = nodeOffsetEnd;
         }
         if (node.closingBracket) {
             const child = node.closingBracket;
             nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
-            if (lengthLessThanEqual(nodeOffsetStart, endOffset) && lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
+            if (lengthLessThanEqual(nodeOffsetStart, endOffset) &&
+                lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
                 const range = lengthsToRange(nodeOffsetStart, nodeOffsetEnd);
-                result.push(new BracketInfo(range, level - 1, false));
+                result.push(new BracketInfo(range, level, levelPerBracket, false));
             }
             nodeOffsetStart = nodeOffsetEnd;
         }
+        levelPerBracketType === null || levelPerBracketType === void 0 ? void 0 : levelPerBracketType.set(node.openingBracket.text, levelPerBracket);
     }
-    else if (node.kind === 3 /* UnexpectedClosingBracket */) {
+    else if (node.kind === 3 /* AstNodeKind.UnexpectedClosingBracket */) {
         const range = lengthsToRange(nodeOffsetStart, nodeOffsetEnd);
-        result.push(new BracketInfo(range, level - 1, true));
+        result.push(new BracketInfo(range, level - 1, 0, true));
     }
-    else if (node.kind === 1 /* Bracket */) {
+    else if (node.kind === 1 /* AstNodeKind.Bracket */) {
         const range = lengthsToRange(nodeOffsetStart, nodeOffsetEnd);
-        result.push(new BracketInfo(range, level - 1, false));
+        result.push(new BracketInfo(range, level - 1, 0, false));
     }
 }
 class CollectBracketPairsContext {
@@ -156,25 +238,50 @@ class CollectBracketPairsContext {
         this.textModel = textModel;
     }
 }
-function collectBracketPairs(node, nodeOffset, nodeOffsetEnd, startOffset, endOffset, context, level = 0) {
+function collectBracketPairs(node, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, context, level, levelPerBracketType) {
     var _a;
-    if (node.kind === 2 /* Pair */) {
-        const openingBracketEnd = lengthAdd(nodeOffset, node.openingBracket.length);
+    if (level > 200) {
+        return;
+    }
+    if (node.kind === 2 /* AstNodeKind.Pair */) {
+        let levelPerBracket = 0;
+        if (levelPerBracketType) {
+            let existing = levelPerBracketType.get(node.openingBracket.text);
+            if (existing === undefined) {
+                existing = 0;
+            }
+            levelPerBracket = existing;
+            existing++;
+            levelPerBracketType.set(node.openingBracket.text, existing);
+        }
+        const openingBracketEnd = lengthAdd(nodeOffsetStart, node.openingBracket.length);
         let minIndentation = -1;
         if (context.includeMinIndentation) {
-            minIndentation = node.computeMinIndentation(nodeOffset, context.textModel);
+            minIndentation = node.computeMinIndentation(nodeOffsetStart, context.textModel);
         }
-        context.result.push(new BracketPairWithMinIndentationInfo(lengthsToRange(nodeOffset, nodeOffsetEnd), lengthsToRange(nodeOffset, openingBracketEnd), node.closingBracket
+        context.result.push(new BracketPairWithMinIndentationInfo(lengthsToRange(nodeOffsetStart, nodeOffsetEnd), lengthsToRange(nodeOffsetStart, openingBracketEnd), node.closingBracket
             ? lengthsToRange(lengthAdd(openingBracketEnd, ((_a = node.child) === null || _a === void 0 ? void 0 : _a.length) || lengthZero), nodeOffsetEnd)
-            : undefined, level, minIndentation));
-        level++;
+            : undefined, level, levelPerBracket, node, minIndentation));
+        nodeOffsetStart = openingBracketEnd;
+        if (node.child) {
+            const child = node.child;
+            nodeOffsetEnd = lengthAdd(nodeOffsetStart, child.length);
+            if (lengthLessThanEqual(nodeOffsetStart, endOffset) &&
+                lengthGreaterThanEqual(nodeOffsetEnd, startOffset)) {
+                collectBracketPairs(child, nodeOffsetStart, nodeOffsetEnd, startOffset, endOffset, context, level + 1, levelPerBracketType);
+            }
+        }
+        levelPerBracketType === null || levelPerBracketType === void 0 ? void 0 : levelPerBracketType.set(node.openingBracket.text, levelPerBracket);
     }
-    let curOffset = nodeOffset;
-    for (const child of node.children) {
-        const childOffset = curOffset;
-        curOffset = lengthAdd(curOffset, child.length);
-        if (lengthLessThanEqual(childOffset, endOffset) && lengthLessThanEqual(startOffset, curOffset)) {
-            collectBracketPairs(child, childOffset, curOffset, startOffset, endOffset, context, level);
+    else {
+        let curOffset = nodeOffsetStart;
+        for (const child of node.children) {
+            const childOffset = curOffset;
+            curOffset = lengthAdd(curOffset, child.length);
+            if (lengthLessThanEqual(childOffset, endOffset) &&
+                lengthLessThanEqual(startOffset, curOffset)) {
+                collectBracketPairs(child, childOffset, curOffset, startOffset, endOffset, context, level, levelPerBracketType);
+            }
         }
     }
 }

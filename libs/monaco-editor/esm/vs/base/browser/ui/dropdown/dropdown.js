@@ -27,8 +27,10 @@ export class BaseDropdown extends ActionRunner {
         }
         for (const event of [EventType.MOUSE_DOWN, GestureEventType.Tap]) {
             this._register(addDisposableListener(this._label, event, e => {
-                if (e instanceof MouseEvent && e.detail > 1) {
-                    return; // prevent multiple clicks to open multiple context menus (https://github.com/microsoft/vscode/issues/41363)
+                if (e instanceof MouseEvent && (e.detail > 1 || e.button !== 0)) {
+                    // prevent right click trigger to allow separate context menu (https://github.com/microsoft/vscode/issues/151064)
+                    // prevent multiple clicks to open multiple context menus (https://github.com/microsoft/vscode/issues/41363)
+                    return;
                 }
                 if (this.visible) {
                     this.hide();
@@ -40,7 +42,7 @@ export class BaseDropdown extends ActionRunner {
         }
         this._register(addDisposableListener(this._label, EventType.KEY_UP, e => {
             const event = new StandardKeyboardEvent(e);
-            if (event.equals(3 /* Enter */) || event.equals(10 /* Space */)) {
+            if (event.equals(3 /* KeyCode.Enter */) || event.equals(10 /* KeyCode.Space */)) {
                 EventHelper.stop(e, true); // https://github.com/microsoft/vscode/issues/57997
                 if (this.visible) {
                     this.hide();
@@ -125,7 +127,7 @@ export class DropdownMenu extends BaseDropdown {
             getMenuClassName: () => this.menuClassName,
             onHide: () => this.onHide(),
             actionRunner: this.menuOptions ? this.menuOptions.actionRunner : undefined,
-            anchorAlignment: this.menuOptions ? this.menuOptions.anchorAlignment : 0 /* LEFT */,
+            anchorAlignment: this.menuOptions ? this.menuOptions.anchorAlignment : 0 /* AnchorAlignment.LEFT */,
             domForShadowRoot: this.menuAsChild ? this.element : undefined
         });
     }

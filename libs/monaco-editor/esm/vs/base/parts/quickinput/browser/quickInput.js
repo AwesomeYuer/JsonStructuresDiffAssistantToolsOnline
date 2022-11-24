@@ -300,6 +300,7 @@ class QuickPick extends QuickInput {
         this._matchOnDescription = false;
         this._matchOnDetail = false;
         this._matchOnLabel = true;
+        this._matchOnLabelMode = 'fuzzy';
         this._sortByLabel = true;
         this._autoFocusOnList = true;
         this._keepScrollPosition = false;
@@ -414,6 +415,13 @@ class QuickPick extends QuickInput {
         this._matchOnLabel = matchOnLabel;
         this.update();
     }
+    get matchOnLabelMode() {
+        return this._matchOnLabelMode;
+    }
+    set matchOnLabelMode(matchOnLabelMode) {
+        this._matchOnLabelMode = matchOnLabelMode;
+        this.update();
+    }
     get sortByLabel() {
         return this._sortByLabel;
     }
@@ -525,14 +533,14 @@ class QuickPick extends QuickInput {
             }));
             this.visibleDisposables.add((this._hideInput ? this.ui.list : this.ui.inputBox).onKeyDown((event) => {
                 switch (event.keyCode) {
-                    case 18 /* DownArrow */:
+                    case 18 /* KeyCode.DownArrow */:
                         this.ui.list.focus(QuickInputListFocus.Next);
                         if (this.canSelectMany) {
                             this.ui.list.domFocus();
                         }
                         dom.EventHelper.stop(event, true);
                         break;
-                    case 16 /* UpArrow */:
+                    case 16 /* KeyCode.UpArrow */:
                         if (this.ui.list.getFocusedElements().length) {
                             this.ui.list.focus(QuickInputListFocus.Previous);
                         }
@@ -544,21 +552,21 @@ class QuickPick extends QuickInput {
                         }
                         dom.EventHelper.stop(event, true);
                         break;
-                    case 12 /* PageDown */:
+                    case 12 /* KeyCode.PageDown */:
                         this.ui.list.focus(QuickInputListFocus.NextPage);
                         if (this.canSelectMany) {
                             this.ui.list.domFocus();
                         }
                         dom.EventHelper.stop(event, true);
                         break;
-                    case 11 /* PageUp */:
+                    case 11 /* KeyCode.PageUp */:
                         this.ui.list.focus(QuickInputListFocus.PreviousPage);
                         if (this.canSelectMany) {
                             this.ui.list.domFocus();
                         }
                         dom.EventHelper.stop(event, true);
                         break;
-                    case 17 /* RightArrow */:
+                    case 17 /* KeyCode.RightArrow */:
                         if (!this._canAcceptInBackground) {
                             return; // needs to be enabled
                         }
@@ -571,13 +579,13 @@ class QuickPick extends QuickInput {
                             this.handleAccept(true);
                         }
                         break;
-                    case 14 /* Home */:
+                    case 14 /* KeyCode.Home */:
                         if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
                             this.ui.list.focus(QuickInputListFocus.First);
                             dom.EventHelper.stop(event, true);
                         }
                         break;
-                    case 13 /* End */:
+                    case 13 /* KeyCode.End */:
                         if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
                             this.ui.list.focus(QuickInputListFocus.Last);
                             dom.EventHelper.stop(event, true);
@@ -670,19 +678,19 @@ class QuickPick extends QuickInput {
                 if (chordPart) {
                     return false;
                 }
-                if (firstPart.shiftKey && keyCode === 4 /* Shift */) {
+                if (firstPart.shiftKey && keyCode === 4 /* KeyCode.Shift */) {
                     if (keyboardEvent.ctrlKey || keyboardEvent.altKey || keyboardEvent.metaKey) {
                         return false; // this is an optimistic check for the shift key being used to navigate back in quick input
                     }
                     return true;
                 }
-                if (firstPart.altKey && keyCode === 6 /* Alt */) {
+                if (firstPart.altKey && keyCode === 6 /* KeyCode.Alt */) {
                     return true;
                 }
-                if (firstPart.ctrlKey && keyCode === 5 /* Ctrl */) {
+                if (firstPart.ctrlKey && keyCode === 5 /* KeyCode.Ctrl */) {
                     return true;
                 }
-                if (firstPart.metaKey && keyCode === 57 /* Meta */) {
+                if (firstPart.metaKey && keyCode === 57 /* KeyCode.Meta */) {
                     return true;
                 }
                 return false;
@@ -734,13 +742,21 @@ class QuickPick extends QuickInput {
         if (this.ui.inputBox.placeholder !== (this.placeholder || '')) {
             this.ui.inputBox.placeholder = (this.placeholder || '');
         }
-        const ariaLabel = this.ariaLabel || this.placeholder || QuickPick.DEFAULT_ARIA_LABEL;
+        let ariaLabel = this.ariaLabel;
+        if (!ariaLabel) {
+            ariaLabel = this.placeholder || QuickPick.DEFAULT_ARIA_LABEL;
+            // If we have a title, include it in the aria label.
+            if (this.title) {
+                ariaLabel += ` - ${this.title}`;
+            }
+        }
         if (this.ui.inputBox.ariaLabel !== ariaLabel) {
             this.ui.inputBox.ariaLabel = ariaLabel;
         }
         this.ui.list.matchOnDescription = this.matchOnDescription;
         this.ui.list.matchOnDetail = this.matchOnDetail;
         this.ui.list.matchOnLabel = this.matchOnLabel;
+        this.ui.list.matchOnLabelMode = this.matchOnLabelMode;
         this.ui.list.sortByLabel = this.sortByLabel;
         if (this.itemsUpdated) {
             this.itemsUpdated = false;
@@ -861,6 +877,7 @@ export class QuickInputController extends Disposable {
         const headerContainer = dom.append(container, $('.quick-input-header'));
         const checkAll = dom.append(headerContainer, $('input.quick-input-check-all'));
         checkAll.type = 'checkbox';
+        checkAll.setAttribute('aria-label', localize('quickInput.checkAll', "Toggle all checkboxes"));
         this._register(dom.addStandardDisposableListener(checkAll, dom.EventType.CHANGE, e => {
             const checked = checkAll.checked;
             list.setAllVisibleChecked(checked);
@@ -938,15 +955,15 @@ export class QuickInputController extends Disposable {
         this._register(dom.addDisposableListener(container, dom.EventType.KEY_DOWN, (e) => {
             const event = new StandardKeyboardEvent(e);
             switch (event.keyCode) {
-                case 3 /* Enter */:
+                case 3 /* KeyCode.Enter */:
                     dom.EventHelper.stop(e, true);
                     this.onDidAcceptEmitter.fire();
                     break;
-                case 9 /* Escape */:
+                case 9 /* KeyCode.Escape */:
                     dom.EventHelper.stop(e, true);
                     this.hide(QuickInputHideReason.Gesture);
                     break;
-                case 2 /* Tab */:
+                case 2 /* KeyCode.Tab */:
                     if (!event.altKey && !event.ctrlKey && !event.metaKey) {
                         const selectors = ['.action-label.codicon'];
                         if (container.classList.contains('show-checkboxes')) {
@@ -1013,10 +1030,9 @@ export class QuickInputController extends Disposable {
     pick(picks, options = {}, token = CancellationToken.None) {
         return new Promise((doResolve, reject) => {
             let resolve = (result) => {
+                var _a;
                 resolve = doResolve;
-                if (options.onKeyMods) {
-                    options.onKeyMods(input.keyMods);
-                }
+                (_a = options.onKeyMods) === null || _a === void 0 ? void 0 : _a.call(options, input.keyMods);
                 doResolve(result);
             };
             if (token.isCancellationRequested) {
@@ -1092,6 +1108,7 @@ export class QuickInputController extends Disposable {
             input.matchOnLabel = (options.matchOnLabel === undefined) || options.matchOnLabel; // default to true
             input.autoFocusOnList = (options.autoFocusOnList === undefined) || options.autoFocusOnList; // default to true
             input.quickNavigate = options.quickNavigate;
+            input.hideInput = !!options.hideInput;
             input.contextKey = options.contextKey;
             input.busy = true;
             Promise.all([picks, options.activeItem])

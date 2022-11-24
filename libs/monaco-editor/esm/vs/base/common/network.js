@@ -36,7 +36,7 @@ export var Schemas;
     Schemas.command = 'command';
     Schemas.vscodeRemote = 'vscode-remote';
     Schemas.vscodeRemoteResource = 'vscode-remote-resource';
-    Schemas.userData = 'vscode-userdata';
+    Schemas.vscodeUserData = 'vscode-userdata';
     Schemas.vscodeCustomEditor = 'vscode-custom-editor';
     Schemas.vscodeNotebook = 'vscode-notebook';
     Schemas.vscodeNotebookCell = 'vscode-notebook-cell';
@@ -72,6 +72,10 @@ export var Schemas;
      * Scheme used vs live share
      */
     Schemas.vsls = 'vsls';
+    /**
+     * Scheme used for the Source Control commit input's text document
+     */
+    Schemas.vscodeSourceControl = 'vscode-scm';
 })(Schemas || (Schemas = {}));
 export const connectionTokenQueryName = 'tkn';
 class RemoteAuthoritiesImpl {
@@ -81,6 +85,7 @@ class RemoteAuthoritiesImpl {
         this._connectionTokens = Object.create(null);
         this._preferredWebSchema = 'http';
         this._delegate = null;
+        this._remoteResourcesPath = `/${Schemas.vscodeRemoteResource}`;
     }
     setPreferredWebSchema(schema) {
         this._preferredWebSchema = schema;
@@ -103,7 +108,7 @@ class RemoteAuthoritiesImpl {
         return URI.from({
             scheme: platform.isWeb ? this._preferredWebSchema : Schemas.vscodeRemoteResource,
             authority: `${host}:${port}`,
-            path: `/vscode-remote-resource`,
+            path: this._remoteResourcesPath,
             query
         });
     }

@@ -35,7 +35,7 @@ export class Workspace {
         this._transient = _transient;
         this._configuration = _configuration;
         this._ignorePathCasing = _ignorePathCasing;
-        this._foldersMap = TernarySearchTree.forUris(this._ignorePathCasing);
+        this._foldersMap = TernarySearchTree.forUris(this._ignorePathCasing, () => true);
         this.folders = folders;
     }
     get folders() {
@@ -61,14 +61,10 @@ export class Workspace {
         if (!resource) {
             return null;
         }
-        return this._foldersMap.findSubstr(resource.with({
-            scheme: resource.scheme,
-            authority: resource.authority,
-            path: resource.path
-        })) || null;
+        return this._foldersMap.findSubstr(resource) || null;
     }
     updateFoldersMap() {
-        this._foldersMap = TernarySearchTree.forUris(this._ignorePathCasing);
+        this._foldersMap = TernarySearchTree.forUris(this._ignorePathCasing, () => true);
         for (const folder of this.folders) {
             this._foldersMap.set(folder.uri, folder);
         }

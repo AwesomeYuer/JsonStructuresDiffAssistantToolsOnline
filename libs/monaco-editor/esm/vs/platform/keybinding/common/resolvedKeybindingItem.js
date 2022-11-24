@@ -11,7 +11,7 @@ export class ResolvedKeybindingItem {
             // handle possible single modifier chord keybindings
             this.keypressParts = removeElementsAfterNulls(resolvedKeybinding.getSingleModifierDispatchParts());
         }
-        this.bubble = (command ? command.charCodeAt(0) === 94 /* Caret */ : false);
+        this.bubble = (command ? command.charCodeAt(0) === 94 /* CharCode.Caret */ : false);
         this.command = this.bubble ? command.substr(1) : command;
         this.commandArgs = commandArgs;
         this.when = when;
@@ -21,7 +21,7 @@ export class ResolvedKeybindingItem {
     }
 }
 export function removeElementsAfterNulls(arr) {
-    let result = [];
+    const result = [];
     for (let i = 0, len = arr.length; i < len; i++) {
         const element = arr[i];
         if (!element) {

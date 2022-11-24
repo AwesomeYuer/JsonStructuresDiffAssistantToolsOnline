@@ -16,8 +16,8 @@ export class Rulers extends ViewPart {
         this.domNode.setClassName('view-rulers');
         this._renderedRulers = [];
         const options = this._context.configuration.options;
-        this._rulers = options.get(91 /* rulers */);
-        this._typicalHalfwidthCharacterWidth = options.get(44 /* fontInfo */).typicalHalfwidthCharacterWidth;
+        this._rulers = options.get(93 /* EditorOption.rulers */);
+        this._typicalHalfwidthCharacterWidth = options.get(46 /* EditorOption.fontInfo */).typicalHalfwidthCharacterWidth;
     }
     dispose() {
         super.dispose();
@@ -25,8 +25,8 @@ export class Rulers extends ViewPart {
     // --- begin event handlers
     onConfigurationChanged(e) {
         const options = this._context.configuration.options;
-        this._rulers = options.get(91 /* rulers */);
-        this._typicalHalfwidthCharacterWidth = options.get(44 /* fontInfo */).typicalHalfwidthCharacterWidth;
+        this._rulers = options.get(93 /* EditorOption.rulers */);
+        this._typicalHalfwidthCharacterWidth = options.get(46 /* EditorOption.fontInfo */).typicalHalfwidthCharacterWidth;
         return true;
     }
     onScrollChanged(e) {

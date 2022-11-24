@@ -42,6 +42,7 @@ class ViewItem {
         return typeof this._cachedVisibleSize === 'undefined';
     }
     setVisible(visible, size) {
+        var _a, _b;
         if (visible === this.visible) {
             return;
         }
@@ -54,9 +55,7 @@ class ViewItem {
             this.size = 0;
         }
         this.container.classList.toggle('visible', visible);
-        if (this.view.setVisible) {
-            this.view.setVisible(visible);
-        }
+        (_b = (_a = this.view).setVisible) === null || _b === void 0 ? void 0 : _b.call(_a, visible);
     }
     get minimumSize() { return this.visible ? this.view.minimumSize : 0; }
     get viewMinimumSize() { return this.view.minimumSize; }
@@ -165,13 +164,13 @@ export class SplitView extends Disposable {
          * Fires whenever the user double clicks a {@link Sash sash}.
          */
         this.onDidSashReset = this._onDidSashReset.event;
-        this.orientation = (_a = options.orientation) !== null && _a !== void 0 ? _a : 0 /* VERTICAL */;
+        this.orientation = (_a = options.orientation) !== null && _a !== void 0 ? _a : 0 /* Orientation.VERTICAL */;
         this.inverseAltBehavior = (_b = options.inverseAltBehavior) !== null && _b !== void 0 ? _b : false;
         this.proportionalLayout = (_c = options.proportionalLayout) !== null && _c !== void 0 ? _c : true;
         this.getSashOrthogonalSize = options.getSashOrthogonalSize;
         this.el = document.createElement('div');
         this.el.classList.add('monaco-split-view2');
-        this.el.classList.add(this.orientation === 0 /* VERTICAL */ ? 'vertical' : 'horizontal');
+        this.el.classList.add(this.orientation === 0 /* Orientation.VERTICAL */ ? 'vertical' : 'horizontal');
         container.appendChild(this.el);
         this.sashContainer = append(this.el, $('.sash-container'));
         this.viewContainer = $('.split-view-container');
@@ -181,8 +180,8 @@ export class SplitView extends Disposable {
             scheduleAtNextAnimationFrame
         });
         this.scrollableElement = this._register(new SmoothScrollableElement(this.viewContainer, {
-            vertical: this.orientation === 0 /* VERTICAL */ ? ((_d = options.scrollbarVisibility) !== null && _d !== void 0 ? _d : 1 /* Auto */) : 2 /* Hidden */,
-            horizontal: this.orientation === 1 /* HORIZONTAL */ ? ((_e = options.scrollbarVisibility) !== null && _e !== void 0 ? _e : 1 /* Auto */) : 2 /* Hidden */
+            vertical: this.orientation === 0 /* Orientation.VERTICAL */ ? ((_d = options.scrollbarVisibility) !== null && _d !== void 0 ? _d : 1 /* ScrollbarVisibility.Auto */) : 2 /* ScrollbarVisibility.Hidden */,
+            horizontal: this.orientation === 1 /* Orientation.HORIZONTAL */ ? ((_e = options.scrollbarVisibility) !== null && _e !== void 0 ? _e : 1 /* ScrollbarVisibility.Auto */) : 2 /* ScrollbarVisibility.Hidden */
         }, this.scrollable));
         this.onDidScroll = this.scrollableElement.onScroll;
         this._register(this.onDidScroll(e => {
@@ -283,8 +282,8 @@ export class SplitView extends Disposable {
         this.layoutContext = layoutContext;
         if (!this.proportions) {
             const indexes = range(this.viewItems.length);
-            const lowPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 1 /* Low */);
-            const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* High */);
+            const lowPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 1 /* LayoutPriority.Low */);
+            const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* LayoutPriority.High */);
             this.resize(this.viewItems.length - 1, size - previousSize, undefined, lowPriorityIndexes, highPriorityIndexes);
         }
         else {
@@ -427,8 +426,8 @@ export class SplitView extends Disposable {
             return;
         }
         const indexes = range(this.viewItems.length).filter(i => i !== index);
-        const lowPriorityIndexes = [...indexes.filter(i => this.viewItems[i].priority === 1 /* Low */), index];
-        const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* High */);
+        const lowPriorityIndexes = [...indexes.filter(i => this.viewItems[i].priority === 1 /* LayoutPriority.Low */), index];
+        const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* LayoutPriority.High */);
         const item = this.viewItems[index];
         size = Math.round(size);
         size = clamp(size, item.minimumSize, Math.min(item.maximumSize, this.size));
@@ -453,8 +452,8 @@ export class SplitView extends Disposable {
             item.size = clamp(size, item.minimumSize, item.maximumSize);
         }
         const indexes = range(this.viewItems.length);
-        const lowPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 1 /* Low */);
-        const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* High */);
+        const lowPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 1 /* LayoutPriority.Low */);
+        const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* LayoutPriority.High */);
         this.relayout(lowPriorityIndexes, highPriorityIndexes);
     }
     /**
@@ -495,17 +494,17 @@ export class SplitView extends Disposable {
         else {
             viewSize = view.minimumSize;
         }
-        const item = this.orientation === 0 /* VERTICAL */
+        const item = this.orientation === 0 /* Orientation.VERTICAL */
             ? new VerticalViewItem(container, view, viewSize, disposable)
             : new HorizontalViewItem(container, view, viewSize, disposable);
         this.viewItems.splice(index, 0, item);
         // Add sash
         if (this.viewItems.length > 1) {
-            let opts = { orthogonalStartSash: this.orthogonalStartSash, orthogonalEndSash: this.orthogonalEndSash };
-            const sash = this.orientation === 0 /* VERTICAL */
-                ? new Sash(this.sashContainer, { getHorizontalSashTop: s => this.getSashPosition(s), getHorizontalSashWidth: this.getSashOrthogonalSize }, Object.assign(Object.assign({}, opts), { orientation: 1 /* HORIZONTAL */ }))
-                : new Sash(this.sashContainer, { getVerticalSashLeft: s => this.getSashPosition(s), getVerticalSashHeight: this.getSashOrthogonalSize }, Object.assign(Object.assign({}, opts), { orientation: 0 /* VERTICAL */ }));
-            const sashEventMapper = this.orientation === 0 /* VERTICAL */
+            const opts = { orthogonalStartSash: this.orthogonalStartSash, orthogonalEndSash: this.orthogonalEndSash };
+            const sash = this.orientation === 0 /* Orientation.VERTICAL */
+                ? new Sash(this.sashContainer, { getHorizontalSashTop: s => this.getSashPosition(s), getHorizontalSashWidth: this.getSashOrthogonalSize }, Object.assign(Object.assign({}, opts), { orientation: 1 /* Orientation.HORIZONTAL */ }))
+                : new Sash(this.sashContainer, { getVerticalSashLeft: s => this.getSashPosition(s), getVerticalSashHeight: this.getSashOrthogonalSize }, Object.assign(Object.assign({}, opts), { orientation: 0 /* Orientation.VERTICAL */ }));
+            const sashEventMapper = this.orientation === 0 /* Orientation.VERTICAL */
                 ? (e) => ({ sash, start: e.startY, current: e.currentY, alt: e.altKey })
                 : (e) => ({ sash, start: e.startX, current: e.currentX, alt: e.altKey });
             const onStart = Event.map(sash.onDidStart, sashEventMapper);
@@ -617,8 +616,8 @@ export class SplitView extends Disposable {
         const contentSize = this.viewItems.reduce((r, i) => r + i.size, 0);
         let emptyDelta = this.size - contentSize;
         const indexes = range(this.viewItems.length - 1, -1);
-        const lowPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 1 /* Low */);
-        const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* High */);
+        const lowPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 1 /* LayoutPriority.Low */);
+        const highPriorityIndexes = indexes.filter(i => this.viewItems[i].priority === 2 /* LayoutPriority.High */);
         for (const index of highPriorityIndexes) {
             pushToStart(indexes, index);
         }
@@ -651,7 +650,7 @@ export class SplitView extends Disposable {
         this.updateScrollableElement();
     }
     updateScrollableElement() {
-        if (this.orientation === 0 /* VERTICAL */) {
+        if (this.orientation === 0 /* Orientation.VERTICAL */) {
             this.scrollableElement.setScrollDimensions({
                 height: this.size,
                 scrollHeight: this.contentSize
@@ -689,23 +688,23 @@ export class SplitView extends Disposable {
                 const snappedBefore = typeof snapBeforeIndex === 'number' && !this.viewItems[snapBeforeIndex].visible;
                 const snappedAfter = typeof snapAfterIndex === 'number' && !this.viewItems[snapAfterIndex].visible;
                 if (snappedBefore && collapsesUp[index] && (position > 0 || this.startSnappingEnabled)) {
-                    sash.state = 1 /* AtMinimum */;
+                    sash.state = 1 /* SashState.AtMinimum */;
                 }
                 else if (snappedAfter && collapsesDown[index] && (position < this.contentSize || this.endSnappingEnabled)) {
-                    sash.state = 2 /* AtMaximum */;
+                    sash.state = 2 /* SashState.AtMaximum */;
                 }
                 else {
-                    sash.state = 0 /* Disabled */;
+                    sash.state = 0 /* SashState.Disabled */;
                 }
             }
             else if (min && !max) {
-                sash.state = 1 /* AtMinimum */;
+                sash.state = 1 /* SashState.AtMinimum */;
             }
             else if (!min && max) {
-                sash.state = 2 /* AtMaximum */;
+                sash.state = 2 /* SashState.AtMaximum */;
             }
             else {
-                sash.state = 3 /* Enabled */;
+                sash.state = 3 /* SashState.Enabled */;
             }
         }
     }

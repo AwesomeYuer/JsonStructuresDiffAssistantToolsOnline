@@ -11,16 +11,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { ArrayQueue } from '../../../base/common/arrays.js';
+import { ArrayQueue, pushMany } from '../../../base/common/arrays.js';
 import { Color } from '../../../base/common/color.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import { Emitter } from '../../../base/common/event.js';
 import { combinedDisposable, Disposable } from '../../../base/common/lifecycle.js';
 import * as strings from '../../../base/common/strings.js';
 import { URI } from '../../../base/common/uri.js';
+import { countEOL } from '../core/eolCounter.js';
+import { normalizeIndentation } from '../core/indentation.js';
 import { Position } from '../core/position.js';
 import { Range } from '../core/range.js';
 import { Selection } from '../core/selection.js';
+import { EDITOR_MODEL_DEFAULTS } from '../core/textModelDefaults.js';
+import { ILanguageService } from '../languages/language.js';
+import { ILanguageConfigurationService } from '../languages/languageConfigurationRegistry.js';
 import * as model from '../model.js';
 import { BracketPairsTextModelPart } from './bracketPairsTextModelPart/bracketPairsImpl.js';
 import { ColorizedBracketPairsDecorationProvider } from './bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.js';
@@ -30,28 +35,34 @@ import { guessIndentation } from './indentationGuesser.js';
 import { IntervalNode, IntervalTree, recomputeMaxEnd } from './intervalTree.js';
 import { PieceTreeTextBuffer } from './pieceTreeTextBuffer/pieceTreeTextBuffer.js';
 import { PieceTreeTextBufferBuilder } from './pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js';
-import { InternalModelContentChangeEvent, LineInjectedText, ModelInjectedTextChangedEvent, ModelRawContentChangedEvent, ModelRawEOLChanged, ModelRawFlush, ModelRawLineChanged, ModelRawLinesDeleted, ModelRawLinesInserted } from '../textModelEvents.js';
 import { SearchParams, TextModelSearch } from './textModelSearch.js';
-import { TextModelTokenization } from './textModelTokens.js';
-import { countEOL } from '../core/eolCounter.js';
-import { ContiguousTokensStore } from '../tokens/contiguousTokensStore.js';
-import { SparseTokensStore } from '../tokens/sparseTokensStore.js';
-import { getWordAtText } from '../core/wordHelper.js';
-import { ILanguageConfigurationService } from '../languages/languageConfigurationRegistry.js';
-import { ILanguageService } from '../languages/language.js';
+import { TokenizationTextModelPart } from './tokenizationTextModelPart.js';
+import { InternalModelContentChangeEvent, LineInjectedText, ModelInjectedTextChangedEvent, ModelRawContentChangedEvent, ModelRawEOLChanged, ModelRawFlush, ModelRawLineChanged, ModelRawLinesDeleted, ModelRawLinesInserted } from '../textModelEvents.js';
 import { IUndoRedoService } from '../../../platform/undoRedo/common/undoRedo.js';
-import { EDITOR_MODEL_DEFAULTS } from '../core/textModelDefaults.js';
-import { normalizeIndentation } from '../core/indentation.js';
-function createTextBufferBuilder() {
-    return new PieceTreeTextBufferBuilder();
-}
 export function createTextBufferFactory(text) {
-    const builder = createTextBufferBuilder();
+    const builder = new PieceTreeTextBufferBuilder();
     builder.acceptChunk(text);
     return builder.finish();
 }
+export function createTextBufferFactoryFromSnapshot(snapshot) {
+    const builder = new PieceTreeTextBufferBuilder();
+    let chunk;
+    while (typeof (chunk = snapshot.read()) === 'string') {
+        builder.acceptChunk(chunk);
+    }
+    return builder.finish();
+}
 export function createTextBuffer(value, defaultEOL) {
-    const factory = (typeof value === 'string' ? createTextBufferFactory(value) : value);
+    let factory;
+    if (typeof value === 'string') {
+        factory = createTextBufferFactory(value);
+    }
+    else if (model.isITextSnapshot(value)) {
+        factory = createTextBufferFactoryFromSnapshot(value);
+    }
+    else {
+        factory = value;
+    }
     return factory.create(defaultEOL);
 }
 let MODEL_ID = 0;
@@ -103,20 +114,13 @@ let TextModel = class TextModel extends Disposable {
         this.onWillDispose = this._onWillDispose.event;
         this._onDidChangeDecorations = this._register(new DidChangeDecorationsEmitter(affectedInjectedTextLines => this.handleBeforeFireDecorationsChangedEvent(affectedInjectedTextLines)));
         this.onDidChangeDecorations = this._onDidChangeDecorations.event;
-        this._onDidChangeLanguage = this._register(new Emitter());
-        this.onDidChangeLanguage = this._onDidChangeLanguage.event;
-        this._onDidChangeLanguageConfiguration = this._register(new Emitter());
-        this.onDidChangeLanguageConfiguration = this._onDidChangeLanguageConfiguration.event;
-        this._onDidChangeTokens = this._register(new Emitter());
-        this.onDidChangeTokens = this._onDidChangeTokens.event;
         this._onDidChangeOptions = this._register(new Emitter());
         this.onDidChangeOptions = this._onDidChangeOptions.event;
         this._onDidChangeAttached = this._register(new Emitter());
         this.onDidChangeAttached = this._onDidChangeAttached.event;
         this._onDidChangeInjectedText = this._register(new Emitter());
         this._eventEmitter = this._register(new DidChangeContentEmitter());
-        this._backgroundTokenizationState = 0 /* Uninitialized */;
-        this._onBackgroundTokenizationStateChanged = this._register(new Emitter());
+        this._deltaDecorationCallCnt = 0;
         // Generate a new unique model id
         MODEL_ID++;
         this.id = '$model' + MODEL_ID;
@@ -132,8 +136,12 @@ let TextModel = class TextModel extends Disposable {
         this._buffer = textBuffer;
         this._bufferDisposable = disposable;
         this._options = TextModel.resolveOptions(this._buffer, creationOptions);
+        this._bracketPairs = this._register(new BracketPairsTextModelPart(this, this._languageConfigurationService));
+        this._guidesTextModelPart = this._register(new GuidesTextModelPart(this, this._languageConfigurationService));
+        this._decorationProvider = this._register(new ColorizedBracketPairsDecorationProvider(this));
+        this._tokenizationTextModelPart = new TokenizationTextModelPart(this._languageService, this._languageConfigurationService, this, this._bracketPairs, languageId);
         const bufferLineCount = this._buffer.getLineCount();
-        const bufferTextLength = this._buffer.getValueLengthInRange(new Range(1, 1, bufferLineCount, this._buffer.getLineLength(bufferLineCount) + 1), 0 /* TextDefined */);
+        const bufferTextLength = this._buffer.getValueLengthInRange(new Range(1, 1, bufferLineCount, this._buffer.getLineLength(bufferLineCount) + 1), 0 /* model.EndOfLinePreference.TextDefined */);
         // !!! Make a decision in the ctor and permanently respect this decision !!!
         // If a model is too large at construction time, it will never get tokenized,
         // under no circumstances.
@@ -149,13 +157,7 @@ let TextModel = class TextModel extends Disposable {
         this._alternativeVersionId = 1;
         this._initialUndoRedoSnapshot = null;
         this._isDisposed = false;
-        this._isDisposing = false;
-        this._languageId = languageId;
-        this._languageRegistryListener = this._languageConfigurationService.onDidChange(e => {
-            if (e.affects(this._languageId)) {
-                this._onDidChangeLanguageConfiguration.fire({});
-            }
-        });
+        this.__isDisposing = false;
         this._instanceId = strings.singleLetterHash(MODEL_ID);
         this._lastDecorationId = 0;
         this._decorations = Object.create(null);
@@ -164,12 +166,6 @@ let TextModel = class TextModel extends Disposable {
         this._isUndoing = false;
         this._isRedoing = false;
         this._trimAutoWhitespaceLines = null;
-        this._tokens = new ContiguousTokensStore(this._languageService.languageIdCodec);
-        this._semanticTokens = new SparseTokensStore(this._languageService.languageIdCodec);
-        this._tokenization = new TextModelTokenization(this, this._languageService.languageIdCodec);
-        this._bracketPairColorizer = this._register(new BracketPairsTextModelPart(this, this._languageConfigurationService));
-        this._guidesTextModelPart = this._register(new GuidesTextModelPart(this, this._languageConfigurationService));
-        this._decorationProvider = this._register(new ColorizedBracketPairsDecorationProvider(this));
         this._register(this._decorationProvider.onDidChange(() => {
             this._onDidChangeDecorations.beginDeferredEmit();
             this._onDidChangeDecorations.fire();
@@ -197,38 +193,27 @@ let TextModel = class TextModel extends Disposable {
             bracketPairColorizationOptions: options.bracketPairColorizationOptions,
         });
     }
+    get onDidChangeLanguage() { return this._tokenizationTextModelPart.onDidChangeLanguage; }
+    get onDidChangeLanguageConfiguration() { return this._tokenizationTextModelPart.onDidChangeLanguageConfiguration; }
+    get onDidChangeTokens() { return this._tokenizationTextModelPart.onDidChangeTokens; }
     onDidChangeContent(listener) {
         return this._eventEmitter.slowEvent((e) => listener(e.contentChangedEvent));
     }
     onDidChangeContentOrInjectedText(listener) {
-        return combinedDisposable(this._eventEmitter.fastEvent(e => listener(e.rawContentChangedEvent)), this._onDidChangeInjectedText.event(e => listener(e)));
+        return combinedDisposable(this._eventEmitter.fastEvent(e => listener(e)), this._onDidChangeInjectedText.event(e => listener(e)));
     }
-    get bracketPairs() { return this._bracketPairColorizer; }
+    _isDisposing() { return this.__isDisposing; }
+    get tokenization() { return this._tokenizationTextModelPart; }
+    get bracketPairs() { return this._bracketPairs; }
     get guides() { return this._guidesTextModelPart; }
-    get backgroundTokenizationState() {
-        return this._backgroundTokenizationState;
-    }
-    handleTokenizationProgress(completed) {
-        if (this._backgroundTokenizationState === 2 /* Completed */) {
-            // We already did a full tokenization and don't go back to progressing.
-            return;
-        }
-        const newState = completed ? 2 /* Completed */ : 1 /* InProgress */;
-        if (this._backgroundTokenizationState !== newState) {
-            this._backgroundTokenizationState = newState;
-            this._bracketPairColorizer.handleDidChangeBackgroundTokenizationState();
-            this._onBackgroundTokenizationStateChanged.fire();
-        }
-    }
     dispose() {
-        this._isDisposing = true;
+        this.__isDisposing = true;
         this._onWillDispose.fire();
-        this._languageRegistryListener.dispose();
-        this._tokenization.dispose();
+        this._tokenizationTextModelPart.dispose();
         this._isDisposed = true;
         super.dispose();
         this._bufferDisposable.dispose();
-        this._isDisposing = false;
+        this.__isDisposing = false;
         // Manually release reference to previous text buffer to avoid large leaks
         // in case someone leaks a TextModel reference
         const emptyDisposedTextBuffer = new PieceTreeTextBuffer([], '', '\n', false, false, true, true);
@@ -242,12 +227,12 @@ let TextModel = class TextModel extends Disposable {
         }
     }
     _emitContentChangedEvent(rawChange, change) {
-        if (this._isDisposing) {
+        if (this.__isDisposing) {
             // Do not confuse listeners by emitting any event after disposing
             return;
         }
-        this._bracketPairColorizer.handleDidChangeContent(change);
-        this._tokenization.handleDidChangeContent(change);
+        this._tokenizationTextModelPart.handleDidChangeContent(change);
+        this._bracketPairs.handleDidChangeContent(change);
         this._eventEmitter.fire(new InternalModelContentChangeEvent(rawChange, change));
     }
     setValue(value) {
@@ -285,8 +270,7 @@ let TextModel = class TextModel extends Disposable {
         this._bufferDisposable = textBufferDisposable;
         this._increaseVersionId();
         // Flush all tokens
-        this._tokens.flush();
-        this._semanticTokens.flush();
+        this._tokenizationTextModelPart.flush();
         // Destroy all my decorations
         this._decorations = Object.create(null);
         this._decorationsTree = new DecorationsTrees();
@@ -299,7 +283,7 @@ let TextModel = class TextModel extends Disposable {
     }
     setEOL(eol) {
         this._assertNotDisposed();
-        const newEOL = (eol === 1 /* CRLF */ ? '\r\n' : '\n');
+        const newEOL = (eol === 1 /* model.EndOfLineSequence.CRLF */ ? '\r\n' : '\n');
         if (this._buffer.getEOL() === newEOL) {
             // Nothing to do
             return;
@@ -341,14 +325,14 @@ let TextModel = class TextModel extends Disposable {
     onBeforeAttached() {
         this._attachedEditorCount++;
         if (this._attachedEditorCount === 1) {
-            this._tokenization.handleDidChangeAttached();
+            this._tokenizationTextModelPart.handleDidChangeAttached();
             this._onDidChangeAttached.fire(undefined);
         }
     }
     onBeforeDetached() {
         this._attachedEditorCount--;
         if (this._attachedEditorCount === 0) {
-            this._tokenization.handleDidChangeAttached();
+            this._tokenizationTextModelPart.handleDidChangeAttached();
             this._onDidChangeAttached.fire(undefined);
         }
     }
@@ -421,7 +405,7 @@ let TextModel = class TextModel extends Disposable {
         }
         const e = this._options.createChangeEvent(newOpts);
         this._options = newOpts;
-        this._bracketPairColorizer.handleDidChangeOptions(e);
+        this._bracketPairs.handleDidChangeOptions(e);
         this._decorationProvider.handleDidChangeOptions(e);
         this._onDidChangeOptions.fire(e);
     }
@@ -451,7 +435,7 @@ let TextModel = class TextModel extends Disposable {
         return this._buffer.mightContainUnusualLineTerminators();
     }
     removeUnusualLineTerminators(selections = null) {
-        const matches = this.findMatches(strings.UNUSUAL_LINE_TERMINATORS.source, false, true, false, null, false, 1073741824 /* MAX_SAFE_SMALL_INTEGER */);
+        const matches = this.findMatches(strings.UNUSUAL_LINE_TERMINATORS.source, false, true, false, null, false, 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */);
         this._buffer.resetMightContainUnusualLineTerminators();
         this.pushEditOperations(selections, matches.map(m => ({ range: m.range, text: null })), () => null);
     }
@@ -468,7 +452,7 @@ let TextModel = class TextModel extends Disposable {
     }
     getOffsetAt(rawPosition) {
         this._assertNotDisposed();
-        const position = this._validatePosition(rawPosition.lineNumber, rawPosition.column, 0 /* Relaxed */);
+        const position = this._validatePosition(rawPosition.lineNumber, rawPosition.column, 0 /* StringOffsetValidationType.Relaxed */);
         return this._buffer.getOffsetAt(position.lineNumber, position.column);
     }
     getPositionAt(rawOffset) {
@@ -510,15 +494,15 @@ let TextModel = class TextModel extends Disposable {
         }
         return fullModelValue;
     }
-    getValueInRange(rawRange, eol = 0 /* TextDefined */) {
+    getValueInRange(rawRange, eol = 0 /* model.EndOfLinePreference.TextDefined */) {
         this._assertNotDisposed();
         return this._buffer.getValueInRange(this.validateRange(rawRange), eol);
     }
-    getValueLengthInRange(rawRange, eol = 0 /* TextDefined */) {
+    getValueLengthInRange(rawRange, eol = 0 /* model.EndOfLinePreference.TextDefined */) {
         this._assertNotDisposed();
         return this._buffer.getValueLengthInRange(this.validateRange(rawRange), eol);
     }
-    getCharacterCountInRange(rawRange, eol = 0 /* TextDefined */) {
+    getCharacterCountInRange(rawRange, eol = 0 /* model.EndOfLinePreference.TextDefined */) {
         this._assertNotDisposed();
         return this._buffer.getCharacterCountInRange(this.validateRange(rawRange), eol);
     }
@@ -551,8 +535,8 @@ let TextModel = class TextModel extends Disposable {
     getEndOfLineSequence() {
         this._assertNotDisposed();
         return (this._buffer.getEOL() === '\n'
-            ? 0 /* LF */
-            : 1 /* CRLF */);
+            ? 0 /* model.EndOfLineSequence.LF */
+            : 1 /* model.EndOfLineSequence.CRLF */);
     }
     getLineMinColumn(lineNumber) {
         this._assertNotDisposed();
@@ -665,7 +649,7 @@ let TextModel = class TextModel extends Disposable {
         if (column > maxColumn) {
             return false;
         }
-        if (validationType === 1 /* SurrogatePairs */) {
+        if (validationType === 1 /* StringOffsetValidationType.SurrogatePairs */) {
             // !!At this point, column > 1
             const charCodeBefore = this._buffer.getLineCharCode(lineNumber, column - 2);
             if (strings.isHighSurrogate(charCodeBefore)) {
@@ -691,7 +675,7 @@ let TextModel = class TextModel extends Disposable {
         if (column >= maxColumn) {
             return new Position(lineNumber, maxColumn);
         }
-        if (validationType === 1 /* SurrogatePairs */) {
+        if (validationType === 1 /* StringOffsetValidationType.SurrogatePairs */) {
             // If the position would end up in the middle of a high-low surrogate pair,
             // we move it to before the pair
             // !!At this point, column > 1
@@ -703,7 +687,7 @@ let TextModel = class TextModel extends Disposable {
         return new Position(lineNumber, column);
     }
     validatePosition(position) {
-        const validationType = 1 /* SurrogatePairs */;
+        const validationType = 1 /* StringOffsetValidationType.SurrogatePairs */;
         this._assertNotDisposed();
         // Avoid object allocation and cover most likely case
         if (position instanceof Position) {
@@ -718,13 +702,13 @@ let TextModel = class TextModel extends Disposable {
         const startColumn = range.startColumn;
         const endLineNumber = range.endLineNumber;
         const endColumn = range.endColumn;
-        if (!this._isValidPosition(startLineNumber, startColumn, 0 /* Relaxed */)) {
+        if (!this._isValidPosition(startLineNumber, startColumn, 0 /* StringOffsetValidationType.Relaxed */)) {
             return false;
         }
-        if (!this._isValidPosition(endLineNumber, endColumn, 0 /* Relaxed */)) {
+        if (!this._isValidPosition(endLineNumber, endColumn, 0 /* StringOffsetValidationType.Relaxed */)) {
             return false;
         }
-        if (validationType === 1 /* SurrogatePairs */) {
+        if (validationType === 1 /* StringOffsetValidationType.SurrogatePairs */) {
             const charCodeBeforeStart = (startColumn > 1 ? this._buffer.getLineCharCode(startLineNumber, startColumn - 2) : 0);
             const charCodeBeforeEnd = (endColumn > 1 && endColumn <= this._buffer.getLineLength(endLineNumber) ? this._buffer.getLineCharCode(endLineNumber, endColumn - 2) : 0);
             const startInsideSurrogatePair = strings.isHighSurrogate(charCodeBeforeStart);
@@ -737,7 +721,7 @@ let TextModel = class TextModel extends Disposable {
         return true;
     }
     validateRange(_range) {
-        const validationType = 1 /* SurrogatePairs */;
+        const validationType = 1 /* StringOffsetValidationType.SurrogatePairs */;
         this._assertNotDisposed();
         // Avoid object allocation and cover most likely case
         if ((_range instanceof Range) && !(_range instanceof Selection)) {
@@ -745,13 +729,13 @@ let TextModel = class TextModel extends Disposable {
                 return _range;
             }
         }
-        const start = this._validatePosition(_range.startLineNumber, _range.startColumn, 0 /* Relaxed */);
-        const end = this._validatePosition(_range.endLineNumber, _range.endColumn, 0 /* Relaxed */);
+        const start = this._validatePosition(_range.startLineNumber, _range.startColumn, 0 /* StringOffsetValidationType.Relaxed */);
+        const end = this._validatePosition(_range.endLineNumber, _range.endColumn, 0 /* StringOffsetValidationType.Relaxed */);
         const startLineNumber = start.lineNumber;
         const startColumn = start.column;
         const endLineNumber = end.lineNumber;
         const endColumn = end.column;
-        if (validationType === 1 /* SurrogatePairs */) {
+        if (validationType === 1 /* StringOffsetValidationType.SurrogatePairs */) {
             const charCodeBeforeStart = (startColumn > 1 ? this._buffer.getLineCharCode(startLineNumber, startColumn - 2) : 0);
             const charCodeBeforeEnd = (endColumn > 1 && endColumn <= this._buffer.getLineLength(endLineNumber) ? this._buffer.getLineCharCode(endLineNumber, endColumn - 2) : 0);
             const startInsideSurrogatePair = strings.isHighSurrogate(charCodeBeforeStart);
@@ -866,7 +850,7 @@ let TextModel = class TextModel extends Disposable {
         this._commandManager.popStackElement();
     }
     pushEOL(eol) {
-        const currentEOL = (this.getEOL() === '\n' ? 0 /* LF */ : 1 /* CRLF */);
+        const currentEOL = (this.getEOL() === '\n' ? 0 /* model.EndOfLineSequence.LF */ : 1 /* model.EndOfLineSequence.CRLF */);
         if (currentEOL === eol) {
             return;
         }
@@ -1045,8 +1029,7 @@ let TextModel = class TextModel extends Disposable {
             for (let i = 0, len = contentChanges.length; i < len; i++) {
                 const change = contentChanges[i];
                 const [eolCount, firstLineLength, lastLineLength] = countEOL(change.text);
-                this._tokens.acceptEdit(change.range, eolCount, firstLineLength);
-                this._semanticTokens.acceptEdit(change.range, eolCount, firstLineLength, lastLineLength, change.text.length > 0 ? change.text.charCodeAt(0) : 0 /* Null */);
+                this._tokenizationTextModelPart.acceptEdit(change.range, change.text, eolCount, firstLineLength, lastLineLength);
                 this._decorationsTree.acceptReplace(change.rangeOffset, change.rangeLength, change.text.length, change.forceMoveMarkers);
             }
             const rawContentChanges = [];
@@ -1128,7 +1111,7 @@ let TextModel = class TextModel extends Disposable {
         if (affectedInjectedTextLines === null || affectedInjectedTextLines.size === 0) {
             return;
         }
-        const affectedLines = [...affectedInjectedTextLines];
+        const affectedLines = Array.from(affectedInjectedTextLines);
         const lineChangeEvents = affectedLines.map(lineNumber => new ModelRawLineChanged(lineNumber, this.getLineContent(lineNumber), this._getInjectedTextInLine(lineNumber)));
         this._onDidChangeInjectedText.fire(new ModelInjectedTextChangedEvent(lineChangeEvents));
     }
@@ -1189,11 +1172,17 @@ let TextModel = class TextModel extends Disposable {
             return [];
         }
         try {
+            this._deltaDecorationCallCnt++;
+            if (this._deltaDecorationCallCnt > 1) {
+                console.warn(`Invoking deltaDecorations recursively could lead to leaking decorations.`);
+                onUnexpectedError(new Error(`Invoking deltaDecorations recursively could lead to leaking decorations.`));
+            }
             this._onDidChangeDecorations.beginDeferredEmit();
             return this._deltaDecorationsImpl(ownerId, oldDecorations, newDecorations);
         }
         finally {
             this._onDidChangeDecorations.endDeferredEmit();
+            this._deltaDecorationCallCnt--;
         }
     }
     _getTrackedRange(id) {
@@ -1263,13 +1252,13 @@ let TextModel = class TextModel extends Disposable {
         const endColumn = this.getLineMaxColumn(endLineNumber);
         const range = new Range(startLineNumber, 1, endLineNumber, endColumn);
         const decorations = this._getDecorationsInRange(range, ownerId, filterOutValidation);
-        decorations.push(...this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation));
+        pushMany(decorations, this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation));
         return decorations;
     }
     getDecorationsInRange(range, ownerId = 0, filterOutValidation = false) {
         const validatedRange = this.validateRange(range);
         const decorations = this._getDecorationsInRange(validatedRange, ownerId, filterOutValidation);
-        decorations.push(...this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation));
+        pushMany(decorations, this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation));
         return decorations;
     }
     getOverviewRulerDecorations(ownerId = 0, filterOutValidation = false) {
@@ -1415,205 +1404,23 @@ let TextModel = class TextModel extends Disposable {
         }
         return result;
     }
-    setTokens(tokens, backgroundTokenizationCompleted = false) {
-        if (tokens.length !== 0) {
-            const ranges = [];
-            for (let i = 0, len = tokens.length; i < len; i++) {
-                const element = tokens[i];
-                let minChangedLineNumber = 0;
-                let maxChangedLineNumber = 0;
-                let hasChange = false;
-                for (let lineNumber = element.startLineNumber; lineNumber <= element.endLineNumber; lineNumber++) {
-                    if (hasChange) {
-                        this._tokens.setTokens(this._languageId, lineNumber - 1, this._buffer.getLineLength(lineNumber), element.getLineTokens(lineNumber), false);
-                        maxChangedLineNumber = lineNumber;
-                    }
-                    else {
-                        const lineHasChange = this._tokens.setTokens(this._languageId, lineNumber - 1, this._buffer.getLineLength(lineNumber), element.getLineTokens(lineNumber), true);
-                        if (lineHasChange) {
-                            hasChange = true;
-                            minChangedLineNumber = lineNumber;
-                            maxChangedLineNumber = lineNumber;
-                        }
-                    }
-                }
-                if (hasChange) {
-                    ranges.push({ fromLineNumber: minChangedLineNumber, toLineNumber: maxChangedLineNumber });
-                }
-            }
-            if (ranges.length > 0) {
-                this._emitModelTokensChangedEvent({
-                    tokenizationSupportChanged: false,
-                    semanticTokensApplied: false,
-                    ranges: ranges
-                });
-            }
-        }
-        this.handleTokenizationProgress(backgroundTokenizationCompleted);
-    }
-    setSemanticTokens(tokens, isComplete) {
-        this._semanticTokens.set(tokens, isComplete);
-        this._emitModelTokensChangedEvent({
-            tokenizationSupportChanged: false,
-            semanticTokensApplied: tokens !== null,
-            ranges: [{ fromLineNumber: 1, toLineNumber: this.getLineCount() }]
-        });
-    }
-    hasCompleteSemanticTokens() {
-        return this._semanticTokens.isComplete();
-    }
-    hasSomeSemanticTokens() {
-        return !this._semanticTokens.isEmpty();
-    }
-    setPartialSemanticTokens(range, tokens) {
-        if (this.hasCompleteSemanticTokens()) {
-            return;
-        }
-        const changedRange = this.validateRange(this._semanticTokens.setPartial(range, tokens));
-        this._emitModelTokensChangedEvent({
-            tokenizationSupportChanged: false,
-            semanticTokensApplied: true,
-            ranges: [{ fromLineNumber: changedRange.startLineNumber, toLineNumber: changedRange.endLineNumber }]
-        });
-    }
-    tokenizeViewport(startLineNumber, endLineNumber) {
-        startLineNumber = Math.max(1, startLineNumber);
-        endLineNumber = Math.min(this._buffer.getLineCount(), endLineNumber);
-        this._tokenization.tokenizeViewport(startLineNumber, endLineNumber);
-    }
-    clearTokens() {
-        this._tokens.flush();
-        this._emitModelTokensChangedEvent({
-            tokenizationSupportChanged: true,
-            semanticTokensApplied: false,
-            ranges: [{
-                    fromLineNumber: 1,
-                    toLineNumber: this._buffer.getLineCount()
-                }]
-        });
-    }
-    _emitModelTokensChangedEvent(e) {
-        if (!this._isDisposing) {
-            this._bracketPairColorizer.handleDidChangeTokens(e);
-            this._onDidChangeTokens.fire(e);
-        }
-    }
-    resetTokenization() {
-        this._tokenization.reset();
-    }
-    forceTokenization(lineNumber) {
-        if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-            throw new Error('Illegal value for lineNumber');
-        }
-        this._tokenization.forceTokenization(lineNumber);
-    }
-    isCheapToTokenize(lineNumber) {
-        return this._tokenization.isCheapToTokenize(lineNumber);
-    }
-    tokenizeIfCheap(lineNumber) {
-        if (this.isCheapToTokenize(lineNumber)) {
-            this.forceTokenization(lineNumber);
-        }
-    }
-    getLineTokens(lineNumber) {
-        if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-            throw new Error('Illegal value for lineNumber');
-        }
-        return this._getLineTokens(lineNumber);
-    }
-    _getLineTokens(lineNumber) {
-        const lineText = this.getLineContent(lineNumber);
-        const syntacticTokens = this._tokens.getTokens(this._languageId, lineNumber - 1, lineText);
-        return this._semanticTokens.addSparseTokens(lineNumber, syntacticTokens);
-    }
+    //#endregion
+    //#region Tokenization
+    // TODO move them to the tokenization part.
     getLanguageId() {
-        return this._languageId;
+        return this.tokenization.getLanguageId();
     }
     setMode(languageId) {
-        if (this._languageId === languageId) {
-            // There's nothing to do
-            return;
-        }
-        const e = {
-            oldLanguage: this._languageId,
-            newLanguage: languageId
-        };
-        this._languageId = languageId;
-        this._bracketPairColorizer.handleDidChangeLanguage(e);
-        this._tokenization.handleDidChangeLanguage(e);
-        this._onDidChangeLanguage.fire(e);
-        this._onDidChangeLanguageConfiguration.fire({});
+        this.tokenization.setLanguageId(languageId);
     }
     getLanguageIdAtPosition(lineNumber, column) {
-        const position = this.validatePosition(new Position(lineNumber, column));
-        const lineTokens = this.getLineTokens(position.lineNumber);
-        return lineTokens.getLanguageId(lineTokens.findTokenIndexAtOffset(position.column - 1));
+        return this.tokenization.getLanguageIdAtPosition(lineNumber, column);
     }
-    getTokenTypeIfInsertingCharacter(lineNumber, column, character) {
-        const position = this.validatePosition(new Position(lineNumber, column));
-        return this._tokenization.getTokenTypeIfInsertingCharacter(position, character);
-    }
-    tokenizeLineWithEdit(position, length, newText) {
-        const validatedPosition = this.validatePosition(position);
-        return this._tokenization.tokenizeLineWithEdit(validatedPosition, length, newText);
-    }
-    getLanguageConfiguration(languageId) {
-        return this._languageConfigurationService.getLanguageConfiguration(languageId);
-    }
-    // Having tokens allows implementing additional helper methods
-    getWordAtPosition(_position) {
-        this._assertNotDisposed();
-        const position = this.validatePosition(_position);
-        const lineContent = this.getLineContent(position.lineNumber);
-        const lineTokens = this._getLineTokens(position.lineNumber);
-        const tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
-        // (1). First try checking right biased word
-        const [rbStartOffset, rbEndOffset] = TextModel._findLanguageBoundaries(lineTokens, tokenIndex);
-        const rightBiasedWord = getWordAtText(position.column, this.getLanguageConfiguration(lineTokens.getLanguageId(tokenIndex)).getWordDefinition(), lineContent.substring(rbStartOffset, rbEndOffset), rbStartOffset);
-        // Make sure the result touches the original passed in position
-        if (rightBiasedWord && rightBiasedWord.startColumn <= _position.column && _position.column <= rightBiasedWord.endColumn) {
-            return rightBiasedWord;
-        }
-        // (2). Else, if we were at a language boundary, check the left biased word
-        if (tokenIndex > 0 && rbStartOffset === position.column - 1) {
-            // edge case, where `position` sits between two tokens belonging to two different languages
-            const [lbStartOffset, lbEndOffset] = TextModel._findLanguageBoundaries(lineTokens, tokenIndex - 1);
-            const leftBiasedWord = getWordAtText(position.column, this.getLanguageConfiguration(lineTokens.getLanguageId(tokenIndex - 1)).getWordDefinition(), lineContent.substring(lbStartOffset, lbEndOffset), lbStartOffset);
-            // Make sure the result touches the original passed in position
-            if (leftBiasedWord && leftBiasedWord.startColumn <= _position.column && _position.column <= leftBiasedWord.endColumn) {
-                return leftBiasedWord;
-            }
-        }
-        return null;
-    }
-    static _findLanguageBoundaries(lineTokens, tokenIndex) {
-        const languageId = lineTokens.getLanguageId(tokenIndex);
-        // go left until a different language is hit
-        let startOffset = 0;
-        for (let i = tokenIndex; i >= 0 && lineTokens.getLanguageId(i) === languageId; i--) {
-            startOffset = lineTokens.getStartOffset(i);
-        }
-        // go right until a different language is hit
-        let endOffset = lineTokens.getLineContent().length;
-        for (let i = tokenIndex, tokenCount = lineTokens.getCount(); i < tokenCount && lineTokens.getLanguageId(i) === languageId; i++) {
-            endOffset = lineTokens.getEndOffset(i);
-        }
-        return [startOffset, endOffset];
+    getWordAtPosition(position) {
+        return this._tokenizationTextModelPart.getWordAtPosition(position);
     }
     getWordUntilPosition(position) {
-        const wordAtPosition = this.getWordAtPosition(position);
-        if (!wordAtPosition) {
-            return {
-                word: '',
-                startColumn: position.column,
-                endColumn: position.column
-            };
-        }
-        return {
-            word: wordAtPosition.word.substr(0, position.column - wordAtPosition.startColumn),
-            startColumn: wordAtPosition.startColumn,
-            endColumn: position.column
-        };
+        return this._tokenizationTextModelPart.getWordUntilPosition(position);
     }
     //#endregion
     normalizePosition(position, affinity) {
@@ -1637,7 +1444,7 @@ TextModel.DEFAULT_CREATION_OPTIONS = {
     indentSize: EDITOR_MODEL_DEFAULTS.indentSize,
     insertSpaces: EDITOR_MODEL_DEFAULTS.insertSpaces,
     detectIndentation: false,
-    defaultEOL: 1 /* LF */,
+    defaultEOL: 1 /* model.DefaultEndOfLine.LF */,
     trimAutoWhitespace: EDITOR_MODEL_DEFAULTS.trimAutoWhitespace,
     largeFileOptimizations: EDITOR_MODEL_DEFAULTS.largeFileOptimizations,
     bracketPairColorizationOptions: EDITOR_MODEL_DEFAULTS.bracketPairColorizationOptions,
@@ -1867,7 +1674,8 @@ export class ModelDecorationOptions {
     constructor(options) {
         var _a, _b;
         this.description = options.description;
-        this.stickiness = options.stickiness || 0 /* AlwaysGrowsWhenTypingAtEdges */;
+        this.blockClassName = options.blockClassName ? cleanClassName(options.blockClassName) : null;
+        this.stickiness = options.stickiness || 0 /* model.TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges */;
         this.zIndex = options.zIndex || 0;
         this.className = options.className ? cleanClassName(options.className) : null;
         this.hoverMessage = options.hoverMessage || null;
@@ -1902,10 +1710,10 @@ ModelDecorationOptions.EMPTY = ModelDecorationOptions.register({ description: 'e
  * The order carefully matches the values of the enum.
  */
 const TRACKED_RANGE_OPTIONS = [
-    ModelDecorationOptions.register({ description: 'tracked-range-always-grows-when-typing-at-edges', stickiness: 0 /* AlwaysGrowsWhenTypingAtEdges */ }),
-    ModelDecorationOptions.register({ description: 'tracked-range-never-grows-when-typing-at-edges', stickiness: 1 /* NeverGrowsWhenTypingAtEdges */ }),
-    ModelDecorationOptions.register({ description: 'tracked-range-grows-only-when-typing-before', stickiness: 2 /* GrowsOnlyWhenTypingBefore */ }),
-    ModelDecorationOptions.register({ description: 'tracked-range-grows-only-when-typing-after', stickiness: 3 /* GrowsOnlyWhenTypingAfter */ }),
+    ModelDecorationOptions.register({ description: 'tracked-range-always-grows-when-typing-at-edges', stickiness: 0 /* model.TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges */ }),
+    ModelDecorationOptions.register({ description: 'tracked-range-never-grows-when-typing-at-edges', stickiness: 1 /* model.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */ }),
+    ModelDecorationOptions.register({ description: 'tracked-range-grows-only-when-typing-before', stickiness: 2 /* model.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore */ }),
+    ModelDecorationOptions.register({ description: 'tracked-range-grows-only-when-typing-after', stickiness: 3 /* model.TrackedRangeStickiness.GrowsOnlyWhenTypingAfter */ }),
 ];
 function _normalizeOptions(options) {
     if (options instanceof ModelDecorationOptions) {

@@ -8,7 +8,6 @@ import { Menu } from '../../../base/browser/ui/menu/menu.js';
 import { ActionRunner } from '../../../base/common/actions.js';
 import { isCancellationError } from '../../../base/common/errors.js';
 import { combinedDisposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import './contextMenuHandler.css';
 import { attachMenuStyler } from '../../theme/common/styler.js';
 export class ContextMenuHandler {
     constructor(contextViewService, telemetryService, notificationService, keybindingService, themeService) {
@@ -31,14 +30,14 @@ export class ContextMenuHandler {
         }
         this.focusToReturn = document.activeElement;
         let menu;
-        let shadowRootElement = isHTMLElement(delegate.domForShadowRoot) ? delegate.domForShadowRoot : undefined;
+        const shadowRootElement = isHTMLElement(delegate.domForShadowRoot) ? delegate.domForShadowRoot : undefined;
         this.contextViewService.showContextView({
             getAnchor: () => delegate.getAnchor(),
             canRelayout: false,
             anchorAlignment: delegate.anchorAlignment,
             anchorAxisAlignment: delegate.anchorAxisAlignment,
             render: (container) => {
-                let className = delegate.getMenuClassName ? delegate.getMenuClassName() : '';
+                const className = delegate.getMenuClassName ? delegate.getMenuClassName() : '';
                 if (className) {
                     container.className += ' ' + className;
                 }
@@ -73,7 +72,7 @@ export class ContextMenuHandler {
                     if (e.defaultPrevented) {
                         return;
                     }
-                    let event = new StandardMouseEvent(e);
+                    const event = new StandardMouseEvent(e);
                     let element = event.target;
                     // Don't do anything as we are likely creating a context menu
                     if (event.rightButton) {
@@ -90,14 +89,11 @@ export class ContextMenuHandler {
                 return combinedDisposable(menuDisposables, menu);
             },
             focus: () => {
-                if (menu) {
-                    menu.focus(!!delegate.autoSelectFirstItem);
-                }
+                menu === null || menu === void 0 ? void 0 : menu.focus(!!delegate.autoSelectFirstItem);
             },
             onHide: (didCancel) => {
-                if (delegate.onHide) {
-                    delegate.onHide(!!didCancel);
-                }
+                var _a;
+                (_a = delegate.onHide) === null || _a === void 0 ? void 0 : _a.call(delegate, !!didCancel);
                 if (this.block) {
                     this.block.remove();
                     this.block = null;

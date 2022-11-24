@@ -25,7 +25,7 @@ export class SyntaxRangeProvider {
     compute(cancellationToken, notifyTooManyRegions) {
         return collectSyntaxRanges(this.providers, this.editorModel, cancellationToken).then(ranges => {
             if (ranges) {
-                let res = sanitizeRanges(ranges, this.limit, notifyTooManyRegions);
+                const res = sanitizeRanges(ranges, this.limit, notifyTooManyRegions);
                 return res;
             }
             return null;
@@ -38,7 +38,7 @@ export class SyntaxRangeProvider {
 }
 function collectSyntaxRanges(providers, model, cancellationToken) {
     let rangeData = null;
-    let promises = providers.map((provider, i) => {
+    const promises = providers.map((provider, i) => {
         return Promise.resolve(provider.provideFoldingRanges(model, foldingContext, cancellationToken)).then(ranges => {
             if (cancellationToken.isCancellationRequested) {
                 return;
@@ -47,8 +47,8 @@ function collectSyntaxRanges(providers, model, cancellationToken) {
                 if (!Array.isArray(rangeData)) {
                     rangeData = [];
                 }
-                let nLines = model.getLineCount();
-                for (let r of ranges) {
+                const nLines = model.getLineCount();
+                for (const r of ranges) {
                     if (r.start > 0 && r.end > r.start && r.end <= nLines) {
                         rangeData.push({ start: r.start, end: r.end, rank: i, kind: r.kind });
                     }
@@ -75,7 +75,7 @@ export class RangesCollector {
         if (startLineNumber > MAX_LINE_NUMBER || endLineNumber > MAX_LINE_NUMBER) {
             return;
         }
-        let index = this._length;
+        const index = this._length;
         this._startIndexes[index] = startLineNumber;
         this._endIndexes[index] = endLineNumber;
         this._nestingLevels[index] = nestingLevel;
@@ -86,9 +86,10 @@ export class RangesCollector {
         }
     }
     toIndentRanges() {
+        var _a;
         if (this._length <= this._foldingRangesLimit) {
-            let startIndexes = new Uint32Array(this._length);
-            let endIndexes = new Uint32Array(this._length);
+            const startIndexes = new Uint32Array(this._length);
+            const endIndexes = new Uint32Array(this._length);
             for (let i = 0; i < this._length; i++) {
                 startIndexes[i] = this._startIndexes[i];
                 endIndexes[i] = this._endIndexes[i];
@@ -96,13 +97,11 @@ export class RangesCollector {
             return new FoldingRegions(startIndexes, endIndexes, this._types);
         }
         else {
-            if (this._notifyTooManyRegions) {
-                this._notifyTooManyRegions(this._foldingRangesLimit);
-            }
+            (_a = this._notifyTooManyRegions) === null || _a === void 0 ? void 0 : _a.call(this, this._foldingRangesLimit);
             let entries = 0;
             let maxLevel = this._nestingLevelCounts.length;
             for (let i = 0; i < this._nestingLevelCounts.length; i++) {
-                let n = this._nestingLevelCounts[i];
+                const n = this._nestingLevelCounts[i];
                 if (n) {
                     if (n + entries > this._foldingRangesLimit) {
                         maxLevel = i;
@@ -111,11 +110,11 @@ export class RangesCollector {
                     entries += n;
                 }
             }
-            let startIndexes = new Uint32Array(this._foldingRangesLimit);
-            let endIndexes = new Uint32Array(this._foldingRangesLimit);
-            let types = [];
+            const startIndexes = new Uint32Array(this._foldingRangesLimit);
+            const endIndexes = new Uint32Array(this._foldingRangesLimit);
+            const types = [];
             for (let i = 0, k = 0; i < this._length; i++) {
-                let level = this._nestingLevels[i];
+                const level = this._nestingLevels[i];
                 if (level < maxLevel || (level === maxLevel && entries++ < this._foldingRangesLimit)) {
                     startIndexes[k] = this._startIndexes[i];
                     endIndexes[k] = this._endIndexes[i];
@@ -128,17 +127,17 @@ export class RangesCollector {
     }
 }
 export function sanitizeRanges(rangeData, limit, notifyTooManyRegions) {
-    let sorted = rangeData.sort((d1, d2) => {
+    const sorted = rangeData.sort((d1, d2) => {
         let diff = d1.start - d2.start;
         if (diff === 0) {
             diff = d1.rank - d2.rank;
         }
         return diff;
     });
-    let collector = new RangesCollector(limit, notifyTooManyRegions);
+    const collector = new RangesCollector(limit, notifyTooManyRegions);
     let top = undefined;
-    let previous = [];
-    for (let entry of sorted) {
+    const previous = [];
+    for (const entry of sorted) {
         if (!top) {
             top = entry;
             collector.add(entry.start, entry.end, entry.kind && entry.kind.value, previous.length);

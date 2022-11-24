@@ -2,13 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+import './iconlabel.css';
 import * as dom from '../../dom.js';
 import { HighlightedLabel } from '../highlightedlabel/highlightedLabel.js';
 import { setupCustomHover, setupNativeHover } from './iconLabelHover.js';
 import { Disposable } from '../../../common/lifecycle.js';
 import { equals } from '../../../common/objects.js';
 import { Range } from '../../../common/range.js';
-import './iconlabel.css';
 class FastLabelNode {
     constructor(_element) {
         this._element = _element;

@@ -36,7 +36,7 @@ export class KeybindingLabel {
     render() {
         this.clear();
         if (this.keybinding) {
-            let [firstPart, chordPart] = this.keybinding.getParts();
+            const [firstPart, chordPart] = this.keybinding.getParts();
             if (firstPart) {
                 this.renderPart(this.domNode, firstPart, this.matches ? this.matches.firstPart : null);
             }

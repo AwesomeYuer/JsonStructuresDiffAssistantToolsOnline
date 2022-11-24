@@ -36,7 +36,8 @@ let EditorScopedQuickInputService = class EditorScopedQuickInputService extends 
                 get container() { return widget.getDomNode(); },
                 get dimension() { return editor.getLayoutInfo(); },
                 get onDidLayout() { return editor.onDidLayoutChange; },
-                focus: () => editor.focus()
+                focus: () => editor.focus(),
+                offset: { top: 0, quickPickTop: 0 }
             };
         }
         else {
@@ -118,7 +119,7 @@ export class QuickInputEditorWidget {
         return this.domNode;
     }
     getPosition() {
-        return { preference: 2 /* TOP_CENTER */ };
+        return { preference: 2 /* OverlayWidgetPositionPreference.TOP_CENTER */ };
     }
     dispose() {
         this.codeEditor.removeOverlayWidget(this);

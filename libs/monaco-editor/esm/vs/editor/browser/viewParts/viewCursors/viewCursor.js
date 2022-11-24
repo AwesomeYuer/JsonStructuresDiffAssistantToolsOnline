@@ -24,11 +24,11 @@ export class ViewCursor {
     constructor(context) {
         this._context = context;
         const options = this._context.configuration.options;
-        const fontInfo = options.get(44 /* fontInfo */);
-        this._cursorStyle = options.get(24 /* cursorStyle */);
-        this._lineHeight = options.get(59 /* lineHeight */);
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        this._cursorStyle = options.get(24 /* EditorOption.cursorStyle */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
         this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
-        this._lineCursorWidth = Math.min(options.get(27 /* cursorWidth */), this._typicalHalfwidthCharacterWidth);
+        this._lineCursorWidth = Math.min(options.get(27 /* EditorOption.cursorWidth */), this._typicalHalfwidthCharacterWidth);
         this._isVisible = true;
         // Create the dom node
         this._domNode = createFastDomNode(document.createElement('div'));
@@ -62,11 +62,11 @@ export class ViewCursor {
     }
     onConfigurationChanged(e) {
         const options = this._context.configuration.options;
-        const fontInfo = options.get(44 /* fontInfo */);
-        this._cursorStyle = options.get(24 /* cursorStyle */);
-        this._lineHeight = options.get(59 /* lineHeight */);
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        this._cursorStyle = options.get(24 /* EditorOption.cursorStyle */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
         this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
-        this._lineCursorWidth = Math.min(options.get(27 /* cursorWidth */), this._typicalHalfwidthCharacterWidth);
+        this._lineCursorWidth = Math.min(options.get(27 /* EditorOption.cursorWidth */), this._typicalHalfwidthCharacterWidth);
         applyFontInfo(this._domNode, fontInfo);
         return true;
     }
@@ -122,7 +122,11 @@ export class ViewCursor {
             return null;
         }
         const range = firstVisibleRangeForCharacter.ranges[0];
-        const width = range.width < 1 ? this._typicalHalfwidthCharacterWidth : range.width;
+        const width = (nextGrapheme === '\t'
+            ? this._typicalHalfwidthCharacterWidth
+            : (range.width < 1
+                ? this._typicalHalfwidthCharacterWidth
+                : range.width));
         let textContentClassName = '';
         if (this._cursorStyle === TextEditorCursorStyle.Block) {
             const lineData = this._context.viewModel.getViewLineData(position.lineNumber);

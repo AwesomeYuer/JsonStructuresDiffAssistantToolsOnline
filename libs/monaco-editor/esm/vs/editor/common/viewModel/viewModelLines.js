@@ -265,7 +265,7 @@ export class ViewModelLinesFromProjectedModel {
             changeTo = changeFrom + newOutputLineCount - 1;
         }
         this.projectedModelLineLineCounts.setValue(lineIndex, newOutputLineCount);
-        const viewLinesChangedEvent = (changeFrom <= changeTo ? new viewEvents.ViewLinesChangedEvent(changeFrom, changeTo) : null);
+        const viewLinesChangedEvent = (changeFrom <= changeTo ? new viewEvents.ViewLinesChangedEvent(changeFrom, changeTo - changeFrom + 1) : null);
         const viewLinesInsertedEvent = (insertFrom <= insertTo ? new viewEvents.ViewLinesInsertedEvent(insertFrom, insertTo) : null);
         const viewLinesDeletedEvent = (deleteFrom <= deleteTo ? new viewEvents.ViewLinesDeletedEvent(deleteFrom, deleteTo) : null);
         return [lineMappingChanged, viewLinesChangedEvent, viewLinesInsertedEvent, viewLinesDeletedEvent];
@@ -316,6 +316,9 @@ export class ViewModelLinesFromProjectedModel {
     }
     getMinColumnOfViewLine(viewLineInfo) {
         return this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewLineMinColumn(this.model, viewLineInfo.modelLineNumber, viewLineInfo.modelLineWrappedLineIdx);
+    }
+    getMaxColumnOfViewLine(viewLineInfo) {
+        return this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewLineMaxColumn(this.model, viewLineInfo.modelLineNumber, viewLineInfo.modelLineWrappedLineIdx);
     }
     getModelStartPositionOfViewLine(viewLineInfo) {
         const line = this.modelLineProjections[viewLineInfo.modelLineNumber - 1];
@@ -373,18 +376,55 @@ export class ViewModelLinesFromProjectedModel {
             const modelRangeStartLineNumber = group.modelRange.startLineNumber;
             const bracketGuidesPerModelLine = this.model.guides.getLinesBracketGuides(modelRangeStartLineNumber, group.modelRange.endLineNumber, modelActivePosition, options);
             for (const viewLineInfo of group.viewLines) {
-                if (viewLineInfo.isWrappedLineContinuation && this.getMinColumnOfViewLine(viewLineInfo) === 1) {
-                    // Don't add indent guides when the wrapped line continuation has no wrapping-indentation.
-                    resultPerViewLine.push([]);
-                }
-                else {
-                    let bracketGuides = bracketGuidesPerModelLine[viewLineInfo.modelLineNumber - modelRangeStartLineNumber];
-                    // visibleColumns stay as they are (this is a bug and needs to be fixed, but it is not a regression)
-                    // model-columns must be converted to view-model columns.
-                    bracketGuides = bracketGuides.map(g => g.horizontalLine ?
-                        new IndentGuide(g.visibleColumn, g.className, new IndentGuideHorizontalLine(g.horizontalLine.top, this.convertModelPositionToViewPosition(viewLineInfo.modelLineNumber, g.horizontalLine.endColumn).column)) : g);
-                    resultPerViewLine.push(bracketGuides);
-                }
+                const bracketGuides = bracketGuidesPerModelLine[viewLineInfo.modelLineNumber - modelRangeStartLineNumber];
+                // visibleColumns stay as they are (this is a bug and needs to be fixed, but it is not a regression)
+                // model-columns must be converted to view-model columns.
+                const result = bracketGuides.map(g => {
+                    if (g.forWrappedLinesAfterColumn !== -1) {
+                        const p = this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewPositionOfModelPosition(0, g.forWrappedLinesAfterColumn);
+                        if (p.lineNumber >= viewLineInfo.modelLineWrappedLineIdx) {
+                            return undefined;
+                        }
+                    }
+                    if (g.forWrappedLinesBeforeOrAtColumn !== -1) {
+                        const p = this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewPositionOfModelPosition(0, g.forWrappedLinesBeforeOrAtColumn);
+                        if (p.lineNumber < viewLineInfo.modelLineWrappedLineIdx) {
+                            return undefined;
+                        }
+                    }
+                    if (!g.horizontalLine) {
+                        return g;
+                    }
+                    let column = -1;
+                    if (g.column !== -1) {
+                        const p = this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewPositionOfModelPosition(0, g.column);
+                        if (p.lineNumber === viewLineInfo.modelLineWrappedLineIdx) {
+                            column = p.column;
+                        }
+                        else if (p.lineNumber < viewLineInfo.modelLineWrappedLineIdx) {
+                            column = this.getMinColumnOfViewLine(viewLineInfo);
+                        }
+                        else if (p.lineNumber > viewLineInfo.modelLineWrappedLineIdx) {
+                            return undefined;
+                        }
+                    }
+                    const viewPosition = this.convertModelPositionToViewPosition(viewLineInfo.modelLineNumber, g.horizontalLine.endColumn);
+                    const p = this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewPositionOfModelPosition(0, g.horizontalLine.endColumn);
+                    if (p.lineNumber === viewLineInfo.modelLineWrappedLineIdx) {
+                        return new IndentGuide(g.visibleColumn, column, g.className, new IndentGuideHorizontalLine(g.horizontalLine.top, viewPosition.column), -1, -1);
+                    }
+                    else if (p.lineNumber < viewLineInfo.modelLineWrappedLineIdx) {
+                        return undefined;
+                    }
+                    else {
+                        if (g.visibleColumn !== -1) {
+                            // Don't repeat horizontal lines that use visibleColumn for unrelated lines.
+                            return undefined;
+                        }
+                        return new IndentGuide(g.visibleColumn, column, g.className, new IndentGuideHorizontalLine(g.horizontalLine.top, this.getMaxColumnOfViewLine(viewLineInfo)), -1, -1);
+                    }
+                });
+                resultPerViewLine.push(result.filter((r) => !!r));
             }
         }
         return resultPerViewLine;
@@ -409,10 +449,10 @@ export class ViewModelLinesFromProjectedModel {
                 const viewLineStartIndex = line.getViewLineNumberOfModelPosition(0, modelLineIndex === modelStartLineIndex ? modelStart.column : 1);
                 const viewLineEndIndex = line.getViewLineNumberOfModelPosition(0, this.model.getLineMaxColumn(modelLineIndex + 1));
                 const count = viewLineEndIndex - viewLineStartIndex + 1;
-                let option = 0 /* BlockNone */;
+                let option = 0 /* IndentGuideRepeatOption.BlockNone */;
                 if (count > 1 && line.getViewLineMinColumn(this.model, modelLineIndex + 1, viewLineEndIndex) === 1) {
                     // wrapped lines should block indent guides
-                    option = (viewLineStartIndex === 0 ? 1 /* BlockSubsequent */ : 2 /* BlockAll */);
+                    option = (viewLineStartIndex === 0 ? 1 /* IndentGuideRepeatOption.BlockSubsequent */ : 2 /* IndentGuideRepeatOption.BlockAll */);
                 }
                 resultRepeatCount.push(count);
                 resultRepeatOption.push(option);
@@ -441,10 +481,10 @@ export class ViewModelLinesFromProjectedModel {
             const count = Math.min(viewLineCount - currIndex, resultRepeatCount[i]);
             const option = resultRepeatOption[i];
             let blockAtIndex;
-            if (option === 2 /* BlockAll */) {
+            if (option === 2 /* IndentGuideRepeatOption.BlockAll */) {
                 blockAtIndex = 0;
             }
-            else if (option === 1 /* BlockSubsequent */) {
+            else if (option === 1 /* IndentGuideRepeatOption.BlockSubsequent */) {
                 blockAtIndex = 1;
             }
             else {
@@ -544,7 +584,7 @@ export class ViewModelLinesFromProjectedModel {
         const end = this.convertViewPositionToModelPosition(viewRange.endLineNumber, viewRange.endColumn);
         return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
     }
-    convertModelPositionToViewPosition(_modelLineNumber, _modelColumn, affinity = 2 /* None */) {
+    convertModelPositionToViewPosition(_modelLineNumber, _modelColumn, affinity = 2 /* PositionAffinity.None */) {
         const validPosition = this.model.validatePosition(new Position(_modelLineNumber, _modelColumn));
         const inputLineNumber = validPosition.lineNumber;
         const inputColumn = validPosition.column;
@@ -572,14 +612,14 @@ export class ViewModelLinesFromProjectedModel {
     /**
      * @param affinity The affinity in case of an empty range. Has no effect for non-empty ranges.
     */
-    convertModelRangeToViewRange(modelRange, affinity = 0 /* Left */) {
+    convertModelRangeToViewRange(modelRange, affinity = 0 /* PositionAffinity.Left */) {
         if (modelRange.isEmpty()) {
             const start = this.convertModelPositionToViewPosition(modelRange.startLineNumber, modelRange.startColumn, affinity);
             return Range.fromPositions(start);
         }
         else {
-            const start = this.convertModelPositionToViewPosition(modelRange.startLineNumber, modelRange.startColumn, 1 /* Right */);
-            const end = this.convertModelPositionToViewPosition(modelRange.endLineNumber, modelRange.endColumn, 0 /* Left */);
+            const start = this.convertModelPositionToViewPosition(modelRange.startLineNumber, modelRange.startColumn, 1 /* PositionAffinity.Right */);
+            const end = this.convertModelPositionToViewPosition(modelRange.endLineNumber, modelRange.endColumn, 0 /* PositionAffinity.Left */);
             return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
         }
     }
@@ -648,7 +688,8 @@ export class ViewModelLinesFromProjectedModel {
             return res;
         });
         // Eliminate duplicate decorations that might have intersected our visible ranges multiple times
-        let finalResult = [], finalResultLen = 0;
+        const finalResult = [];
+        let finalResultLen = 0;
         let prevDecId = null;
         for (const dec of result) {
             const decId = dec.id;
@@ -720,9 +761,6 @@ class ViewLineInfo {
     constructor(modelLineNumber, modelLineWrappedLineIdx) {
         this.modelLineNumber = modelLineNumber;
         this.modelLineWrappedLineIdx = modelLineWrappedLineIdx;
-    }
-    get isWrappedLineContinuation() {
-        return this.modelLineWrappedLineIdx > 0;
     }
 }
 /**
@@ -809,7 +847,7 @@ export class ViewModelLinesFromModelAsIs {
         return new viewEvents.ViewLinesInsertedEvent(fromLineNumber, toLineNumber);
     }
     onModelLineChanged(_versionId, lineNumber, lineBreakData) {
-        return [false, new viewEvents.ViewLinesChangedEvent(lineNumber, lineNumber), null, null];
+        return [false, new viewEvents.ViewLinesChangedEvent(lineNumber, 1), null, null];
     }
     acceptVersionId(_versionId) {
     }
@@ -847,7 +885,7 @@ export class ViewModelLinesFromModelAsIs {
         return this.model.getLineMaxColumn(viewLineNumber);
     }
     getViewLineData(viewLineNumber) {
-        const lineTokens = this.model.getLineTokens(viewLineNumber);
+        const lineTokens = this.model.tokenization.getLineTokens(viewLineNumber);
         const lineContent = lineTokens.getLineContent();
         return new ViewLineData(lineContent, false, 1, lineContent.length + 1, 0, lineTokens.inflate(), null);
     }

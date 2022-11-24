@@ -12,7 +12,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import * as dom from '../../../../base/browser/dom.js';
-import { GlobalMouseMoveMonitor, standardMouseMoveMerger } from '../../../../base/browser/globalMouseMoveMonitor.js';
 import { Gesture } from '../../../../base/browser/touch.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { Emitter } from '../../../../base/common/event.js';
@@ -25,14 +24,14 @@ import { editorBackground, editorLightBulbAutoFixForeground, editorLightBulbFore
 import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 var LightBulbState;
 (function (LightBulbState) {
-    LightBulbState.Hidden = { type: 0 /* Hidden */ };
+    LightBulbState.Hidden = { type: 0 /* Type.Hidden */ };
     class Showing {
         constructor(actions, trigger, editorPosition, widgetPosition) {
             this.actions = actions;
             this.trigger = trigger;
             this.editorPosition = editorPosition;
             this.widgetPosition = widgetPosition;
-            this.type = 1 /* Showing */;
+            this.type = 1 /* Type.Showing */;
         }
     }
     LightBulbState.Showing = Showing;
@@ -53,13 +52,13 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
         this._register(this._editor.onDidChangeModelContent(_ => {
             // cancel when the line in question has been removed
             const editorModel = this._editor.getModel();
-            if (this.state.type !== 1 /* Showing */ || !editorModel || this.state.editorPosition.lineNumber >= editorModel.getLineCount()) {
+            if (this.state.type !== 1 /* LightBulbState.Type.Showing */ || !editorModel || this.state.editorPosition.lineNumber >= editorModel.getLineCount()) {
                 this.hide();
             }
         }));
         Gesture.ignoreTarget(this._domNode);
         this._register(dom.addStandardDisposableGenericMouseDownListener(this._domNode, e => {
-            if (this.state.type !== 1 /* Showing */) {
+            if (this.state.type !== 1 /* LightBulbState.Type.Showing */) {
                 return;
             }
             // Make sure that focus / cursor location is not lost when clicking widget icon
@@ -68,7 +67,7 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
             // a bit of extra work to make sure the menu
             // doesn't cover the line-text
             const { top, height } = dom.getDomNodePagePosition(this._domNode);
-            const lineHeight = this._editor.getOption(59 /* lineHeight */);
+            const lineHeight = this._editor.getOption(61 /* EditorOption.lineHeight */);
             let pad = Math.floor(lineHeight / 3);
             if (this.state.widgetPosition.position !== null && this.state.widgetPosition.position.lineNumber < this.state.editorPosition.lineNumber) {
                 pad += lineHeight;
@@ -85,17 +84,12 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
                 return;
             }
             // mouse enters lightbulb while the primary/left button
-            // is being pressed -> hide the lightbulb and block future
-            // showings until mouse is released
+            // is being pressed -> hide the lightbulb
             this.hide();
-            const monitor = new GlobalMouseMoveMonitor();
-            monitor.startMonitoring(e.target, e.buttons, standardMouseMoveMerger, () => { }, () => {
-                monitor.dispose();
-            });
         }));
         this._register(this._editor.onDidChangeConfiguration(e => {
             // hide when told to do so
-            if (e.hasChanged(57 /* lightbulb */) && !this._editor.getOption(57 /* lightbulb */).enabled) {
+            if (e.hasChanged(59 /* EditorOption.lightbulb */) && !this._editor.getOption(59 /* EditorOption.lightbulb */).enabled) {
                 this.hide();
             }
         }));
@@ -113,14 +107,14 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
         return this._domNode;
     }
     getPosition() {
-        return this._state.type === 1 /* Showing */ ? this._state.widgetPosition : null;
+        return this._state.type === 1 /* LightBulbState.Type.Showing */ ? this._state.widgetPosition : null;
     }
     update(actions, trigger, atPosition) {
         if (actions.validActions.length <= 0) {
             return this.hide();
         }
         const options = this._editor.getOptions();
-        if (!options.get(57 /* lightbulb */).enabled) {
+        if (!options.get(59 /* EditorOption.lightbulb */).enabled) {
             return this.hide();
         }
         const model = this._editor.getModel();
@@ -129,7 +123,7 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
         }
         const { lineNumber, column } = model.validatePosition(atPosition);
         const tabSize = model.getOptions().tabSize;
-        const fontInfo = options.get(44 /* fontInfo */);
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
         const lineContent = model.getLineContent(lineNumber);
         const indent = computeIndentLevel(lineContent, tabSize);
         const lineHasSpace = fontInfo.spaceWidth * indent > 22;
@@ -166,7 +160,7 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
         this._updateLightBulbTitleAndIcon();
     }
     _updateLightBulbTitleAndIcon() {
-        if (this.state.type === 1 /* Showing */ && this.state.actions.hasAutoFix) {
+        if (this.state.type === 1 /* LightBulbState.Type.Showing */ && this.state.actions.hasAutoFix) {
             // update icon
             this._domNode.classList.remove(...Codicon.lightBulb.classNamesArray);
             this._domNode.classList.add(...Codicon.lightbulbAutofix.classNamesArray);
@@ -191,7 +185,7 @@ let LightBulbWidget = class LightBulbWidget extends Disposable {
         this._domNode.title = value;
     }
 };
-LightBulbWidget._posPref = [0 /* EXACT */];
+LightBulbWidget._posPref = [0 /* ContentWidgetPositionPreference.EXACT */];
 LightBulbWidget = __decorate([
     __param(3, IKeybindingService)
 ], LightBulbWidget);

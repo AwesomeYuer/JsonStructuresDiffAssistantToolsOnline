@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as platform from '../../../base/common/platform.js';
+import { EDITOR_FONT_DEFAULTS } from './editorOptions.js';
 import { EditorZoom } from './editorZoom.js';
 /**
  * Determined from empirical observations.
@@ -31,12 +32,12 @@ export class BareFontInfo {
      * @internal
      */
     static createFromValidatedSettings(options, pixelRatio, ignoreEditorZoom) {
-        const fontFamily = options.get(43 /* fontFamily */);
-        const fontWeight = options.get(47 /* fontWeight */);
-        const fontSize = options.get(46 /* fontSize */);
-        const fontFeatureSettings = options.get(45 /* fontLigatures */);
-        const lineHeight = options.get(59 /* lineHeight */);
-        const letterSpacing = options.get(56 /* letterSpacing */);
+        const fontFamily = options.get(45 /* EditorOption.fontFamily */);
+        const fontWeight = options.get(49 /* EditorOption.fontWeight */);
+        const fontSize = options.get(48 /* EditorOption.fontSize */);
+        const fontFeatureSettings = options.get(47 /* EditorOption.fontLigatures */);
+        const lineHeight = options.get(61 /* EditorOption.lineHeight */);
+        const letterSpacing = options.get(58 /* EditorOption.letterSpacing */);
         return BareFontInfo._create(fontFamily, fontWeight, fontSize, fontFeatureSettings, lineHeight, letterSpacing, pixelRatio, ignoreEditorZoom);
     }
     /**
@@ -77,7 +78,8 @@ export class BareFontInfo {
     /**
      * @internal
      */
-    getMassagedFontFamily(fallbackFontFamily) {
+    getMassagedFontFamily() {
+        const fallbackFontFamily = EDITOR_FONT_DEFAULTS.fontFamily;
         const fontFamily = BareFontInfo._wrapInQuotes(this.fontFamily);
         if (fallbackFontFamily && this.fontFamily !== fallbackFontFamily) {
             return `${fontFamily}, ${fallbackFontFamily}`;

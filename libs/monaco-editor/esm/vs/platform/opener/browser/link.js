@@ -36,7 +36,7 @@ let Link = class Link extends Disposable {
         const onKeyPress = this._register(new DomEmitter(this.el, 'keypress'));
         const onEnterPress = Event.chain(onKeyPress.event)
             .map(e => new StandardKeyboardEvent(e))
-            .filter(e => e.keyCode === 3 /* Enter */)
+            .filter(e => e.keyCode === 3 /* KeyCode.Enter */)
             .event;
         const onTap = this._register(new DomEmitter(this.el, TouchEventType.Tap)).event;
         this._register(Gesture.addTarget(this.el));

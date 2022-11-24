@@ -6,6 +6,25 @@ import { LcsDiff } from '../../../../base/common/diff/diff.js';
 import * as strings from '../../../../base/common/strings.js';
 import { Range } from '../../../common/core/range.js';
 import { GhostText, GhostTextPart } from './ghostText.js';
+export function minimizeInlineCompletion(model, inlineCompletion) {
+    if (!inlineCompletion) {
+        return inlineCompletion;
+    }
+    const valueToReplace = model.getValueInRange(inlineCompletion.range);
+    const commonPrefixLen = strings.commonPrefixLength(valueToReplace, inlineCompletion.insertText);
+    const startOffset = model.getOffsetAt(inlineCompletion.range.getStartPosition()) + commonPrefixLen;
+    const start = model.getPositionAt(startOffset);
+    const remainingValueToReplace = valueToReplace.substr(commonPrefixLen);
+    const commonSuffixLen = strings.commonSuffixLength(remainingValueToReplace, inlineCompletion.insertText);
+    const end = model.getPositionAt(Math.max(startOffset, model.getOffsetAt(inlineCompletion.range.getEndPosition()) - commonSuffixLen));
+    return {
+        range: Range.fromPositions(start, end),
+        insertText: inlineCompletion.insertText.substr(commonPrefixLen, inlineCompletion.insertText.length - commonPrefixLen - commonSuffixLen),
+        snippetInfo: inlineCompletion.snippetInfo,
+        filterText: inlineCompletion.filterText,
+        additionalTextEdits: inlineCompletion.additionalTextEdits,
+    };
+}
 export function normalizedInlineCompletionsEquals(a, b) {
     if (a === b) {
         return true;
@@ -13,7 +32,7 @@ export function normalizedInlineCompletionsEquals(a, b) {
     if (!a || !b) {
         return false;
     }
-    return a.range.equalsRange(b.range) && a.text === b.text && a.command === b.command;
+    return a.range.equalsRange(b.range) && a.insertText === b.insertText && a.command === b.command;
 }
 /**
  * @param previewSuffixLength Sets where to split `inlineCompletion.text`.
@@ -35,23 +54,26 @@ export function inlineCompletionToGhostText(inlineCompletion, textModel, mode, c
         //                               ^^^ rangeThatDoesNotReplaceIndentation
         // inlineCompletion.text: '··foo'
         //                         ^^ suggestionAddedIndentationLength
-        const suggestionAddedIndentationLength = strings.getLeadingWhitespace(inlineCompletion.text).length;
+        const suggestionAddedIndentationLength = strings.getLeadingWhitespace(inlineCompletion.insertText).length;
         const replacedIndentation = sourceLine.substring(inlineCompletion.range.startColumn - 1, sourceIndentationLength);
         const rangeThatDoesNotReplaceIndentation = Range.fromPositions(inlineCompletion.range.getStartPosition().delta(0, replacedIndentation.length), inlineCompletion.range.getEndPosition());
-        const suggestionWithoutIndentationChange = inlineCompletion.text.startsWith(replacedIndentation)
+        const suggestionWithoutIndentationChange = inlineCompletion.insertText.startsWith(replacedIndentation)
             // Adds more indentation without changing existing indentation: We can add ghost text for this
-            ? inlineCompletion.text.substring(replacedIndentation.length)
+            ? inlineCompletion.insertText.substring(replacedIndentation.length)
             // Changes or removes existing indentation. Only add ghost text for the non-indentation part.
-            : inlineCompletion.text.substring(suggestionAddedIndentationLength);
+            : inlineCompletion.insertText.substring(suggestionAddedIndentationLength);
         inlineCompletion = {
             range: rangeThatDoesNotReplaceIndentation,
-            text: suggestionWithoutIndentationChange,
-            command: inlineCompletion.command
+            insertText: suggestionWithoutIndentationChange,
+            command: inlineCompletion.command,
+            snippetInfo: undefined,
+            filterText: inlineCompletion.filterText,
+            additionalTextEdits: inlineCompletion.additionalTextEdits,
         };
     }
     // This is a single line string
     const valueToBeReplaced = textModel.getValueInRange(inlineCompletion.range);
-    const changes = cachingDiff(valueToBeReplaced, inlineCompletion.text);
+    const changes = cachingDiff(valueToBeReplaced, inlineCompletion.insertText);
     if (!changes) {
         // No ghost text in case the diff would be too slow to compute
         return undefined;
@@ -65,7 +87,7 @@ export function inlineCompletionToGhostText(inlineCompletion, textModel, mode, c
             return undefined;
         }
     }
-    const previewStartInCompletionText = inlineCompletion.text.length - previewSuffixLength;
+    const previewStartInCompletionText = inlineCompletion.insertText.length - previewSuffixLength;
     for (const c of changes) {
         const insertColumn = inlineCompletion.range.startColumn + c.originalStart + c.originalLength;
         if (mode === 'subwordSmart' && cursorPosition && cursorPosition.lineNumber === inlineCompletion.range.startLineNumber && insertColumn < cursorPosition.column) {
@@ -80,8 +102,8 @@ export function inlineCompletionToGhostText(inlineCompletion, textModel, mode, c
         }
         const modifiedEnd = c.modifiedStart + c.modifiedLength;
         const nonPreviewTextEnd = Math.max(c.modifiedStart, Math.min(modifiedEnd, previewStartInCompletionText));
-        const nonPreviewText = inlineCompletion.text.substring(c.modifiedStart, nonPreviewTextEnd);
-        const italicText = inlineCompletion.text.substring(nonPreviewTextEnd, Math.max(c.modifiedStart, modifiedEnd));
+        const nonPreviewText = inlineCompletion.insertText.substring(c.modifiedStart, nonPreviewTextEnd);
+        const italicText = inlineCompletion.insertText.substring(nonPreviewTextEnd, Math.max(c.modifiedStart, modifiedEnd));
         if (nonPreviewText.length > 0) {
             const lines = strings.splitLines(nonPreviewText);
             parts.push(new GhostTextPart(insertColumn, lines, false));
@@ -99,7 +121,18 @@ function cachingDiff(originalValue, newValue) {
         return lastRequest === null || lastRequest === void 0 ? void 0 : lastRequest.changes;
     }
     else {
-        const changes = smartDiff(originalValue, newValue);
+        let changes = smartDiff(originalValue, newValue, true);
+        if (changes) {
+            const deletedChars = deletedCharacters(changes);
+            if (deletedChars > 0) {
+                // For performance reasons, don't compute diff if there is nothing to improve
+                const newChanges = smartDiff(originalValue, newValue, false);
+                if (newChanges && deletedCharacters(newChanges) < deletedChars) {
+                    // Disabling smartness seems to be better here
+                    changes = newChanges;
+                }
+            }
+        }
         lastRequest = {
             originalValue,
             newValue,
@@ -107,6 +140,13 @@ function cachingDiff(originalValue, newValue) {
         };
         return changes;
     }
+}
+function deletedCharacters(changes) {
+    let sum = 0;
+    for (const c of changes) {
+        sum += Math.max(c.originalLength - c.modifiedLength, 0);
+    }
+    return sum;
 }
 /**
  * When matching `if ()` with `if (f() = 1) { g(); }`,
@@ -116,7 +156,7 @@ function cachingDiff(originalValue, newValue) {
  *
  * The parenthesis are preprocessed to ensure that they match correctly.
  */
-function smartDiff(originalValue, newValue) {
+function smartDiff(originalValue, newValue, smartBracketMatching) {
     if (originalValue.length > 5000 || newValue.length > 5000) {
         // We don't want to work on strings that are too big
         return undefined;
@@ -143,18 +183,19 @@ function smartDiff(originalValue, newValue) {
         let group = 0;
         const characters = new Int32Array(source.length);
         for (let i = 0, len = source.length; i < len; i++) {
-            const id = group * 100 + level;
             // TODO support more brackets
-            if (source[i] === '(') {
+            if (smartBracketMatching && source[i] === '(') {
+                const id = group * 100 + level;
                 characters[i] = getUniqueCharCode(2 * id);
                 level++;
             }
-            else if (source[i] === ')') {
+            else if (smartBracketMatching && source[i] === ')') {
+                level = Math.max(level - 1, 0);
+                const id = group * 100 + level;
                 characters[i] = getUniqueCharCode(2 * id + 1);
-                if (level === 1) {
+                if (level === 0) {
                     group++;
                 }
-                level = Math.max(level - 1, 0);
             }
             else {
                 characters[i] = source.charCodeAt(i);

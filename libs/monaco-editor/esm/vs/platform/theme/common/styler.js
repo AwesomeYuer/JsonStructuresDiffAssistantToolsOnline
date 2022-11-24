@@ -2,10 +2,10 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { activeContrastBorder, badgeBackground, badgeForeground, contrastBorder, listActiveSelectionBackground, listActiveSelectionForeground, listActiveSelectionIconForeground, listDropBackground, listFilterWidgetBackground, listFilterWidgetNoMatchesOutline, listFilterWidgetOutline, listFocusBackground, listFocusForeground, listFocusOutline, listHoverBackground, listHoverForeground, listInactiveFocusBackground, listInactiveFocusOutline, listInactiveSelectionBackground, listInactiveSelectionForeground, listInactiveSelectionIconForeground, menuBackground, menuBorder, menuForeground, menuSelectionBackground, menuSelectionBorder, menuSelectionForeground, menuSeparatorBackground, resolveColorValue, scrollbarShadow, scrollbarSliderActiveBackground, scrollbarSliderBackground, scrollbarSliderHoverBackground, tableColumnsBorder, tableOddRowsBackgroundColor, treeIndentGuidesStroke, widgetShadow } from './colorRegistry.js';
+import { activeContrastBorder, badgeBackground, badgeForeground, contrastBorder, inputActiveOptionBackground, inputActiveOptionBorder, inputActiveOptionForeground, inputBackground, inputBorder, inputForeground, inputValidationErrorBackground, inputValidationErrorBorder, inputValidationErrorForeground, inputValidationInfoBackground, inputValidationInfoBorder, inputValidationInfoForeground, inputValidationWarningBackground, inputValidationWarningBorder, inputValidationWarningForeground, listActiveSelectionBackground, listActiveSelectionForeground, listActiveSelectionIconForeground, listDropBackground, listFilterWidgetBackground, listFilterWidgetNoMatchesOutline, listFilterWidgetOutline, listFocusBackground, listFocusForeground, listFocusOutline, listHoverBackground, listHoverForeground, listInactiveFocusBackground, listInactiveFocusOutline, listInactiveSelectionBackground, listInactiveSelectionForeground, listInactiveSelectionIconForeground, menuBackground, menuBorder, menuForeground, menuSelectionBackground, menuSelectionBorder, menuSelectionForeground, menuSeparatorBackground, resolveColorValue, scrollbarShadow, scrollbarSliderActiveBackground, scrollbarSliderBackground, scrollbarSliderHoverBackground, tableColumnsBorder, tableOddRowsBackgroundColor, treeIndentGuidesStroke, widgetShadow, listFocusAndSelectionOutline, listFilterWidgetShadow } from './colorRegistry.js';
 export function computeStyles(theme, styleMap) {
     const styles = Object.create(null);
-    for (let key in styleMap) {
+    for (const key in styleMap) {
         const value = styleMap[key];
         if (value) {
             styles[key] = resolveColorValue(value, theme);
@@ -43,6 +43,7 @@ export const defaultListStyles = {
     listActiveSelectionBackground,
     listActiveSelectionForeground,
     listActiveSelectionIconForeground,
+    listFocusAndSelectionOutline,
     listFocusAndSelectionBackground: listActiveSelectionBackground,
     listFocusAndSelectionForeground: listActiveSelectionForeground,
     listInactiveSelectionBackground,
@@ -58,10 +59,25 @@ export const defaultListStyles = {
     listFilterWidgetBackground,
     listFilterWidgetOutline,
     listFilterWidgetNoMatchesOutline,
-    listMatchesShadow: widgetShadow,
+    listFilterWidgetShadow,
     treeIndentGuidesStroke,
     tableColumnsBorder,
-    tableOddRowsBackgroundColor
+    tableOddRowsBackgroundColor,
+    inputActiveOptionBorder,
+    inputActiveOptionForeground,
+    inputActiveOptionBackground,
+    inputBackground,
+    inputForeground,
+    inputBorder,
+    inputValidationInfoBackground,
+    inputValidationInfoForeground,
+    inputValidationInfoBorder,
+    inputValidationWarningBackground,
+    inputValidationWarningForeground,
+    inputValidationWarningBorder,
+    inputValidationErrorBackground,
+    inputValidationErrorForeground,
+    inputValidationErrorBorder,
 };
 export const defaultMenuStyles = {
     shadowColor: widgetShadow,

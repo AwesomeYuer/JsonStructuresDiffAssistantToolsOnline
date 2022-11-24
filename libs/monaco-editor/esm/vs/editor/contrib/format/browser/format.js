@@ -128,16 +128,16 @@ export function formatDocumentRangesWithProvider(accessor, provider, editorOrMod
         let cts;
         if (isCodeEditor(editorOrModel)) {
             model = editorOrModel.getModel();
-            cts = new EditorStateCancellationTokenSource(editorOrModel, 1 /* Value */ | 4 /* Position */, undefined, token);
+            cts = new EditorStateCancellationTokenSource(editorOrModel, 1 /* CodeEditorStateFlag.Value */ | 4 /* CodeEditorStateFlag.Position */, undefined, token);
         }
         else {
             model = editorOrModel;
             cts = new TextModelCancellationTokenSource(editorOrModel, token);
         }
         // make sure that ranges don't overlap nor touch each other
-        let ranges = [];
+        const ranges = [];
         let len = 0;
-        for (let range of asArray(rangeOrRanges).sort(Range.compareRangesUsingStarts)) {
+        for (const range of asArray(rangeOrRanges).sort(Range.compareRangesUsingStarts)) {
             if (len > 0 && Range.areIntersectingOrTouching(ranges[len - 1], range)) {
                 ranges[len - 1] = Range.fromPositions(ranges[len - 1].getStartPosition(), range.getEndPosition());
             }
@@ -158,8 +158,8 @@ export function formatDocumentRangesWithProvider(accessor, provider, editorOrMod
                 return false;
             }
             // fallback to a complete check [O(n^2)]
-            for (let edit of a) {
-                for (let otherEdit of b) {
+            for (const edit of a) {
+                for (const otherEdit of b) {
                     if (Range.intersectRanges(edit.range, otherEdit.range)) {
                         return true;
                     }
@@ -170,7 +170,7 @@ export function formatDocumentRangesWithProvider(accessor, provider, editorOrMod
         const allEdits = [];
         const rawEditsList = [];
         try {
-            for (let range of ranges) {
+            for (const range of ranges) {
                 if (cts.token.isCancellationRequested) {
                     return true;
                 }
@@ -197,7 +197,7 @@ export function formatDocumentRangesWithProvider(accessor, provider, editorOrMod
                     }
                 }
             }
-            for (let rawEdits of rawEditsList) {
+            for (const rawEdits of rawEditsList) {
                 if (cts.token.isCancellationRequested) {
                     return true;
                 }
@@ -217,7 +217,7 @@ export function formatDocumentRangesWithProvider(accessor, provider, editorOrMod
             // use editor to apply edits
             FormattingEdit.execute(editorOrModel, allEdits, true);
             alertFormattingEdits(allEdits);
-            editorOrModel.revealPositionInCenterIfOutsideViewport(editorOrModel.getPosition(), 1 /* Immediate */);
+            editorOrModel.revealPositionInCenterIfOutsideViewport(editorOrModel.getPosition(), 1 /* ScrollType.Immediate */);
         }
         else {
             // use model to apply edits
@@ -261,7 +261,7 @@ export function formatDocumentWithProvider(accessor, provider, editorOrModel, mo
         let cts;
         if (isCodeEditor(editorOrModel)) {
             model = editorOrModel.getModel();
-            cts = new EditorStateCancellationTokenSource(editorOrModel, 1 /* Value */ | 4 /* Position */, undefined, token);
+            cts = new EditorStateCancellationTokenSource(editorOrModel, 1 /* CodeEditorStateFlag.Value */ | 4 /* CodeEditorStateFlag.Position */, undefined, token);
         }
         else {
             model = editorOrModel;
@@ -283,10 +283,10 @@ export function formatDocumentWithProvider(accessor, provider, editorOrModel, mo
         }
         if (isCodeEditor(editorOrModel)) {
             // use editor to apply edits
-            FormattingEdit.execute(editorOrModel, edits, mode !== 2 /* Silent */);
-            if (mode !== 2 /* Silent */) {
+            FormattingEdit.execute(editorOrModel, edits, mode !== 2 /* FormattingMode.Silent */);
+            if (mode !== 2 /* FormattingMode.Silent */) {
                 alertFormattingEdits(edits);
-                editorOrModel.revealPositionInCenterIfOutsideViewport(editorOrModel.getPosition(), 1 /* Immediate */);
+                editorOrModel.revealPositionInCenterIfOutsideViewport(editorOrModel.getPosition(), 1 /* ScrollType.Immediate */);
             }
         }
         else {
@@ -315,7 +315,7 @@ export function getDocumentRangeFormattingEditsUntilResult(workerService, langua
     return __awaiter(this, void 0, void 0, function* () {
         const providers = languageFeaturesService.documentRangeFormattingEditProvider.ordered(model);
         for (const provider of providers) {
-            let rawEdits = yield Promise.resolve(provider.provideDocumentRangeFormattingEdits(model, range, options, token)).catch(onUnexpectedExternalError);
+            const rawEdits = yield Promise.resolve(provider.provideDocumentRangeFormattingEdits(model, range, options, token)).catch(onUnexpectedExternalError);
             if (isNonEmptyArray(rawEdits)) {
                 return yield workerService.computeMoreMinimalEdits(model.uri, rawEdits);
             }
@@ -327,7 +327,7 @@ export function getDocumentFormattingEditsUntilResult(workerService, languageFea
     return __awaiter(this, void 0, void 0, function* () {
         const providers = getRealAndSyntheticDocumentFormattersOrdered(languageFeaturesService.documentFormattingEditProvider, languageFeaturesService.documentRangeFormattingEditProvider, model);
         for (const provider of providers) {
-            let rawEdits = yield Promise.resolve(provider.provideDocumentFormattingEdits(model, options, token)).catch(onUnexpectedExternalError);
+            const rawEdits = yield Promise.resolve(provider.provideDocumentFormattingEdits(model, options, token)).catch(onUnexpectedExternalError);
             if (isNonEmptyArray(rawEdits)) {
                 return yield workerService.computeMoreMinimalEdits(model.uri, rawEdits);
             }

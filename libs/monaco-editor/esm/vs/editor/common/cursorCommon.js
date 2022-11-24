@@ -17,26 +17,26 @@ export class CursorConfiguration {
         this._cursorMoveConfigurationBrand = undefined;
         this._languageId = languageId;
         const options = configuration.options;
-        const layoutInfo = options.get(131 /* layoutInfo */);
-        this.readOnly = options.get(81 /* readOnly */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
+        this.readOnly = options.get(83 /* EditorOption.readOnly */);
         this.tabSize = modelOptions.tabSize;
         this.indentSize = modelOptions.indentSize;
         this.insertSpaces = modelOptions.insertSpaces;
-        this.stickyTabStops = options.get(104 /* stickyTabStops */);
-        this.lineHeight = options.get(59 /* lineHeight */);
+        this.stickyTabStops = options.get(106 /* EditorOption.stickyTabStops */);
+        this.lineHeight = options.get(61 /* EditorOption.lineHeight */);
         this.pageSize = Math.max(1, Math.floor(layoutInfo.height / this.lineHeight) - 2);
-        this.useTabStops = options.get(116 /* useTabStops */);
-        this.wordSeparators = options.get(117 /* wordSeparators */);
-        this.emptySelectionClipboard = options.get(32 /* emptySelectionClipboard */);
-        this.copyWithSyntaxHighlighting = options.get(21 /* copyWithSyntaxHighlighting */);
-        this.multiCursorMergeOverlapping = options.get(69 /* multiCursorMergeOverlapping */);
-        this.multiCursorPaste = options.get(71 /* multiCursorPaste */);
-        this.autoClosingBrackets = options.get(5 /* autoClosingBrackets */);
-        this.autoClosingQuotes = options.get(8 /* autoClosingQuotes */);
-        this.autoClosingDelete = options.get(6 /* autoClosingDelete */);
-        this.autoClosingOvertype = options.get(7 /* autoClosingOvertype */);
-        this.autoSurround = options.get(11 /* autoSurround */);
-        this.autoIndent = options.get(9 /* autoIndent */);
+        this.useTabStops = options.get(118 /* EditorOption.useTabStops */);
+        this.wordSeparators = options.get(119 /* EditorOption.wordSeparators */);
+        this.emptySelectionClipboard = options.get(33 /* EditorOption.emptySelectionClipboard */);
+        this.copyWithSyntaxHighlighting = options.get(21 /* EditorOption.copyWithSyntaxHighlighting */);
+        this.multiCursorMergeOverlapping = options.get(71 /* EditorOption.multiCursorMergeOverlapping */);
+        this.multiCursorPaste = options.get(73 /* EditorOption.multiCursorPaste */);
+        this.autoClosingBrackets = options.get(5 /* EditorOption.autoClosingBrackets */);
+        this.autoClosingQuotes = options.get(8 /* EditorOption.autoClosingQuotes */);
+        this.autoClosingDelete = options.get(6 /* EditorOption.autoClosingDelete */);
+        this.autoClosingOvertype = options.get(7 /* EditorOption.autoClosingOvertype */);
+        this.autoSurround = options.get(11 /* EditorOption.autoSurround */);
+        this.autoIndent = options.get(9 /* EditorOption.autoIndent */);
         this.surroundingPairs = {};
         this._electricChars = null;
         this.shouldAutoCloseBefore = {
@@ -52,19 +52,19 @@ export class CursorConfiguration {
         }
     }
     static shouldRecreate(e) {
-        return (e.hasChanged(131 /* layoutInfo */)
-            || e.hasChanged(117 /* wordSeparators */)
-            || e.hasChanged(32 /* emptySelectionClipboard */)
-            || e.hasChanged(69 /* multiCursorMergeOverlapping */)
-            || e.hasChanged(71 /* multiCursorPaste */)
-            || e.hasChanged(5 /* autoClosingBrackets */)
-            || e.hasChanged(8 /* autoClosingQuotes */)
-            || e.hasChanged(6 /* autoClosingDelete */)
-            || e.hasChanged(7 /* autoClosingOvertype */)
-            || e.hasChanged(11 /* autoSurround */)
-            || e.hasChanged(116 /* useTabStops */)
-            || e.hasChanged(59 /* lineHeight */)
-            || e.hasChanged(81 /* readOnly */));
+        return (e.hasChanged(133 /* EditorOption.layoutInfo */)
+            || e.hasChanged(119 /* EditorOption.wordSeparators */)
+            || e.hasChanged(33 /* EditorOption.emptySelectionClipboard */)
+            || e.hasChanged(71 /* EditorOption.multiCursorMergeOverlapping */)
+            || e.hasChanged(73 /* EditorOption.multiCursorPaste */)
+            || e.hasChanged(5 /* EditorOption.autoClosingBrackets */)
+            || e.hasChanged(8 /* EditorOption.autoClosingQuotes */)
+            || e.hasChanged(6 /* EditorOption.autoClosingDelete */)
+            || e.hasChanged(7 /* EditorOption.autoClosingOvertype */)
+            || e.hasChanged(11 /* EditorOption.autoSurround */)
+            || e.hasChanged(118 /* EditorOption.useTabStops */)
+            || e.hasChanged(61 /* EditorOption.lineHeight */)
+            || e.hasChanged(83 /* EditorOption.readOnly */));
     }
     get electricChars() {
         var _a;

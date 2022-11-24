@@ -80,9 +80,8 @@ class AsyncDataTreeRenderer {
         }
     }
     disposeElement(node, index, templateData, height) {
-        if (this.renderer.disposeElement) {
-            this.renderer.disposeElement(this.nodeMapper.map(node), index, templateData.templateData, height);
-        }
+        var _a, _b;
+        (_b = (_a = this.renderer).disposeElement) === null || _b === void 0 ? void 0 : _b.call(_a, this.nodeMapper.map(node), index, templateData.templateData, height);
     }
     disposeTemplate(templateData) {
         this.renderer.disposeTemplate(templateData.templateData);
@@ -130,9 +129,8 @@ class AsyncDataTreeNodeListDragAndDrop {
         return undefined;
     }
     onDragStart(data, originalEvent) {
-        if (this.dnd.onDragStart) {
-            this.dnd.onDragStart(asAsyncDataTreeDragAndDropData(data), originalEvent);
-        }
+        var _a, _b;
+        (_b = (_a = this.dnd).onDragStart) === null || _b === void 0 ? void 0 : _b.call(_a, asAsyncDataTreeDragAndDropData(data), originalEvent);
     }
     onDragOver(data, targetNode, targetIndex, originalEvent, raw = true) {
         return this.dnd.onDragOver(asAsyncDataTreeDragAndDropData(data), targetNode && targetNode.element, targetIndex, originalEvent);
@@ -141,9 +139,8 @@ class AsyncDataTreeNodeListDragAndDrop {
         this.dnd.drop(asAsyncDataTreeDragAndDropData(data), targetNode && targetNode.element, targetIndex, originalEvent);
     }
     onDragEnd(originalEvent) {
-        if (this.dnd.onDragEnd) {
-            this.dnd.onDragEnd(originalEvent);
-        }
+        var _a, _b;
+        (_b = (_a = this.dnd).onDragEnd) === null || _b === void 0 ? void 0 : _b.call(_a, originalEvent);
     }
 }
 function asObjectTreeOptions(options) {
@@ -200,6 +197,7 @@ export class AsyncDataTree {
         this.sorter = options.sorter;
         this.collapseByDefault = options.collapseByDefault;
         this.tree = this.createTree(user, container, delegate, renderers, options);
+        this.onDidChangeFindMode = this.tree.onDidChangeFindMode;
         this.root = createAsyncDataTreeNode({
             element: undefined,
             parent: null,
@@ -218,6 +216,7 @@ export class AsyncDataTree {
     get onDidFocus() { return this.tree.onDidFocus; }
     get onDidChangeModel() { return this.tree.onDidChangeModel; }
     get onDidChangeCollapseState() { return this.tree.onDidChangeCollapseState; }
+    get onDidChangeFindOpenState() { return this.tree.onDidChangeFindOpenState; }
     get onDidDispose() { return this.tree.onDidDispose; }
     createTree(user, container, delegate, renderers, options) {
         const objectTreeDelegate = new ComposedTreeDelegate(delegate);
@@ -389,6 +388,14 @@ export class AsyncDataTree {
             });
             if (result) {
                 return result;
+            }
+            if (node !== this.root) {
+                const treeNode = this.tree.getNode(node);
+                if (treeNode.collapsed) {
+                    node.hasChildren = !!this.dataSource.hasChildren(node.element);
+                    node.stale = true;
+                    return;
+                }
             }
             return this.doRefreshSubTree(node, recursive, viewStateContext);
         });
@@ -660,14 +667,12 @@ class CompressibleAsyncDataTreeRenderer {
         }
     }
     disposeElement(node, index, templateData, height) {
-        if (this.renderer.disposeElement) {
-            this.renderer.disposeElement(this.nodeMapper.map(node), index, templateData.templateData, height);
-        }
+        var _a, _b;
+        (_b = (_a = this.renderer).disposeElement) === null || _b === void 0 ? void 0 : _b.call(_a, this.nodeMapper.map(node), index, templateData.templateData, height);
     }
     disposeCompressedElements(node, index, templateData, height) {
-        if (this.renderer.disposeCompressedElements) {
-            this.renderer.disposeCompressedElements(this.compressibleNodeMapperProvider().map(node), index, templateData.templateData, height);
-        }
+        var _a, _b;
+        (_b = (_a = this.renderer).disposeCompressedElements) === null || _b === void 0 ? void 0 : _b.call(_a, this.compressibleNodeMapperProvider().map(node), index, templateData.templateData, height);
     }
     disposeTemplate(templateData) {
         this.renderer.disposeTemplate(templateData.templateData);
@@ -763,12 +768,12 @@ export class CompressibleAsyncDataTree extends AsyncDataTree {
     processChildren(children) {
         if (this.filter) {
             children = Iterable.filter(children, e => {
-                const result = this.filter.filter(e, 1 /* Visible */);
+                const result = this.filter.filter(e, 1 /* TreeVisibility.Visible */);
                 const visibility = getVisibility(result);
-                if (visibility === 2 /* Recurse */) {
+                if (visibility === 2 /* TreeVisibility.Recurse */) {
                     throw new Error('Recursive tree visibility not supported in async data compressed trees');
                 }
-                return visibility === 1 /* Visible */;
+                return visibility === 1 /* TreeVisibility.Visible */;
             });
         }
         return super.processChildren(children);
@@ -776,7 +781,7 @@ export class CompressibleAsyncDataTree extends AsyncDataTree {
 }
 function getVisibility(filterResult) {
     if (typeof filterResult === 'boolean') {
-        return filterResult ? 1 /* Visible */ : 0 /* Hidden */;
+        return filterResult ? 1 /* TreeVisibility.Visible */ : 0 /* TreeVisibility.Hidden */;
     }
     else if (isFilterResult(filterResult)) {
         return getVisibleState(filterResult.visibility);

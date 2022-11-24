@@ -18,13 +18,14 @@ import { MarkdownRenderer } from '../../markdownRenderer/browser/markdownRendere
 import { Range } from '../../../common/core/range.js';
 import { ILanguageService } from '../../../common/languages/language.js';
 import { HoverForeignElementAnchor } from '../../hover/browser/hoverTypes.js';
-import { commitInlineSuggestionAction, GhostTextController, ShowNextInlineSuggestionAction, ShowPreviousInlineSuggestionAction } from './ghostTextController.js';
+import { GhostTextController, ShowNextInlineSuggestionAction, ShowPreviousInlineSuggestionAction } from './ghostTextController.js';
 import * as nls from '../../../../nls.js';
 import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
 import { IMenuService, MenuId, MenuItemAction } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { inlineSuggestCommitId } from './consts.js';
 export class InlineCompletionsHover {
     constructor(owner, range, controller) {
         this.owner = owner;
@@ -32,12 +33,16 @@ export class InlineCompletionsHover {
         this.controller = controller;
     }
     isValidForHoverAnchor(anchor) {
-        return (anchor.type === 1 /* Range */
+        return (anchor.type === 1 /* HoverAnchorType.Range */
             && this.range.startColumn <= anchor.range.startColumn
             && this.range.endColumn >= anchor.range.endColumn);
     }
     hasMultipleSuggestions() {
         return this.controller.hasMultipleInlineCompletions();
+    }
+    get commands() {
+        var _a, _b, _c;
+        return ((_c = (_b = (_a = this.controller.activeModel) === null || _a === void 0 ? void 0 : _a.activeInlineCompletionsModel) === null || _b === void 0 ? void 0 : _b.completionSession.value) === null || _c === void 0 ? void 0 : _c.commands) || [];
     }
 }
 let InlineCompletionsHoverParticipant = class InlineCompletionsHoverParticipant {
@@ -57,20 +62,20 @@ let InlineCompletionsHoverParticipant = class InlineCompletionsHoverParticipant 
             return null;
         }
         const target = mouseEvent.target;
-        if (target.type === 8 /* CONTENT_VIEW_ZONE */) {
+        if (target.type === 8 /* MouseTargetType.CONTENT_VIEW_ZONE */) {
             // handle the case where the mouse is over the view zone
             const viewZoneData = target.detail;
             if (controller.shouldShowHoverAtViewZone(viewZoneData.viewZoneId)) {
                 return new HoverForeignElementAnchor(1000, this, Range.fromPositions(viewZoneData.positionBefore || viewZoneData.position, viewZoneData.positionBefore || viewZoneData.position));
             }
         }
-        if (target.type === 7 /* CONTENT_EMPTY */) {
+        if (target.type === 7 /* MouseTargetType.CONTENT_EMPTY */) {
             // handle the case where the mouse is over the empty portion of a line following ghost text
             if (controller.shouldShowHoverAt(target.range)) {
                 return new HoverForeignElementAnchor(1000, this, target.range);
             }
         }
-        if (target.type === 6 /* CONTENT_TEXT */) {
+        if (target.type === 6 /* MouseTargetType.CONTENT_TEXT */) {
             // handle the case where the mouse is directly over ghost text
             const mightBeForeignElement = target.detail.mightBeForeignElement;
             if (mightBeForeignElement && controller.shouldShowHoverAt(target.range)) {
@@ -92,6 +97,7 @@ let InlineCompletionsHoverParticipant = class InlineCompletionsHoverParticipant 
         if (this.accessibilityService.isScreenReaderOptimized()) {
             this.renderScreenReaderText(context, part, disposableStore);
         }
+        // TODO@hediet: deprecate MenuId.InlineCompletionsActions
         const menu = disposableStore.add(this._menuService.createMenu(MenuId.InlineCompletionsActions, this._contextKeyService));
         const previousAction = context.statusBar.addAction({
             label: nls.localize('showNextInlineSuggestion', "Next"),
@@ -105,8 +111,8 @@ let InlineCompletionsHoverParticipant = class InlineCompletionsHoverParticipant 
         });
         context.statusBar.addAction({
             label: nls.localize('acceptInlineSuggestion', "Accept"),
-            commandId: commitInlineSuggestionAction.id,
-            run: () => this._commandService.executeCommand(commitInlineSuggestionAction.id)
+            commandId: inlineSuggestCommitId,
+            run: () => this._commandService.executeCommand(inlineSuggestCommitId)
         });
         const actions = [previousAction, nextAction];
         for (const action of actions) {
@@ -117,6 +123,13 @@ let InlineCompletionsHoverParticipant = class InlineCompletionsHoverParticipant 
                 action.setEnabled(hasMore);
             }
         });
+        for (const command of part.commands) {
+            context.statusBar.addAction({
+                label: command.title,
+                commandId: command.id,
+                run: () => this._commandService.executeCommand(command.id, ...(command.arguments || []))
+            });
+        }
         for (const [_, group] of menu.getActions()) {
             for (const action of group) {
                 if (action instanceof MenuItemAction) {

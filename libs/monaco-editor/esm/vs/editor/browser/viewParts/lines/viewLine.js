@@ -9,7 +9,7 @@ import { RangeUtil } from './rangeUtil.js';
 import { FloatHorizontalRange, VisibleRanges } from '../../view/renderingContext.js';
 import { LineDecoration } from '../../../common/viewLayout/lineDecorations.js';
 import { RenderLineInput, renderViewLine, LineRange, DomPosition } from '../../../common/viewLayout/viewLineRenderer.js';
-import { ColorScheme } from '../../../../platform/theme/common/theme.js';
+import { isHighContrast } from '../../../../platform/theme/common/theme.js';
 import { EditorFontLigatures } from '../../../common/config/editorOptions.js';
 const canUseFastRenderedViewLine = (function () {
     if (platform.isNative) {
@@ -66,18 +66,18 @@ export class ViewLineOptions {
     constructor(config, themeType) {
         this.themeType = themeType;
         const options = config.options;
-        const fontInfo = options.get(44 /* fontInfo */);
-        this.renderWhitespace = options.get(88 /* renderWhitespace */);
-        this.renderControlCharacters = options.get(83 /* renderControlCharacters */);
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        this.renderWhitespace = options.get(90 /* EditorOption.renderWhitespace */);
+        this.renderControlCharacters = options.get(85 /* EditorOption.renderControlCharacters */);
         this.spaceWidth = fontInfo.spaceWidth;
         this.middotWidth = fontInfo.middotWidth;
         this.wsmiddotWidth = fontInfo.wsmiddotWidth;
         this.useMonospaceOptimizations = (fontInfo.isMonospace
-            && !options.get(29 /* disableMonospaceOptimizations */));
+            && !options.get(29 /* EditorOption.disableMonospaceOptimizations */));
         this.canUseHalfwidthRightwardsArrow = fontInfo.canUseHalfwidthRightwardsArrow;
-        this.lineHeight = options.get(59 /* lineHeight */);
-        this.stopRenderingLineAfter = options.get(105 /* stopRenderingLineAfter */);
-        this.fontLigatures = options.get(45 /* fontLigatures */);
+        this.lineHeight = options.get(61 /* EditorOption.lineHeight */);
+        this.stopRenderingLineAfter = options.get(107 /* EditorOption.stopRenderingLineAfter */);
+        this.fontLigatures = options.get(47 /* EditorOption.fontLigatures */);
     }
     equals(other) {
         return (this.themeType === other.themeType
@@ -128,7 +128,7 @@ export class ViewLine {
         this._options = newOptions;
     }
     onSelectionChanged() {
-        if (this._options.themeType === ColorScheme.HIGH_CONTRAST || this._options.renderWhitespace === 'selection') {
+        if (isHighContrast(this._options.themeType) || this._options.renderWhitespace === 'selection') {
             this._isMaybeInvalid = true;
             return true;
         }
@@ -145,7 +145,7 @@ export class ViewLine {
         const actualInlineDecorations = LineDecoration.filter(lineData.inlineDecorations, lineNumber, lineData.minColumn, lineData.maxColumn);
         // Only send selection information when needed for rendering whitespace
         let selectionsOnLine = null;
-        if (options.themeType === ColorScheme.HIGH_CONTRAST || this._options.renderWhitespace === 'selection') {
+        if (isHighContrast(options.themeType) || this._options.renderWhitespace === 'selection') {
             const selections = viewportData.selections;
             for (const selection of selections) {
                 if (selection.endLineNumber < lineNumber || selection.startLineNumber > lineNumber) {
@@ -155,8 +155,8 @@ export class ViewLine {
                 const startColumn = (selection.startLineNumber === lineNumber ? selection.startColumn : lineData.minColumn);
                 const endColumn = (selection.endLineNumber === lineNumber ? selection.endColumn : lineData.maxColumn);
                 if (startColumn < endColumn) {
-                    if (options.themeType === ColorScheme.HIGH_CONTRAST || this._options.renderWhitespace !== 'selection') {
-                        actualInlineDecorations.push(new LineDecoration(startColumn, endColumn, 'inline-selected-text', 0 /* Regular */));
+                    if (isHighContrast(options.themeType) || this._options.renderWhitespace !== 'selection') {
+                        actualInlineDecorations.push(new LineDecoration(startColumn, endColumn, 'inline-selected-text', 0 /* InlineDecorationType.Regular */));
                     }
                     else {
                         if (!selectionsOnLine) {
@@ -182,7 +182,7 @@ export class ViewLine {
         const output = renderViewLine(renderLineInput, sb);
         sb.appendASCIIString('</div>');
         let renderedViewLine = null;
-        if (monospaceAssumptionsAreValid && canUseFastRenderedViewLine && lineData.isBasicASCII && options.useMonospaceOptimizations && output.containsForeignElements === 0 /* None */) {
+        if (monospaceAssumptionsAreValid && canUseFastRenderedViewLine && lineData.isBasicASCII && options.useMonospaceOptimizations && output.containsForeignElements === 0 /* ForeignElementType.None */) {
             if (lineData.content.length < 300 && renderLineInput.lineTokens.getCount() < 100) {
                 // Browser rounding errors have been observed in Chrome and IE, so using the fast
                 // view line only for short lines. Please test before removing the length check...
@@ -302,7 +302,7 @@ class FastRenderedViewLine {
         return monospaceAssumptionsAreValid;
     }
     toSlowRenderedLine() {
-        return createRenderedLine(this.domNode, this.input, this._characterMapping, false, 0 /* None */);
+        return createRenderedLine(this.domNode, this.input, this._characterMapping, false, 0 /* ForeignElementType.None */);
     }
     getVisibleRangesForRange(lineNumber, startColumn, endColumn, context) {
         const startPosition = this._getCharPosition(startColumn);
@@ -310,8 +310,8 @@ class FastRenderedViewLine {
         return [new FloatHorizontalRange(startPosition, endPosition - startPosition)];
     }
     _getCharPosition(column) {
-        const charOffset = this._characterMapping.getAbsoluteOffset(column);
-        return this._charWidth * charOffset;
+        const horizontalOffset = this._characterMapping.getHorizontalOffset(column);
+        return this._charWidth * horizontalOffset;
     }
     getColumnOfNodeOffset(lineNumber, spanNode, offset) {
         const spanNodeTextContentLength = spanNode.textContent.length;
@@ -402,15 +402,15 @@ class RenderedViewLine {
     _readPixelOffset(domNode, lineNumber, column, context) {
         if (this._characterMapping.length === 0) {
             // This line has no content
-            if (this._containsForeignElements === 0 /* None */) {
+            if (this._containsForeignElements === 0 /* ForeignElementType.None */) {
                 // We can assume the line is really empty
                 return 0;
             }
-            if (this._containsForeignElements === 2 /* After */) {
+            if (this._containsForeignElements === 2 /* ForeignElementType.After */) {
                 // We have foreign elements after the (empty) line
                 return 0;
             }
-            if (this._containsForeignElements === 1 /* Before */) {
+            if (this._containsForeignElements === 1 /* ForeignElementType.Before */) {
                 // We have foreign elements before the (empty) line
                 return this.getWidth();
             }
@@ -444,7 +444,7 @@ class RenderedViewLine {
             }
             return r[0].left;
         }
-        if (column === this._characterMapping.length && this._isWhitespaceOnly && this._containsForeignElements === 0 /* None */) {
+        if (column === this._characterMapping.length && this._isWhitespaceOnly && this._containsForeignElements === 0 /* ForeignElementType.None */) {
             // This branch helps in the case of whitespace only lines which have a width set
             return this.getWidth();
         }
@@ -455,8 +455,8 @@ class RenderedViewLine {
         }
         const result = r[0].left;
         if (this.input.isBasicASCII) {
-            const charOffset = this._characterMapping.getAbsoluteOffset(column);
-            const expectedResult = Math.round(this.input.spaceWidth * charOffset);
+            const horizontalOffset = this._characterMapping.getHorizontalOffset(column);
+            const expectedResult = Math.round(this.input.spaceWidth * horizontalOffset);
             if (Math.abs(expectedResult - result) <= 1) {
                 return expectedResult;
             }

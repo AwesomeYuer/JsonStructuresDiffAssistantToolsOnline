@@ -6,7 +6,7 @@ import * as arrays from '../../../base/common/arrays.js';
 import { Position } from '../core/position.js';
 import { ContiguousTokensEditing, EMPTY_LINE_TOKENS, toUint32Array } from './contiguousTokensEditing.js';
 import { LineTokens } from './lineTokens.js';
-import { TokenMetadata } from '../languages.js';
+import { TokenMetadata } from '../encodedTokenAttributes.js';
 /**
  * Represents contiguous tokens in a text model.
  */
@@ -160,9 +160,11 @@ export class ContiguousTokensStore {
     }
 }
 function getDefaultMetadata(topLevelLanguageId) {
-    return ((topLevelLanguageId << 0 /* LANGUAGEID_OFFSET */)
-        | (0 /* Other */ << 8 /* TOKEN_TYPE_OFFSET */)
-        | (0 /* None */ << 10 /* FONT_STYLE_OFFSET */)
-        | (1 /* DefaultForeground */ << 14 /* FOREGROUND_OFFSET */)
-        | (2 /* DefaultBackground */ << 23 /* BACKGROUND_OFFSET */)) >>> 0;
+    return ((topLevelLanguageId << 0 /* MetadataConsts.LANGUAGEID_OFFSET */)
+        | (0 /* StandardTokenType.Other */ << 8 /* MetadataConsts.TOKEN_TYPE_OFFSET */)
+        | (0 /* FontStyle.None */ << 11 /* MetadataConsts.FONT_STYLE_OFFSET */)
+        | (1 /* ColorId.DefaultForeground */ << 15 /* MetadataConsts.FOREGROUND_OFFSET */)
+        | (2 /* ColorId.DefaultBackground */ << 24 /* MetadataConsts.BACKGROUND_OFFSET */)
+        // If there is no grammar, we just take a guess and try to match brackets.
+        | (1024 /* MetadataConsts.BALANCED_BRACKETS_MASK */)) >>> 0;
 }

@@ -35,10 +35,9 @@ let BannerController = class BannerController extends Disposable {
     }
     show(item) {
         this.banner.show(Object.assign(Object.assign({}, item), { onClose: () => {
+                var _a;
                 this.hide();
-                if (item.onClose) {
-                    item.onClose();
-                }
+                (_a = item.onClose) === null || _a === void 0 ? void 0 : _a.call(item);
             } }));
         this._editor.setBanner(this.banner.element, BANNER_ELEMENT_HEIGHT);
     }

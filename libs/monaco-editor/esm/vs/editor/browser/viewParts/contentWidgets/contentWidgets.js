@@ -18,12 +18,12 @@ export class ViewContentWidgets extends ViewPart {
         this._viewDomNode = viewDomNode;
         this._widgets = {};
         this.domNode = createFastDomNode(document.createElement('div'));
-        PartFingerprints.write(this.domNode, 1 /* ContentWidgets */);
+        PartFingerprints.write(this.domNode, 1 /* PartFingerprint.ContentWidgets */);
         this.domNode.setClassName('contentWidgets');
         this.domNode.setPosition('absolute');
         this.domNode.setTop(0);
         this.overflowingContentWidgetsDomNode = createFastDomNode(document.createElement('div'));
-        PartFingerprints.write(this.overflowingContentWidgetsDomNode, 2 /* OverflowingContentWidgets */);
+        PartFingerprints.write(this.overflowingContentWidgetsDomNode, 2 /* PartFingerprint.OverflowingContentWidgets */);
         this.overflowingContentWidgetsDomNode.setClassName('overflowingContentWidgets');
     }
     dispose() {
@@ -79,9 +79,9 @@ export class ViewContentWidgets extends ViewPart {
         }
         this.setShouldRender();
     }
-    setWidgetPosition(widget, range, preference) {
+    setWidgetPosition(widget, range, preference, affinity) {
         const myWidget = this._widgets[widget.getId()];
-        myWidget.setPosition(range, preference);
+        myWidget.setPosition(range, preference, affinity);
         this.setShouldRender();
     }
     removeWidget(widget) {
@@ -130,13 +130,14 @@ class Widget {
         this.allowEditorOverflow = this._actual.allowEditorOverflow || false;
         this.suppressMouseDown = this._actual.suppressMouseDown || false;
         const options = this._context.configuration.options;
-        const layoutInfo = options.get(131 /* layoutInfo */);
-        this._fixedOverflowWidgets = options.get(36 /* fixedOverflowWidgets */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
+        this._fixedOverflowWidgets = options.get(38 /* EditorOption.fixedOverflowWidgets */);
         this._contentWidth = layoutInfo.contentWidth;
         this._contentLeft = layoutInfo.contentLeft;
-        this._lineHeight = options.get(59 /* lineHeight */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
         this._range = null;
         this._viewRange = null;
+        this._affinity = null;
         this._preference = [];
         this._cachedDomNodeOffsetWidth = -1;
         this._cachedDomNodeOffsetHeight = -1;
@@ -151,25 +152,27 @@ class Widget {
     }
     onConfigurationChanged(e) {
         const options = this._context.configuration.options;
-        this._lineHeight = options.get(59 /* lineHeight */);
-        if (e.hasChanged(131 /* layoutInfo */)) {
-            const layoutInfo = options.get(131 /* layoutInfo */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
+        if (e.hasChanged(133 /* EditorOption.layoutInfo */)) {
+            const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
             this._contentLeft = layoutInfo.contentLeft;
             this._contentWidth = layoutInfo.contentWidth;
             this._maxWidth = this._getMaxWidth();
         }
     }
     onLineMappingChanged(e) {
-        this._setPosition(this._range);
+        this._setPosition(this._range, this._affinity);
     }
-    _setPosition(range) {
+    _setPosition(range, affinity) {
+        var _a;
         this._range = range;
         this._viewRange = null;
+        this._affinity = affinity;
         if (this._range) {
             // Do not trust that widgets give a valid position
             const validModelRange = this._context.viewModel.model.validateRange(this._range);
             if (this._context.viewModel.coordinatesConverter.modelPositionIsVisible(validModelRange.getStartPosition()) || this._context.viewModel.coordinatesConverter.modelPositionIsVisible(validModelRange.getEndPosition())) {
-                this._viewRange = this._context.viewModel.coordinatesConverter.convertModelRangeToViewRange(validModelRange);
+                this._viewRange = this._context.viewModel.coordinatesConverter.convertModelRangeToViewRange(validModelRange, (_a = this._affinity) !== null && _a !== void 0 ? _a : undefined);
             }
         }
     }
@@ -178,8 +181,8 @@ class Widget {
             ? window.innerWidth || document.documentElement.offsetWidth || document.body.offsetWidth
             : this._contentWidth);
     }
-    setPosition(range, preference) {
-        this._setPosition(range);
+    setPosition(range, preference, affinity) {
+        this._setPosition(range, affinity);
         this._preference = preference;
         if (this._viewRange && this._preference && this._preference.length > 0) {
             // this content widget would like to be visible if possible
@@ -304,13 +307,13 @@ class Widget {
                 lastLine = visibleRangesForLine;
             }
         }
-        let firstLineMinLeft = 1073741824 /* MAX_SAFE_SMALL_INTEGER */; //firstLine.Constants.MAX_SAFE_SMALL_INTEGER;
+        let firstLineMinLeft = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */; //firstLine.Constants.MAX_SAFE_SMALL_INTEGER;
         for (const visibleRange of firstLine.ranges) {
             if (visibleRange.left < firstLineMinLeft) {
                 firstLineMinLeft = visibleRange.left;
             }
         }
-        let lastLineMinLeft = 1073741824 /* MAX_SAFE_SMALL_INTEGER */; //lastLine.Constants.MAX_SAFE_SMALL_INTEGER;
+        let lastLineMinLeft = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */; //lastLine.Constants.MAX_SAFE_SMALL_INTEGER;
         for (const visibleRange of lastLine.ranges) {
             if (visibleRange.left < lastLineMinLeft) {
                 lastLineMinLeft = visibleRange.left;
@@ -341,8 +344,9 @@ class Widget {
             }
             else {
                 const domNode = this.domNode.domNode;
-                this._cachedDomNodeOffsetWidth = domNode.offsetWidth;
-                this._cachedDomNodeOffsetHeight = domNode.offsetHeight;
+                const clientRect = domNode.getBoundingClientRect();
+                this._cachedDomNodeOffsetWidth = Math.round(clientRect.width);
+                this._cachedDomNodeOffsetHeight = Math.round(clientRect.height);
             }
         }
         let placement;
@@ -356,30 +360,30 @@ class Widget {
         for (let pass = 1; pass <= 2; pass++) {
             for (const pref of this._preference) {
                 // placement
-                if (pref === 1 /* ABOVE */) {
+                if (pref === 1 /* ContentWidgetPositionPreference.ABOVE */) {
                     if (!placement) {
                         // Widget outside of viewport
                         return null;
                     }
                     if (pass === 2 || placement.fitsAbove) {
-                        return { coordinate: new Coordinate(placement.aboveTop, placement.aboveLeft), position: 1 /* ABOVE */ };
+                        return { coordinate: new Coordinate(placement.aboveTop, placement.aboveLeft), position: 1 /* ContentWidgetPositionPreference.ABOVE */ };
                     }
                 }
-                else if (pref === 2 /* BELOW */) {
+                else if (pref === 2 /* ContentWidgetPositionPreference.BELOW */) {
                     if (!placement) {
                         // Widget outside of viewport
                         return null;
                     }
                     if (pass === 2 || placement.fitsBelow) {
-                        return { coordinate: new Coordinate(placement.belowTop, placement.belowLeft), position: 2 /* BELOW */ };
+                        return { coordinate: new Coordinate(placement.belowTop, placement.belowLeft), position: 2 /* ContentWidgetPositionPreference.BELOW */ };
                     }
                 }
                 else {
                     if (this.allowEditorOverflow) {
-                        return { coordinate: this._prepareRenderWidgetAtExactPositionOverflowing(topLeft), position: 0 /* EXACT */ };
+                        return { coordinate: this._prepareRenderWidgetAtExactPositionOverflowing(topLeft), position: 0 /* ContentWidgetPositionPreference.EXACT */ };
                     }
                     else {
-                        return { coordinate: topLeft, position: 0 /* EXACT */ };
+                        return { coordinate: topLeft, position: 0 /* ContentWidgetPositionPreference.EXACT */ };
                     }
                 }
             }

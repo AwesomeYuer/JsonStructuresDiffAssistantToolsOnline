@@ -43,7 +43,7 @@ export class ColorHover {
         this.forceShowAtRange = true;
     }
     isValidForHoverAnchor(anchor) {
-        return (anchor.type === 1 /* Range */
+        return (anchor.type === 1 /* HoverAnchorType.Range */
             && this.range.startColumn <= anchor.range.startColumn
             && this.range.endColumn >= anchor.range.endColumn);
     }
@@ -70,7 +70,7 @@ let ColorHoverParticipant = class ColorHoverParticipant {
                 return [];
             }
             for (const d of lineDecorations) {
-                if (!colorDetector.isColorDecorationId(d.id)) {
+                if (!colorDetector.isColorDecoration(d)) {
                     continue;
                 }
                 const colorData = colorDetector.getColorData(d.range.getStartPosition());
@@ -103,7 +103,7 @@ let ColorHoverParticipant = class ColorHoverParticipant {
         const colorHover = hoverParts[0];
         const editorModel = this._editor.getModel();
         const model = colorHover.model;
-        const widget = disposables.add(new ColorPickerWidget(context.fragment, model, this._editor.getOption(129 /* pixelRatio */), this._themeService));
+        const widget = disposables.add(new ColorPickerWidget(context.fragment, model, this._editor.getOption(131 /* EditorOption.pixelRatio */), this._themeService));
         context.setColorPicker(widget);
         let range = new Range(colorHover.range.startLineNumber, colorHover.range.startColumn, colorHover.range.endLineNumber, colorHover.range.endColumn);
         const updateEditorModel = () => {
@@ -112,7 +112,7 @@ let ColorHoverParticipant = class ColorHoverParticipant {
             if (model.presentation.textEdit) {
                 textEdits = [model.presentation.textEdit];
                 newRange = new Range(model.presentation.textEdit.range.startLineNumber, model.presentation.textEdit.range.startColumn, model.presentation.textEdit.range.endLineNumber, model.presentation.textEdit.range.endColumn);
-                const trackedRange = this._editor.getModel()._setTrackedRange(null, newRange, 3 /* GrowsOnlyWhenTypingAfter */);
+                const trackedRange = this._editor.getModel()._setTrackedRange(null, newRange, 3 /* TrackedRangeStickiness.GrowsOnlyWhenTypingAfter */);
                 this._editor.pushUndoStop();
                 this._editor.executeEdits('colorpicker', textEdits);
                 newRange = this._editor.getModel()._getTrackedRange(trackedRange) || newRange;

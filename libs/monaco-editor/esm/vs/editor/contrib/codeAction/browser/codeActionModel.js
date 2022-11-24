@@ -23,6 +23,7 @@ import { Range } from '../../../common/core/range.js';
 import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 import { Progress } from '../../../../platform/progress/common/progress.js';
 import { getCodeActions } from './codeAction.js';
+import { CodeActionTriggerSource } from './types.js';
 export const SUPPORTED_CODE_ACTIONS = new RawContextKey('supportedCodeAction', '');
 class CodeActionOracle extends Disposable {
     constructor(_editor, _markerService, _signalChange, _delay = 250) {
@@ -46,13 +47,13 @@ class CodeActionOracle extends Disposable {
         }
         if (resources.some(resource => isEqual(resource, model.uri))) {
             this._autoTriggerTimer.cancelAndSet(() => {
-                this.trigger({ type: 2 /* Auto */ });
+                this.trigger({ type: 2 /* CodeActionTriggerType.Auto */, triggerAction: CodeActionTriggerSource.Default });
             }, this._delay);
         }
     }
     _onCursorChange() {
         this._autoTriggerTimer.cancelAndSet(() => {
-            this.trigger({ type: 2 /* Auto */ });
+            this.trigger({ type: 2 /* CodeActionTriggerType.Auto */, triggerAction: CodeActionTriggerSource.Default });
         }, this._delay);
     }
     _getRangeOfMarker(selection) {
@@ -74,7 +75,7 @@ class CodeActionOracle extends Disposable {
         }
         const model = this._editor.getModel();
         const selection = this._editor.getSelection();
-        if (selection.isEmpty() && trigger.type === 2 /* Auto */) {
+        if (selection.isEmpty() && trigger.type === 2 /* CodeActionTriggerType.Auto */) {
             const { lineNumber, column } = selection.getPosition();
             const line = model.getLineContent(lineNumber);
             if (line.length === 0) {
@@ -122,14 +123,14 @@ class CodeActionOracle extends Disposable {
 }
 export var CodeActionsState;
 (function (CodeActionsState) {
-    CodeActionsState.Empty = { type: 0 /* Empty */ };
+    CodeActionsState.Empty = { type: 0 /* Type.Empty */ };
     class Triggered {
         constructor(trigger, rangeOrSelection, position, _cancellablePromise) {
             this.trigger = trigger;
             this.rangeOrSelection = rangeOrSelection;
             this.position = position;
             this._cancellablePromise = _cancellablePromise;
-            this.type = 1 /* Triggered */;
+            this.type = 1 /* Type.Triggered */;
             this.actions = _cancellablePromise.catch((e) => {
                 if (isCancellationError(e)) {
                     return emptyCodeActionSet;
@@ -185,7 +186,7 @@ export class CodeActionModel extends Disposable {
         const model = this._editor.getModel();
         if (model
             && this._registry.has(model)
-            && !this._editor.getOption(81 /* readOnly */)) {
+            && !this._editor.getOption(83 /* EditorOption.readOnly */)) {
             const supportedActions = [];
             for (const provider of this._registry.all(model)) {
                 if (Array.isArray(provider.providedCodeActionKinds)) {
@@ -200,28 +201,27 @@ export class CodeActionModel extends Disposable {
                     return;
                 }
                 const actions = createCancelablePromise(token => getCodeActions(this._registry, model, trigger.selection, trigger.trigger, Progress.None, token));
-                if (trigger.trigger.type === 1 /* Invoke */) {
+                if (trigger.trigger.type === 1 /* CodeActionTriggerType.Invoke */) {
                     (_a = this._progressService) === null || _a === void 0 ? void 0 : _a.showWhile(actions, 250);
                 }
                 this.setState(new CodeActionsState.Triggered(trigger.trigger, trigger.selection, trigger.position, actions));
             }, undefined);
-            this._codeActionOracle.value.trigger({ type: 2 /* Auto */ });
+            this._codeActionOracle.value.trigger({ type: 2 /* CodeActionTriggerType.Auto */, triggerAction: CodeActionTriggerSource.Default });
         }
         else {
             this._supportedCodeActions.reset();
         }
     }
     trigger(trigger) {
-        if (this._codeActionOracle.value) {
-            this._codeActionOracle.value.trigger(trigger);
-        }
+        var _a;
+        (_a = this._codeActionOracle.value) === null || _a === void 0 ? void 0 : _a.trigger(trigger);
     }
     setState(newState, skipNotify) {
         if (newState === this._state) {
             return;
         }
         // Cancel old request
-        if (this._state.type === 1 /* Triggered */) {
+        if (this._state.type === 1 /* CodeActionsState.Type.Triggered */) {
             this._state.cancel();
         }
         this._state = newState;

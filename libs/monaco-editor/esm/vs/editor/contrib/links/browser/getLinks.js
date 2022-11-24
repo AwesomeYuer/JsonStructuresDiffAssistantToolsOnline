@@ -82,7 +82,7 @@ export class LinksList {
     }
     static _union(oldLinks, newLinks) {
         // reunite oldLinks with newLinks and remove duplicates
-        let result = [];
+        const result = [];
         let oldIndex;
         let oldLen;
         let newIndex;

@@ -21,7 +21,7 @@ import { Range } from '../../../common/core/range.js';
 import { IMarkerDecorationsService } from '../../../common/services/markerDecorations.js';
 import { getCodeActions } from '../../codeAction/browser/codeAction.js';
 import { QuickFixAction, QuickFixController } from '../../codeAction/browser/codeActionCommands.js';
-import { CodeActionKind } from '../../codeAction/browser/types.js';
+import { CodeActionKind, CodeActionTriggerSource } from '../../codeAction/browser/types.js';
 import { MarkerController, NextMarkerAction } from '../../gotoError/browser/gotoError.js';
 import * as nls from '../../../../nls.js';
 import { IMarkerData, MarkerSeverity } from '../../../../platform/markers/common/markers.js';
@@ -38,14 +38,15 @@ export class MarkerHover {
         this.marker = marker;
     }
     isValidForHoverAnchor(anchor) {
-        return (anchor.type === 1 /* Range */
+        return (anchor.type === 1 /* HoverAnchorType.Range */
             && this.range.startColumn <= anchor.range.startColumn
             && this.range.endColumn >= anchor.range.endColumn);
     }
 }
 const markerCodeActionTrigger = {
-    type: 1 /* Invoke */,
-    filter: { include: CodeActionKind.QuickFix }
+    type: 1 /* CodeActionTriggerType.Invoke */,
+    filter: { include: CodeActionKind.QuickFix },
+    triggerAction: CodeActionTriggerSource.QuickFixHover
 };
 let MarkerHoverParticipant = class MarkerHoverParticipant {
     constructor(_editor, _markerDecorationsService, _openerService, _languageFeaturesService) {
@@ -57,7 +58,7 @@ let MarkerHoverParticipant = class MarkerHoverParticipant {
         this.recentMarkerCodeActionsInfo = undefined;
     }
     computeSync(anchor, lineDecorations) {
-        if (!this._editor.hasModel() || anchor.type !== 1 /* Range */) {
+        if (!this._editor.hasModel() || anchor.type !== 1 /* HoverAnchorType.Range */) {
             return [];
         }
         const model = this._editor.getModel();
@@ -159,7 +160,7 @@ let MarkerHoverParticipant = class MarkerHoverParticipant {
                 }
             });
         }
-        if (!this._editor.getOption(81 /* readOnly */)) {
+        if (!this._editor.getOption(83 /* EditorOption.readOnly */)) {
             const quickfixPlaceholderElement = context.statusBar.append($('div'));
             if (this.recentMarkerCodeActionsInfo) {
                 if (IMarkerData.makeKey(this.recentMarkerCodeActionsInfo.marker) === IMarkerData.makeKey(markerHover.marker)) {
@@ -205,7 +206,9 @@ let MarkerHoverParticipant = class MarkerHoverParticipant {
                         context.hide();
                         controller === null || controller === void 0 ? void 0 : controller.showCodeActions(markerCodeActionTrigger, actions, {
                             x: elementPosition.left + 6,
-                            y: elementPosition.top + elementPosition.height + 6
+                            y: elementPosition.top + elementPosition.height + 6,
+                            width: elementPosition.width,
+                            height: elementPosition.height
                         });
                     }
                 });

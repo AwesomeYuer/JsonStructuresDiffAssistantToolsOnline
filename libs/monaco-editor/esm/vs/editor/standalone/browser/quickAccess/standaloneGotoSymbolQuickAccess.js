@@ -41,25 +41,17 @@ StandaloneGotoSymbolQuickAccessProvider = __decorate([
     __param(2, IOutlineModelService)
 ], StandaloneGotoSymbolQuickAccessProvider);
 export { StandaloneGotoSymbolQuickAccessProvider };
-Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
-    ctor: StandaloneGotoSymbolQuickAccessProvider,
-    prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX,
-    helpEntries: [
-        { description: QuickOutlineNLS.quickOutlineActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX, needsEditor: true },
-        { description: QuickOutlineNLS.quickOutlineByCategoryActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX_BY_CATEGORY, needsEditor: true }
-    ]
-});
-export class GotoLineAction extends EditorAction {
+export class GotoSymbolAction extends EditorAction {
     constructor() {
         super({
-            id: 'editor.action.quickOutline',
+            id: GotoSymbolAction.ID,
             label: QuickOutlineNLS.quickOutlineActionLabel,
             alias: 'Go to Symbol...',
             precondition: EditorContextKeys.hasDocumentSymbolProvider,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 45 /* KeyO */,
-                weight: 100 /* EditorContrib */
+                primary: 2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 45 /* KeyCode.KeyO */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             contextMenuOpts: {
                 group: 'navigation',
@@ -71,4 +63,13 @@ export class GotoLineAction extends EditorAction {
         accessor.get(IQuickInputService).quickAccess.show(AbstractGotoSymbolQuickAccessProvider.PREFIX);
     }
 }
-registerEditorAction(GotoLineAction);
+GotoSymbolAction.ID = 'editor.action.quickOutline';
+registerEditorAction(GotoSymbolAction);
+Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
+    ctor: StandaloneGotoSymbolQuickAccessProvider,
+    prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX,
+    helpEntries: [
+        { description: QuickOutlineNLS.quickOutlineActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX, commandId: GotoSymbolAction.ID },
+        { description: QuickOutlineNLS.quickOutlineByCategoryActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX_BY_CATEGORY }
+    ]
+});

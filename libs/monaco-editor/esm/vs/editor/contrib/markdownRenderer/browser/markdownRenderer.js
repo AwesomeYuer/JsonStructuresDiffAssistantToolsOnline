@@ -57,7 +57,7 @@ let MarkdownRenderer = class MarkdownRenderer {
             dispose: () => disposables.dispose()
         };
     }
-    _getRenderOptions(markdown, disposeables) {
+    _getRenderOptions(markdown, disposables) {
         return {
             codeBlockRenderer: (languageAlias, value) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b, _c;
@@ -79,18 +79,21 @@ let MarkdownRenderer = class MarkdownRenderer {
                 element.innerHTML = ((_c = (_b = MarkdownRenderer._ttpTokenizer) === null || _b === void 0 ? void 0 : _b.createHTML(html)) !== null && _c !== void 0 ? _c : html);
                 // use "good" font
                 if (this._options.editor) {
-                    const fontInfo = this._options.editor.getOption(44 /* fontInfo */);
+                    const fontInfo = this._options.editor.getOption(46 /* EditorOption.fontInfo */);
                     applyFontInfo(element, fontInfo);
                 }
                 else if (this._options.codeBlockFontFamily) {
                     element.style.fontFamily = this._options.codeBlockFontFamily;
+                }
+                if (this._options.codeBlockFontSize !== undefined) {
+                    element.style.fontSize = this._options.codeBlockFontSize;
                 }
                 return element;
             }),
             asyncRenderCallback: () => this._onDidRenderAsync.fire(),
             actionHandler: {
                 callback: (content) => this._openerService.open(content, { fromUserGesture: true, allowContributedOpeners: true, allowCommands: markdown.isTrusted }).catch(onUnexpectedError),
-                disposables: disposeables
+                disposables: disposables
             }
         };
     }

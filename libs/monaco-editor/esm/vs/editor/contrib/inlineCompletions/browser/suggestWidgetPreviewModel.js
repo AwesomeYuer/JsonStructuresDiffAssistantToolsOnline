@@ -26,8 +26,8 @@ import { MutableDisposable, toDisposable } from '../../../../base/common/lifecyc
 import { InlineCompletionTriggerKind } from '../../../common/languages.js';
 import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
 import { BaseGhostTextWidgetModel, GhostText } from './ghostText.js';
-import { minimizeInlineCompletion, provideInlineCompletions, UpdateOperation } from './inlineCompletionsModel.js';
-import { inlineCompletionToGhostText } from './inlineCompletionToGhostText.js';
+import { provideInlineCompletions, UpdateOperation } from './inlineCompletionsModel.js';
+import { inlineCompletionToGhostText, minimizeInlineCompletion } from './inlineCompletionToGhostText.js';
 import { SuggestWidgetInlineCompletionProvider } from './suggestWidgetInlineCompletionProvider.js';
 let SuggestWidgetPreviewModel = class SuggestWidgetPreviewModel extends BaseGhostTextWidgetModel {
     constructor(editor, cache, languageFeaturesService) {
@@ -41,6 +41,10 @@ let SuggestWidgetPreviewModel = class SuggestWidgetPreviewModel extends BaseGhos
         this.updateCacheSoon = this._register(new RunOnceScheduler(() => this.updateCache(), 50));
         this.minReservedLineCount = 0;
         this._register(this.suggestionInlineCompletionSource.onDidChange(() => {
+            if (!this.editor.hasModel()) {
+                // onDidChange might be called when calling setModel on the editor, before we are disposed.
+                return;
+            }
             this.updateCacheSoon.schedule();
             const suggestWidgetState = this.suggestionInlineCompletionSource.state;
             if (!suggestWidgetState) {
@@ -72,7 +76,7 @@ let SuggestWidgetPreviewModel = class SuggestWidgetPreviewModel extends BaseGhos
         return this.suggestionInlineCompletionSource.state !== undefined;
     }
     isSuggestionPreviewEnabled() {
-        const suggestOptions = this.editor.getOption(106 /* suggest */);
+        const suggestOptions = this.editor.getOption(108 /* EditorOption.suggest */);
         return suggestOptions.preview;
     }
     updateCache() {
@@ -82,12 +86,20 @@ let SuggestWidgetPreviewModel = class SuggestWidgetPreviewModel extends BaseGhos
                 return;
             }
             const info = {
-                text: state.selectedItem.normalizedInlineCompletion.text,
+                text: state.selectedItem.normalizedInlineCompletion.insertText,
                 range: state.selectedItem.normalizedInlineCompletion.range,
                 isSnippetText: state.selectedItem.isSnippetText,
                 completionKind: state.selectedItem.completionItemKind,
             };
             const position = this.editor.getPosition();
+            if (state.selectedItem.isSnippetText ||
+                state.selectedItem.completionItemKind === 27 /* CompletionItemKind.Snippet */ ||
+                state.selectedItem.completionItemKind === 20 /* CompletionItemKind.File */ ||
+                state.selectedItem.completionItemKind === 23 /* CompletionItemKind.Folder */) {
+                // Don't ask providers for these types of suggestions.
+                this.cache.clear();
+                return;
+            }
             const promise = createCancelablePromise((token) => __awaiter(this, void 0, void 0, function* () {
                 let result;
                 try {
@@ -98,6 +110,7 @@ let SuggestWidgetPreviewModel = class SuggestWidgetPreviewModel extends BaseGhos
                     return;
                 }
                 if (token.isCancellationRequested) {
+                    result.dispose();
                     return;
                 }
                 this.cache.setValue(this.editor, result, InlineCompletionTriggerKind.Automatic);
@@ -114,24 +127,25 @@ let SuggestWidgetPreviewModel = class SuggestWidgetPreviewModel extends BaseGhos
     get ghostText() {
         var _a, _b, _c;
         const isSuggestionPreviewEnabled = this.isSuggestionPreviewEnabled();
-        const augmentedCompletion = minimizeInlineCompletion(this.editor.getModel(), (_b = (_a = this.cache.value) === null || _a === void 0 ? void 0 : _a.completions[0]) === null || _b === void 0 ? void 0 : _b.toLiveInlineCompletion());
+        const model = this.editor.getModel();
+        const augmentedCompletion = minimizeInlineCompletion(model, (_b = (_a = this.cache.value) === null || _a === void 0 ? void 0 : _a.completions[0]) === null || _b === void 0 ? void 0 : _b.toLiveInlineCompletion());
         const suggestWidgetState = this.suggestionInlineCompletionSource.state;
-        const suggestInlineCompletion = minimizeInlineCompletion(this.editor.getModel(), (_c = suggestWidgetState === null || suggestWidgetState === void 0 ? void 0 : suggestWidgetState.selectedItem) === null || _c === void 0 ? void 0 : _c.normalizedInlineCompletion);
+        const suggestInlineCompletion = minimizeInlineCompletion(model, (_c = suggestWidgetState === null || suggestWidgetState === void 0 ? void 0 : suggestWidgetState.selectedItem) === null || _c === void 0 ? void 0 : _c.normalizedInlineCompletion);
         const isAugmentedCompletionValid = augmentedCompletion
             && suggestInlineCompletion
-            && augmentedCompletion.text.startsWith(suggestInlineCompletion.text)
+            && augmentedCompletion.insertText.startsWith(suggestInlineCompletion.insertText)
             && augmentedCompletion.range.equalsRange(suggestInlineCompletion.range);
         if (!isSuggestionPreviewEnabled && !isAugmentedCompletionValid) {
             return undefined;
         }
         // If the augmented completion is not valid and there is no suggest inline completion, we still show the augmented completion.
         const finalCompletion = isAugmentedCompletionValid ? augmentedCompletion : (suggestInlineCompletion || augmentedCompletion);
-        const inlineCompletionPreviewLength = isAugmentedCompletionValid ? finalCompletion.text.length - suggestInlineCompletion.text.length : 0;
+        const inlineCompletionPreviewLength = isAugmentedCompletionValid ? finalCompletion.insertText.length - suggestInlineCompletion.insertText.length : 0;
         const newGhostText = this.toGhostText(finalCompletion, inlineCompletionPreviewLength);
         return newGhostText;
     }
     toGhostText(completion, inlineCompletionPreviewLength) {
-        const mode = this.editor.getOptions().get(106 /* suggest */).previewMode;
+        const mode = this.editor.getOptions().get(108 /* EditorOption.suggest */).previewMode;
         return completion
             ? (inlineCompletionToGhostText(completion, this.editor.getModel(), mode, this.editor.getPosition(), inlineCompletionPreviewLength) ||
                 // Show an invisible ghost text to reserve space

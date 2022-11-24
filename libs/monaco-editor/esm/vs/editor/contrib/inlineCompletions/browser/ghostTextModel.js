@@ -148,7 +148,7 @@ export class SharedInlineCompletionCache extends Disposable {
         return this.cache.value;
     }
     setValue(editor, completionsSource, triggerKind) {
-        this.cache.value = new SynchronizedInlineCompletionsCache(editor, completionsSource, () => this.onDidChangeEmitter.fire(), triggerKind);
+        this.cache.value = new SynchronizedInlineCompletionsCache(completionsSource, editor, () => this.onDidChangeEmitter.fire(), triggerKind);
     }
     clearAndLeak() {
         return this.cache.clearAndLeak();

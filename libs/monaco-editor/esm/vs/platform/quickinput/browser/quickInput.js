@@ -44,7 +44,6 @@ let QuickInputService = class QuickInputService extends Themable {
         return this._quickAccess;
     }
     createController(host = this.layoutService, options) {
-        var _a, _b;
         const defaultOptions = {
             idPrefix: 'quickInput_',
             container: host.container,
@@ -57,9 +56,9 @@ let QuickInputService = class QuickInputService extends Themable {
             styles: this.computeStyles()
         };
         const controller = this._register(new QuickInputController(Object.assign(Object.assign({}, defaultOptions), options)));
-        controller.layout(host.dimension, (_b = (_a = host.offset) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0);
+        controller.layout(host.dimension, host.offset.quickPickTop);
         // Layout changes
-        this._register(host.onDidLayout(dimension => { var _a, _b; return controller.layout(dimension, (_b = (_a = host.offset) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0); }));
+        this._register(host.onDidLayout(dimension => controller.layout(dimension, host.offset.quickPickTop)));
         // Context keys
         this._register(controller.onShow(() => this.resetContextKeys()));
         this._register(controller.onHide(() => this.resetContextKeys()));
@@ -79,9 +78,7 @@ let QuickInputService = class QuickInputService extends Themable {
             return; // already active context
         }
         this.resetContextKeys();
-        if (key) {
-            key.set(true);
-        }
+        key === null || key === void 0 ? void 0 : key.set(true);
     }
     resetContextKeys() {
         this.contexts.forEach(context => {

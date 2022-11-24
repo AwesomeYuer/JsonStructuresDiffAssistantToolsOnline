@@ -58,7 +58,7 @@ let SuggestWidgetStatus = class SuggestWidgetStatus {
         const renderMenu = () => {
             const left = [];
             const right = [];
-            for (let [group, actions] of menu.getActions()) {
+            for (const [group, actions] of menu.getActions()) {
                 if (group === 'left') {
                     left.push(...actions);
                 }

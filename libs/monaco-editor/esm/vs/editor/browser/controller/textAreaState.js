@@ -165,22 +165,22 @@ export class PagedScreenReaderStrategy {
         const selectionEndPage = PagedScreenReaderStrategy._getPageOfLine(selection.endLineNumber, linesPerPage);
         const selectionEndPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionEndPage, linesPerPage);
         const pretextRange = selectionStartPageRange.intersectRanges(new Range(1, 1, selection.startLineNumber, selection.startColumn));
-        let pretext = model.getValueInRange(pretextRange, 1 /* LF */);
+        let pretext = model.getValueInRange(pretextRange, 1 /* EndOfLinePreference.LF */);
         const lastLine = model.getLineCount();
         const lastLineMaxColumn = model.getLineMaxColumn(lastLine);
         const posttextRange = selectionEndPageRange.intersectRanges(new Range(selection.endLineNumber, selection.endColumn, lastLine, lastLineMaxColumn));
-        let posttext = model.getValueInRange(posttextRange, 1 /* LF */);
+        let posttext = model.getValueInRange(posttextRange, 1 /* EndOfLinePreference.LF */);
         let text;
         if (selectionStartPage === selectionEndPage || selectionStartPage + 1 === selectionEndPage) {
             // take full selection
-            text = model.getValueInRange(selection, 1 /* LF */);
+            text = model.getValueInRange(selection, 1 /* EndOfLinePreference.LF */);
         }
         else {
             const selectionRange1 = selectionStartPageRange.intersectRanges(selection);
             const selectionRange2 = selectionEndPageRange.intersectRanges(selection);
-            text = (model.getValueInRange(selectionRange1, 1 /* LF */)
+            text = (model.getValueInRange(selectionRange1, 1 /* EndOfLinePreference.LF */)
                 + String.fromCharCode(8230)
-                + model.getValueInRange(selectionRange2, 1 /* LF */));
+                + model.getValueInRange(selectionRange2, 1 /* EndOfLinePreference.LF */));
         }
         // Chromium handles very poorly text even of a few thousand chars
         // Cut text to avoid stalling the entire UI

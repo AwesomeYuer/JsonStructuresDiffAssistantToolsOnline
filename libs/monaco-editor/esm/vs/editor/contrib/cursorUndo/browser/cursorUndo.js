@@ -105,8 +105,8 @@ export class CursorUndo extends EditorAction {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
-                primary: 2048 /* CtrlCmd */ | 51 /* KeyU */,
-                weight: 100 /* EditorContrib */
+                primary: 2048 /* KeyMod.CtrlCmd */ | 51 /* KeyCode.KeyU */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             }
         });
     }

@@ -25,12 +25,20 @@ export function isIMenuItem(item) {
     return item.command !== undefined;
 }
 export class MenuId {
-    constructor(debugName) {
-        this.id = MenuId._idPool++;
-        this._debugName = debugName;
+    /**
+     * Create a new `MenuId` with the unique identifier. Will throw if a menu
+     * with the identifier already exists, use `MenuId.for(ident)` or a unique
+     * identifier
+     */
+    constructor(identifier) {
+        if (MenuId._instances.has(identifier)) {
+            throw new TypeError(`MenuId with identifier '${identifier}' already exists. Use MenuId.for(ident) or a unique identifier`);
+        }
+        MenuId._instances.set(identifier, this);
+        this.id = identifier;
     }
 }
-MenuId._idPool = 0;
+MenuId._instances = new Map();
 MenuId.CommandPalette = new MenuId('CommandPalette');
 MenuId.DebugBreakpointsContext = new MenuId('DebugBreakpointsContext');
 MenuId.DebugCallStackContext = new MenuId('DebugCallStackContext');
@@ -38,10 +46,12 @@ MenuId.DebugConsoleContext = new MenuId('DebugConsoleContext');
 MenuId.DebugVariablesContext = new MenuId('DebugVariablesContext');
 MenuId.DebugWatchContext = new MenuId('DebugWatchContext');
 MenuId.DebugToolBar = new MenuId('DebugToolBar');
+MenuId.DebugToolBarStop = new MenuId('DebugToolBarStop');
 MenuId.EditorContext = new MenuId('EditorContext');
 MenuId.SimpleEditorContext = new MenuId('SimpleEditorContext');
 MenuId.EditorContextCopy = new MenuId('EditorContextCopy');
 MenuId.EditorContextPeek = new MenuId('EditorContextPeek');
+MenuId.EditorContextShare = new MenuId('EditorContextShare');
 MenuId.EditorTitle = new MenuId('EditorTitle');
 MenuId.EditorTitleRun = new MenuId('EditorTitleRun');
 MenuId.EditorTitleContext = new MenuId('EditorTitleContext');
@@ -50,6 +60,7 @@ MenuId.EmptyEditorGroupContext = new MenuId('EmptyEditorGroupContext');
 MenuId.ExplorerContext = new MenuId('ExplorerContext');
 MenuId.ExtensionContext = new MenuId('ExtensionContext');
 MenuId.GlobalActivity = new MenuId('GlobalActivity');
+MenuId.CommandCenter = new MenuId('CommandCenter');
 MenuId.LayoutControlMenuSubmenu = new MenuId('LayoutControlMenuSubmenu');
 MenuId.LayoutControlMenu = new MenuId('LayoutControlMenu');
 MenuId.MenubarMainMenu = new MenuId('MenubarMainMenu');
@@ -67,6 +78,7 @@ MenuId.MenubarPanelPositionMenu = new MenuId('MenubarPanelPositionMenu');
 MenuId.MenubarPreferencesMenu = new MenuId('MenubarPreferencesMenu');
 MenuId.MenubarRecentMenu = new MenuId('MenubarRecentMenu');
 MenuId.MenubarSelectionMenu = new MenuId('MenubarSelectionMenu');
+MenuId.MenubarShare = new MenuId('MenubarShare');
 MenuId.MenubarSwitchEditorMenu = new MenuId('MenubarSwitchEditorMenu');
 MenuId.MenubarSwitchGroupMenu = new MenuId('MenubarSwitchGroupMenu');
 MenuId.MenubarTerminalMenu = new MenuId('MenubarTerminalMenu');
@@ -89,6 +101,7 @@ MenuId.TestPeekElement = new MenuId('TestPeekElement');
 MenuId.TestPeekTitle = new MenuId('TestPeekTitle');
 MenuId.TouchBarContext = new MenuId('TouchBarContext');
 MenuId.TitleBarContext = new MenuId('TitleBarContext');
+MenuId.TitleBarTitleContext = new MenuId('TitleBarTitleContext');
 MenuId.TunnelContext = new MenuId('TunnelContext');
 MenuId.TunnelPrivacy = new MenuId('TunnelPrivacy');
 MenuId.TunnelProtocol = new MenuId('TunnelProtocol');
@@ -107,10 +120,12 @@ MenuId.CommentTitle = new MenuId('CommentTitle');
 MenuId.CommentActions = new MenuId('CommentActions');
 MenuId.InteractiveToolbar = new MenuId('InteractiveToolbar');
 MenuId.InteractiveCellTitle = new MenuId('InteractiveCellTitle');
+MenuId.InteractiveCellDelete = new MenuId('InteractiveCellDelete');
 MenuId.InteractiveCellExecute = new MenuId('InteractiveCellExecute');
 MenuId.InteractiveInputExecute = new MenuId('InteractiveInputExecute');
 MenuId.NotebookToolbar = new MenuId('NotebookToolbar');
 MenuId.NotebookCellTitle = new MenuId('NotebookCellTitle');
+MenuId.NotebookCellDelete = new MenuId('NotebookCellDelete');
 MenuId.NotebookCellInsert = new MenuId('NotebookCellInsert');
 MenuId.NotebookCellBetween = new MenuId('NotebookCellBetween');
 MenuId.NotebookCellListTop = new MenuId('NotebookCellTop');
@@ -121,11 +136,13 @@ MenuId.NotebookDiffCellMetadataTitle = new MenuId('NotebookDiffCellMetadataTitle
 MenuId.NotebookDiffCellOutputsTitle = new MenuId('NotebookDiffCellOutputsTitle');
 MenuId.NotebookOutputToolbar = new MenuId('NotebookOutputToolbar');
 MenuId.NotebookEditorLayoutConfigure = new MenuId('NotebookEditorLayoutConfigure');
+MenuId.NotebookKernelSource = new MenuId('NotebookKernelSource');
 MenuId.BulkEditTitle = new MenuId('BulkEditTitle');
 MenuId.BulkEditContext = new MenuId('BulkEditContext');
 MenuId.TimelineItemContext = new MenuId('TimelineItemContext');
 MenuId.TimelineTitle = new MenuId('TimelineTitle');
 MenuId.TimelineTitleContext = new MenuId('TimelineTitleContext');
+MenuId.TimelineFilterSubMenu = new MenuId('TimelineFilterSubMenu');
 MenuId.AccountsContext = new MenuId('AccountsContext');
 MenuId.PanelTitle = new MenuId('PanelTitle');
 MenuId.AuxiliaryBarTitle = new MenuId('AuxiliaryBarTitle');
@@ -138,6 +155,9 @@ MenuId.TerminalInlineTabContext = new MenuId('TerminalInlineTabContext');
 MenuId.WebviewContext = new MenuId('WebviewContext');
 MenuId.InlineCompletionsActions = new MenuId('InlineCompletionsActions');
 MenuId.NewFile = new MenuId('NewFile');
+MenuId.MergeToolbar = new MenuId('MergeToolbar');
+MenuId.MergeInput1Toolbar = new MenuId('MergeToolbar1Toolbar');
+MenuId.MergeInput2Toolbar = new MenuId('MergeToolbar2Toolbar');
 export const IMenuService = createDecorator('menuService');
 export const MenuRegistry = new class {
     constructor() {
@@ -193,7 +213,7 @@ export const MenuRegistry = new class {
         this._onDidChangeMenu.fire(changedIds);
         return toDisposable(() => {
             if (toRemove.size > 0) {
-                for (let fn of toRemove) {
+                for (const fn of toRemove) {
                     fn();
                 }
                 this._onDidChangeMenu.fire(changedIds);
@@ -261,8 +281,9 @@ export class SubmenuItemAction extends SubmenuAction {
 // implements IAction, does NOT extend Action, so that no one
 // subscribes to events of Action or modified properties
 let MenuItemAction = class MenuItemAction {
-    constructor(item, alt, options, contextKeyService, _commandService) {
+    constructor(item, alt, options, hideActions, contextKeyService, _commandService) {
         var _a, _b;
+        this.hideActions = hideActions;
         this._commandService = _commandService;
         this.id = item.id;
         this.label = (options === null || options === void 0 ? void 0 : options.renderShortTitle) && item.shortTitle
@@ -282,7 +303,7 @@ let MenuItemAction = class MenuItemAction {
             }
         }
         this.item = item;
-        this.alt = alt ? new MenuItemAction(alt, undefined, options, contextKeyService, _commandService) : undefined;
+        this.alt = alt ? new MenuItemAction(alt, undefined, options, hideActions, contextKeyService, _commandService) : undefined;
         this._options = options;
         if (ThemeIcon.isThemeIcon(item.icon)) {
             this.class = CSSIcon.asClassName(item.icon);
@@ -306,8 +327,8 @@ let MenuItemAction = class MenuItemAction {
     }
 };
 MenuItemAction = __decorate([
-    __param(3, IContextKeyService),
-    __param(4, ICommandService)
+    __param(4, IContextKeyService),
+    __param(5, ICommandService)
 ], MenuItemAction);
 export { MenuItemAction };
 //#endregion

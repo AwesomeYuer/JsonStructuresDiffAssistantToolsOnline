@@ -93,8 +93,8 @@ export class TokenizationRegistry {
         return this._colorMap;
     }
     getDefaultBackground() {
-        if (this._colorMap && this._colorMap.length > 2 /* DefaultBackground */) {
-            return this._colorMap[2 /* DefaultBackground */];
+        if (this._colorMap && this._colorMap.length > 2 /* ColorId.DefaultBackground */) {
+            return this._colorMap[2 /* ColorId.DefaultBackground */];
         }
         return null;
     }

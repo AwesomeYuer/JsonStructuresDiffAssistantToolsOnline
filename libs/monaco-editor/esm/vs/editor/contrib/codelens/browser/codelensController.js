@@ -55,10 +55,10 @@ let CodeLensContribution = class CodeLensContribution {
         this._disposables.add(this._editor.onDidChangeModel(() => this._onModelChange()));
         this._disposables.add(this._editor.onDidChangeModelLanguage(() => this._onModelChange()));
         this._disposables.add(this._editor.onDidChangeConfiguration((e) => {
-            if (e.hasChanged(44 /* fontInfo */) || e.hasChanged(16 /* codeLensFontSize */) || e.hasChanged(15 /* codeLensFontFamily */)) {
+            if (e.hasChanged(46 /* EditorOption.fontInfo */) || e.hasChanged(16 /* EditorOption.codeLensFontSize */) || e.hasChanged(15 /* EditorOption.codeLensFontFamily */)) {
                 this._updateLensStyle();
             }
-            if (e.hasChanged(14 /* codeLens */)) {
+            if (e.hasChanged(14 /* EditorOption.codeLens */)) {
                 this._onModelChange();
             }
         }));
@@ -79,21 +79,20 @@ let CodeLensContribution = class CodeLensContribution {
         this._styleElement.remove();
     }
     _getLayoutInfo() {
-        let fontSize = this._editor.getOption(16 /* codeLensFontSize */);
-        let codeLensHeight;
+        const lineHeightFactor = Math.max(1.3, this._editor.getOption(61 /* EditorOption.lineHeight */) / this._editor.getOption(48 /* EditorOption.fontSize */));
+        let fontSize = this._editor.getOption(16 /* EditorOption.codeLensFontSize */);
         if (!fontSize || fontSize < 5) {
-            fontSize = (this._editor.getOption(46 /* fontSize */) * .9) | 0;
-            codeLensHeight = this._editor.getOption(59 /* lineHeight */);
+            fontSize = (this._editor.getOption(48 /* EditorOption.fontSize */) * .9) | 0;
         }
-        else {
-            codeLensHeight = (fontSize * Math.max(1.3, this._editor.getOption(59 /* lineHeight */) / this._editor.getOption(46 /* fontSize */))) | 0;
-        }
-        return { codeLensHeight, fontSize };
+        return {
+            fontSize,
+            codeLensHeight: (fontSize * lineHeightFactor) | 0,
+        };
     }
     _updateLensStyle() {
         const { codeLensHeight, fontSize } = this._getLayoutInfo();
-        const fontFamily = this._editor.getOption(15 /* codeLensFontFamily */);
-        const editorFontInfo = this._editor.getOption(44 /* fontInfo */);
+        const fontFamily = this._editor.getOption(15 /* EditorOption.codeLensFontFamily */);
+        const editorFontInfo = this._editor.getOption(46 /* EditorOption.fontInfo */);
         const fontFamilyVar = `--codelens-font-family${this._styleClassName}`;
         const fontFeaturesVar = `--codelens-font-features${this._styleClassName}`;
         let newStyle = `
@@ -108,7 +107,7 @@ let CodeLensContribution = class CodeLensContribution {
         this._editor.getContainerDomNode().style.setProperty(fontFeaturesVar, editorFontInfo.fontFeatureSettings);
         //
         this._editor.changeViewZones(accessor => {
-            for (let lens of this._lenses) {
+            for (const lens of this._lenses) {
                 lens.updateHeight(codeLensHeight, accessor);
             }
         });
@@ -129,7 +128,7 @@ let CodeLensContribution = class CodeLensContribution {
         if (!model) {
             return;
         }
-        if (!this._editor.getOption(14 /* codeLens */)) {
+        if (!this._editor.getOption(14 /* EditorOption.codeLens */)) {
             return;
         }
         const cachedLenses = this._codeLensCache.get(model);
@@ -152,7 +151,7 @@ let CodeLensContribution = class CodeLensContribution {
         }
         for (const provider of this._languageFeaturesService.codeLensProvider.all(model)) {
             if (typeof provider.onDidChange === 'function') {
-                let registration = provider.onDidChange(() => scheduler.schedule());
+                const registration = provider.onDidChange(() => scheduler.schedule());
                 this._localToDispose.add(registration);
             }
         }
@@ -182,7 +181,7 @@ let CodeLensContribution = class CodeLensContribution {
         this._localToDispose.add(this._editor.onDidChangeModelContent(() => {
             this._editor.changeDecorations(decorationsAccessor => {
                 this._editor.changeViewZones(viewZonesAccessor => {
-                    let toDispose = [];
+                    const toDispose = [];
                     let lastLensLineNumber = -1;
                     this._lenses.forEach((lens) => {
                         if (!lens.isValid() || lastLensLineNumber === lens.getLineNumber()) {
@@ -195,7 +194,7 @@ let CodeLensContribution = class CodeLensContribution {
                             lastLensLineNumber = lens.getLineNumber();
                         }
                     });
-                    let helper = new CodeLensHelper();
+                    const helper = new CodeLensHelper();
                     toDispose.forEach((l) => {
                         l.dispose(helper, viewZonesAccessor);
                         this._lenses.splice(this._lenses.indexOf(l), 1);
@@ -233,7 +232,7 @@ let CodeLensContribution = class CodeLensContribution {
             }
         }));
         this._localToDispose.add(this._editor.onMouseDown(e => {
-            if (e.target.type !== 9 /* CONTENT_WIDGET */) {
+            if (e.target.type !== 9 /* MouseTargetType.CONTENT_WIDGET */) {
                 return;
             }
             let target = e.target.element;
@@ -242,7 +241,7 @@ let CodeLensContribution = class CodeLensContribution {
             }
             if ((target === null || target === void 0 ? void 0 : target.tagName) === 'A') {
                 for (const lens of this._lenses) {
-                    let command = lens.getCommand(target);
+                    const command = lens.getCommand(target);
                     if (command) {
                         this._commandService.executeCommand(command.id, ...(command.arguments || [])).catch(err => this._notificationService.error(err));
                         break;
@@ -266,11 +265,11 @@ let CodeLensContribution = class CodeLensContribution {
         if (!this._editor.hasModel()) {
             return;
         }
-        let maxLineNumber = this._editor.getModel().getLineCount();
-        let groups = [];
+        const maxLineNumber = this._editor.getModel().getLineCount();
+        const groups = [];
         let lastGroup;
-        for (let symbol of symbols.lenses) {
-            let line = symbol.symbol.range.startLineNumber;
+        for (const symbol of symbols.lenses) {
+            const line = symbol.symbol.range.startLineNumber;
             if (line < 1 || line > maxLineNumber) {
                 // invalid code lens
                 continue;
@@ -293,8 +292,8 @@ let CodeLensContribution = class CodeLensContribution {
                 let codeLensIndex = 0;
                 let groupsIndex = 0;
                 while (groupsIndex < groups.length && codeLensIndex < this._lenses.length) {
-                    let symbolsLineNumber = groups[groupsIndex][0].symbol.range.startLineNumber;
-                    let codeLensLineNumber = this._lenses[codeLensIndex].getLineNumber();
+                    const symbolsLineNumber = groups[groupsIndex][0].symbol.range.startLineNumber;
+                    const codeLensLineNumber = this._lenses[codeLensIndex].getLineNumber();
                     if (codeLensLineNumber < symbolsLineNumber) {
                         this._lenses[codeLensIndex].dispose(helper, viewZoneAccessor);
                         this._lenses.splice(codeLensIndex, 1);

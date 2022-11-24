@@ -6,13 +6,13 @@ import { Widget } from '../widget.js';
 import { CSSIcon } from '../../../common/codicons.js';
 import { Color } from '../../../common/color.js';
 import { Emitter } from '../../../common/event.js';
-import './checkbox.css';
+import './toggle.css';
 const defaultOpts = {
     inputActiveOptionBorder: Color.fromHex('#007ACC00'),
     inputActiveOptionForeground: Color.fromHex('#FFFFFF'),
     inputActiveOptionBackground: Color.fromHex('#0E639C50')
 };
-export class Checkbox extends Widget {
+export class Toggle extends Widget {
     constructor(opts) {
         super();
         this._onChange = this._register(new Emitter());
@@ -21,9 +21,10 @@ export class Checkbox extends Widget {
         this.onKeyDown = this._onKeyDown.event;
         this._opts = Object.assign(Object.assign({}, defaultOpts), opts);
         this._checked = this._opts.isChecked;
-        const classes = ['monaco-custom-checkbox'];
+        const classes = ['monaco-custom-toggle'];
         if (this._opts.icon) {
-            classes.push(...CSSIcon.asClassNameArray(this._opts.icon));
+            this._icon = this._opts.icon;
+            classes.push(...CSSIcon.asClassNameArray(this._icon));
         }
         if (this._opts.actionClassName) {
             classes.push(...this._opts.actionClassName.split(' '));
@@ -50,10 +51,11 @@ export class Checkbox extends Widget {
         });
         this.ignoreGesture(this.domNode);
         this.onkeydown(this.domNode, (keyboardEvent) => {
-            if (keyboardEvent.keyCode === 10 /* Space */ || keyboardEvent.keyCode === 3 /* Enter */) {
+            if (keyboardEvent.keyCode === 10 /* KeyCode.Space */ || keyboardEvent.keyCode === 3 /* KeyCode.Enter */) {
                 this.checked = !this._checked;
                 this._onChange.fire(true);
                 keyboardEvent.preventDefault();
+                keyboardEvent.stopPropagation();
                 return;
             }
             this._onKeyDown.fire(keyboardEvent);

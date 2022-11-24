@@ -17,10 +17,10 @@ import { assertType } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { Position } from '../../../common/core/position.js';
 import * as languages from '../../../common/languages.js';
+import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
 import { ITextModelService } from '../../../common/services/resolverService.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
 export const Context = {
     Visible: new RawContextKey('parameterHintsVisible', false),
     MultipleSignatures: new RawContextKey('parameterHintsMultipleSignatures', false),

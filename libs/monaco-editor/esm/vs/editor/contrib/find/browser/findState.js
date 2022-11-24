@@ -7,10 +7,10 @@ import { Disposable } from '../../../../base/common/lifecycle.js';
 import { Range } from '../../../common/core/range.js';
 import { MATCHES_LIMIT } from './findModel.js';
 function effectiveOptionValue(override, value) {
-    if (override === 1 /* True */) {
+    if (override === 1 /* FindOptionOverride.True */) {
         return true;
     }
-    if (override === 2 /* False */) {
+    if (override === 2 /* FindOptionOverride.False */) {
         return false;
     }
     return value;
@@ -25,13 +25,13 @@ export class FindReplaceState extends Disposable {
         this._isRevealed = false;
         this._isReplaceRevealed = false;
         this._isRegex = false;
-        this._isRegexOverride = 0 /* NotSet */;
+        this._isRegexOverride = 0 /* FindOptionOverride.NotSet */;
         this._wholeWord = false;
-        this._wholeWordOverride = 0 /* NotSet */;
+        this._wholeWordOverride = 0 /* FindOptionOverride.NotSet */;
         this._matchCase = false;
-        this._matchCaseOverride = 0 /* NotSet */;
+        this._matchCaseOverride = 0 /* FindOptionOverride.NotSet */;
         this._preserveCase = false;
-        this._preserveCaseOverride = 0 /* NotSet */;
+        this._preserveCaseOverride = 0 /* FindOptionOverride.NotSet */;
         this._searchScope = null;
         this._matchesPosition = 0;
         this._matchesCount = 0;
@@ -57,7 +57,7 @@ export class FindReplaceState extends Disposable {
     get matchesCount() { return this._matchesCount; }
     get currentMatch() { return this._currentMatch; }
     changeMatchInfo(matchesPosition, matchesCount, currentMatch) {
-        let changeEvent = {
+        const changeEvent = {
             moveCursor: false,
             updateHistory: false,
             searchString: false,
@@ -106,7 +106,7 @@ export class FindReplaceState extends Disposable {
     }
     change(newState, moveCursor, updateHistory = true) {
         var _a;
-        let changeEvent = {
+        const changeEvent = {
             moveCursor: moveCursor,
             updateHistory: updateHistory,
             searchString: false,
@@ -207,10 +207,10 @@ export class FindReplaceState extends Disposable {
             somethingChanged = true;
         }
         // Overrides get set when they explicitly come in and get reset anytime something else changes
-        this._isRegexOverride = (typeof newState.isRegexOverride !== 'undefined' ? newState.isRegexOverride : 0 /* NotSet */);
-        this._wholeWordOverride = (typeof newState.wholeWordOverride !== 'undefined' ? newState.wholeWordOverride : 0 /* NotSet */);
-        this._matchCaseOverride = (typeof newState.matchCaseOverride !== 'undefined' ? newState.matchCaseOverride : 0 /* NotSet */);
-        this._preserveCaseOverride = (typeof newState.preserveCaseOverride !== 'undefined' ? newState.preserveCaseOverride : 0 /* NotSet */);
+        this._isRegexOverride = (typeof newState.isRegexOverride !== 'undefined' ? newState.isRegexOverride : 0 /* FindOptionOverride.NotSet */);
+        this._wholeWordOverride = (typeof newState.wholeWordOverride !== 'undefined' ? newState.wholeWordOverride : 0 /* FindOptionOverride.NotSet */);
+        this._matchCaseOverride = (typeof newState.matchCaseOverride !== 'undefined' ? newState.matchCaseOverride : 0 /* FindOptionOverride.NotSet */);
+        this._preserveCaseOverride = (typeof newState.preserveCaseOverride !== 'undefined' ? newState.preserveCaseOverride : 0 /* FindOptionOverride.NotSet */);
         if (oldEffectiveIsRegex !== this.isRegex) {
             somethingChanged = true;
             changeEvent.isRegex = true;

@@ -1,7 +1,7 @@
 import '../../editor/editor.api.js';
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.33.0(4b1abad427e58dbedc1215d99a0902ffc885fcd4)
+ * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
@@ -10,14 +10,15 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __reExport = (target, module, copyDefault, desc) => {
-  if (module && typeof module === "object" || typeof module === "function") {
-    for (let key of __getOwnPropNames(module))
-      if (!__hasOwnProp.call(target, key) && (copyDefault || key !== "default"))
-        __defProp(target, key, { get: () => module[key], enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable });
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
-  return target;
+  return to;
 };
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
 
 // src/language/typescript/lib/typescriptServicesMetadata.ts
 var typescriptVersion = "4.5.5";
@@ -63,7 +64,7 @@ var ScriptTarget = /* @__PURE__ */ ((ScriptTarget2) => {
   ScriptTarget2[ScriptTarget2["ES2020"] = 7] = "ES2020";
   ScriptTarget2[ScriptTarget2["ESNext"] = 99] = "ESNext";
   ScriptTarget2[ScriptTarget2["JSON"] = 100] = "JSON";
-  ScriptTarget2[ScriptTarget2["Latest"] = 99] = "Latest";
+  ScriptTarget2[ScriptTarget2["Latest"] = 99 /* ESNext */] = "Latest";
   return ScriptTarget2;
 })(ScriptTarget || {});
 var ModuleResolutionKind = /* @__PURE__ */ ((ModuleResolutionKind2) => {

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { Emitter } from '../common/event.js';
-import { Disposable } from '../common/lifecycle.js';
+import { Disposable, markAsSingleton } from '../common/lifecycle.js';
 class WindowManager {
     constructor() {
         // --- Zoom Factor
@@ -27,9 +27,8 @@ class DevicePixelRatioMonitor extends Disposable {
         this._handleChange(false);
     }
     _handleChange(fireEvent) {
-        if (this._mediaQueryList) {
-            this._mediaQueryList.removeEventListener('change', this._listener);
-        }
+        var _a;
+        (_a = this._mediaQueryList) === null || _a === void 0 ? void 0 : _a.removeEventListener('change', this._listener);
         this._mediaQueryList = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
         this._mediaQueryList.addEventListener('change', this._listener);
         if (fireEvent) {
@@ -69,7 +68,7 @@ class PixelRatioFacade {
     }
     _getOrCreatePixelRatioMonitor() {
         if (!this._pixelRatioMonitor) {
-            this._pixelRatioMonitor = new PixelRatioImpl();
+            this._pixelRatioMonitor = markAsSingleton(new PixelRatioImpl());
         }
         return this._pixelRatioMonitor;
     }
@@ -85,6 +84,12 @@ class PixelRatioFacade {
     get onDidChange() {
         return this._getOrCreatePixelRatioMonitor().onDidChange;
     }
+}
+export function addMatchMediaChangeListener(query, callback) {
+    if (typeof query === 'string') {
+        query = window.matchMedia(query);
+    }
+    query.addEventListener('change', callback);
 }
 /**
  * Returns the pixel ratio.
@@ -106,4 +111,14 @@ export const isSafari = (!isChrome && (userAgent.indexOf('Safari') >= 0));
 export const isWebkitWebView = (!isChrome && !isSafari && isWebKit);
 export const isElectron = (userAgent.indexOf('Electron/') >= 0);
 export const isAndroid = (userAgent.indexOf('Android') >= 0);
-export const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+let standalone = false;
+if (window.matchMedia) {
+    const matchMedia = window.matchMedia('(display-mode: standalone)');
+    standalone = matchMedia.matches;
+    addMatchMediaChangeListener(matchMedia, ({ matches }) => {
+        standalone = matches;
+    });
+}
+export function isStandalone() {
+    return standalone;
+}

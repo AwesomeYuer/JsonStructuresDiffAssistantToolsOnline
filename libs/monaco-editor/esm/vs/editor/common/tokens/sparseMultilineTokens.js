@@ -68,7 +68,7 @@ export class SparseMultilineTokens {
     }
     applyEdit(range, text) {
         const [eolCount, firstLineLength, lastLineLength] = countEOL(text);
-        this.acceptEdit(range, eolCount, firstLineLength, lastLineLength, text.length > 0 ? text.charCodeAt(0) : 0 /* Null */);
+        this.acceptEdit(range, eolCount, firstLineLength, lastLineLength, text.length > 0 ? text.charCodeAt(0) : 0 /* CharCode.Null */);
     }
     acceptEdit(range, eolCount, firstLineLength, lastLineLength, firstCharCode) {
         this._acceptDeleteRange(range);
@@ -436,9 +436,9 @@ class SparseMultilineTokensStorage {
         //
         const isInsertingPreciselyOneWordCharacter = (eolCount === 0
             && firstLineLength === 1
-            && ((firstCharCode >= 48 /* Digit0 */ && firstCharCode <= 57 /* Digit9 */)
-                || (firstCharCode >= 65 /* A */ && firstCharCode <= 90 /* Z */)
-                || (firstCharCode >= 97 /* a */ && firstCharCode <= 122 /* z */)));
+            && ((firstCharCode >= 48 /* CharCode.Digit0 */ && firstCharCode <= 57 /* CharCode.Digit9 */)
+                || (firstCharCode >= 65 /* CharCode.A */ && firstCharCode <= 90 /* CharCode.Z */)
+                || (firstCharCode >= 97 /* CharCode.a */ && firstCharCode <= 122 /* CharCode.z */)));
         const tokens = this._tokens;
         const tokenCount = this._tokenCount;
         for (let i = 0; i < tokenCount; i++) {

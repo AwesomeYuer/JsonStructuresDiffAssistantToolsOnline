@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as dom from '../../../../base/browser/dom.js';
-import { CaseSensitiveCheckbox, RegexCheckbox, WholeWordsCheckbox } from '../../../../base/browser/ui/findinput/findInputCheckboxes.js';
+import { CaseSensitiveToggle, RegexToggle, WholeWordsToggle } from '../../../../base/browser/ui/findinput/findInputToggles.js';
 import { Widget } from '../../../../base/browser/ui/widget.js';
 import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { FIND_IDS } from './findModel.js';
@@ -26,7 +26,7 @@ export class FindOptionsWidget extends Widget {
         const inputActiveOptionBorderColor = themeService.getColorTheme().getColor(inputActiveOptionBorder);
         const inputActiveOptionForegroundColor = themeService.getColorTheme().getColor(inputActiveOptionForeground);
         const inputActiveOptionBackgroundColor = themeService.getColorTheme().getColor(inputActiveOptionBackground);
-        this.caseSensitive = this._register(new CaseSensitiveCheckbox({
+        this.caseSensitive = this._register(new CaseSensitiveToggle({
             appendTitle: this._keybindingLabelFor(FIND_IDS.ToggleCaseSensitiveCommand),
             isChecked: this._state.matchCase,
             inputActiveOptionBorder: inputActiveOptionBorderColor,
@@ -39,7 +39,7 @@ export class FindOptionsWidget extends Widget {
                 matchCase: this.caseSensitive.checked
             }, false);
         }));
-        this.wholeWords = this._register(new WholeWordsCheckbox({
+        this.wholeWords = this._register(new WholeWordsToggle({
             appendTitle: this._keybindingLabelFor(FIND_IDS.ToggleWholeWordCommand),
             isChecked: this._state.wholeWord,
             inputActiveOptionBorder: inputActiveOptionBorderColor,
@@ -52,7 +52,7 @@ export class FindOptionsWidget extends Widget {
                 wholeWord: this.wholeWords.checked
             }, false);
         }));
-        this.regex = this._register(new RegexCheckbox({
+        this.regex = this._register(new RegexToggle({
             appendTitle: this._keybindingLabelFor(FIND_IDS.ToggleRegexCommand),
             isChecked: this._state.isRegex,
             inputActiveOptionBorder: inputActiveOptionBorderColor,
@@ -84,13 +84,13 @@ export class FindOptionsWidget extends Widget {
                 this._revealTemporarily();
             }
         }));
-        this._register(dom.addDisposableNonBubblingMouseOutListener(this._domNode, (e) => this._onMouseOut()));
+        this._register(dom.addDisposableListener(this._domNode, dom.EventType.MOUSE_LEAVE, (e) => this._onMouseLeave()));
         this._register(dom.addDisposableListener(this._domNode, 'mouseover', (e) => this._onMouseOver()));
         this._applyTheme(themeService.getColorTheme());
         this._register(themeService.onDidColorThemeChange(this._applyTheme.bind(this)));
     }
     _keybindingLabelFor(actionId) {
-        let kb = this._keybindingService.lookupKeybinding(actionId);
+        const kb = this._keybindingService.lookupKeybinding(actionId);
         if (!kb) {
             return '';
         }
@@ -109,7 +109,7 @@ export class FindOptionsWidget extends Widget {
     }
     getPosition() {
         return {
-            preference: 0 /* TOP_RIGHT_CORNER */
+            preference: 0 /* OverlayWidgetPositionPreference.TOP_RIGHT_CORNER */
         };
     }
     highlightFindOptions() {
@@ -119,7 +119,7 @@ export class FindOptionsWidget extends Widget {
         this._show();
         this._hideSoon.schedule();
     }
-    _onMouseOut() {
+    _onMouseLeave() {
         this._hideSoon.schedule();
     }
     _onMouseOver() {
@@ -140,7 +140,7 @@ export class FindOptionsWidget extends Widget {
         this._domNode.style.display = 'none';
     }
     _applyTheme(theme) {
-        let inputStyles = {
+        const inputStyles = {
             inputActiveOptionBorder: theme.getColor(inputActiveOptionBorder),
             inputActiveOptionForeground: theme.getColor(inputActiveOptionForeground),
             inputActiveOptionBackground: theme.getColor(inputActiveOptionBackground)

@@ -36,15 +36,15 @@ let CodeLensCache = class CodeLensCache {
         this._cache = new LRUCache(20, 0.75);
         // remove old data
         const oldkey = 'codelens/cache';
-        runWhenIdle(() => storageService.remove(oldkey, 1 /* WORKSPACE */));
+        runWhenIdle(() => storageService.remove(oldkey, 1 /* StorageScope.WORKSPACE */));
         // restore lens data on start
         const key = 'codelens/cache2';
-        const raw = storageService.get(key, 1 /* WORKSPACE */, '{}');
+        const raw = storageService.get(key, 1 /* StorageScope.WORKSPACE */, '{}');
         this._deserialize(raw);
         // store lens data on shutdown
         once(storageService.onWillSaveState)(e => {
             if (e.reason === WillSaveStateReason.SHUTDOWN) {
-                storageService.store(key, this._serialize(), 1 /* WORKSPACE */, 1 /* MACHINE */);
+                storageService.store(key, this._serialize(), 1 /* StorageScope.WORKSPACE */, 1 /* StorageTarget.MACHINE */);
             }
         });
     }

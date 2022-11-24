@@ -28,7 +28,7 @@ export const CommandsRegistry = new class {
         // add argument validation if rich command metadata is provided
         if (idOrCommand.description) {
             const constraints = [];
-            for (let arg of idOrCommand.description.args) {
+            for (const arg of idOrCommand.description.args) {
                 constraints.push(arg.constraint);
             }
             const actualHandler = idOrCommand.handler;
@@ -44,8 +44,8 @@ export const CommandsRegistry = new class {
             commands = new LinkedList();
             this._commands.set(id, commands);
         }
-        let removeFn = commands.unshift(idOrCommand);
-        let ret = toDisposable(() => {
+        const removeFn = commands.unshift(idOrCommand);
+        const ret = toDisposable(() => {
             removeFn();
             const command = this._commands.get(id);
             if (command === null || command === void 0 ? void 0 : command.isEmpty()) {

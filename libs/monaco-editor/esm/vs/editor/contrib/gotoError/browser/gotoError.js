@@ -136,7 +136,7 @@ let MarkerController = class MarkerController {
                     this._cleanUp();
                     const otherEditor = yield this._editorService.openCodeEditor({
                         resource: model.selected.marker.resource,
-                        options: { pinned: false, revealIfOpened: true, selectionRevealType: 2 /* NearTop */, selection: model.selected.marker }
+                        options: { pinned: false, revealIfOpened: true, selectionRevealType: 2 /* TextEditorSelectionRevealType.NearTop */, selection: model.selected.marker }
                     }, this._editor);
                     if (otherEditor) {
                         (_a = MarkerController.get(otherEditor)) === null || _a === void 0 ? void 0 : _a.close();
@@ -183,8 +183,8 @@ export class NextMarkerAction extends MarkerNavigationAction {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 512 /* Alt */ | 66 /* F8 */,
-                weight: 100 /* EditorContrib */
+                primary: 512 /* KeyMod.Alt */ | 66 /* KeyCode.F8 */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             menuOpts: {
                 menuId: MarkerNavigationWidget.TitleMenu,
@@ -207,8 +207,8 @@ class PrevMarkerAction extends MarkerNavigationAction {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 1024 /* Shift */ | 512 /* Alt */ | 66 /* F8 */,
-                weight: 100 /* EditorContrib */
+                primary: 1024 /* KeyMod.Shift */ | 512 /* KeyMod.Alt */ | 66 /* KeyCode.F8 */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             menuOpts: {
                 menuId: MarkerNavigationWidget.TitleMenu,
@@ -231,8 +231,8 @@ class NextMarkerInFilesAction extends MarkerNavigationAction {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 66 /* F8 */,
-                weight: 100 /* EditorContrib */
+                primary: 66 /* KeyCode.F8 */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             menuOpts: {
                 menuId: MenuId.MenubarGoMenu,
@@ -252,8 +252,8 @@ class PrevMarkerInFilesAction extends MarkerNavigationAction {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 1024 /* Shift */ | 66 /* F8 */,
-                weight: 100 /* EditorContrib */
+                primary: 1024 /* KeyMod.Shift */ | 66 /* KeyCode.F8 */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             menuOpts: {
                 menuId: MenuId.MenubarGoMenu,
@@ -276,9 +276,9 @@ registerEditorCommand(new MarkerCommand({
     precondition: CONTEXT_MARKERS_NAVIGATION_VISIBLE,
     handler: x => x.close(),
     kbOpts: {
-        weight: 100 /* EditorContrib */ + 50,
+        weight: 100 /* KeybindingWeight.EditorContrib */ + 50,
         kbExpr: EditorContextKeys.focus,
-        primary: 9 /* Escape */,
-        secondary: [1024 /* Shift */ | 9 /* Escape */]
+        primary: 9 /* KeyCode.Escape */,
+        secondary: [1024 /* KeyMod.Shift */ | 9 /* KeyCode.Escape */]
     }
 }));

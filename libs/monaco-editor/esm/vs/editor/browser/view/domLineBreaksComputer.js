@@ -53,7 +53,7 @@ function createLineBreaks(requests, fontInfo, tabSize, firstLineBreakColumn, wra
         return result;
     }
     const overallWidth = Math.round(firstLineBreakColumn * fontInfo.typicalHalfwidthCharacterWidth);
-    const additionalIndent = (wrappingIndent === 3 /* DeepIndent */ ? 2 : wrappingIndent === 2 /* Indent */ ? 1 : 0);
+    const additionalIndent = (wrappingIndent === 3 /* WrappingIndent.DeepIndent */ ? 2 : wrappingIndent === 2 /* WrappingIndent.Indent */ ? 1 : 0);
     const additionalIndentSize = Math.round(tabSize * additionalIndent);
     const additionalIndentLength = Math.ceil(fontInfo.spaceWidth * additionalIndentSize);
     const containerDomNode = document.createElement('div');
@@ -69,7 +69,7 @@ function createLineBreaks(requests, fontInfo, tabSize, firstLineBreakColumn, wra
         let firstNonWhitespaceIndex = 0;
         let wrappedTextIndentLength = 0;
         let width = overallWidth;
-        if (wrappingIndent !== 0 /* None */) {
+        if (wrappingIndent !== 0 /* WrappingIndent.None */) {
             firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineContent);
             if (firstNonWhitespaceIndex === -1) {
                 // all whitespace line
@@ -78,7 +78,7 @@ function createLineBreaks(requests, fontInfo, tabSize, firstLineBreakColumn, wra
             else {
                 // Track existing indent
                 for (let i = 0; i < firstNonWhitespaceIndex; i++) {
-                    const charWidth = (lineContent.charCodeAt(i) === 9 /* Tab */
+                    const charWidth = (lineContent.charCodeAt(i) === 9 /* CharCode.Tab */
                         ? (tabSize - (wrappedTextIndentLength % tabSize))
                         : 1);
                     wrappedTextIndentLength += charWidth;
@@ -170,20 +170,20 @@ function renderLine(lineContent, initialVisibleColumn, tabSize, width, sb, wrapp
     let charOffset = 0;
     const charOffsets = [];
     const visibleColumns = [];
-    let nextCharCode = (0 < len ? lineContent.charCodeAt(0) : 0 /* Null */);
+    let nextCharCode = (0 < len ? lineContent.charCodeAt(0) : 0 /* CharCode.Null */);
     sb.appendASCIIString('<span>');
     for (let charIndex = 0; charIndex < len; charIndex++) {
-        if (charIndex !== 0 && charIndex % 16384 /* SPAN_MODULO_LIMIT */ === 0) {
+        if (charIndex !== 0 && charIndex % 16384 /* Constants.SPAN_MODULO_LIMIT */ === 0) {
             sb.appendASCIIString('</span><span>');
         }
         charOffsets[charIndex] = charOffset;
         visibleColumns[charIndex] = visibleColumn;
         const charCode = nextCharCode;
-        nextCharCode = (charIndex + 1 < len ? lineContent.charCodeAt(charIndex + 1) : 0 /* Null */);
+        nextCharCode = (charIndex + 1 < len ? lineContent.charCodeAt(charIndex + 1) : 0 /* CharCode.Null */);
         let producedCharacters = 1;
         let charWidth = 1;
         switch (charCode) {
-            case 9 /* Tab */:
+            case 9 /* CharCode.Tab */:
                 producedCharacters = (tabSize - (visibleColumn % tabSize));
                 charWidth = producedCharacters;
                 for (let space = 1; space <= producedCharacters; space++) {
@@ -191,34 +191,34 @@ function renderLine(lineContent, initialVisibleColumn, tabSize, width, sb, wrapp
                         sb.write1(0xA0); // &nbsp;
                     }
                     else {
-                        sb.appendASCII(32 /* Space */);
+                        sb.appendASCII(32 /* CharCode.Space */);
                     }
                 }
                 break;
-            case 32 /* Space */:
-                if (nextCharCode === 32 /* Space */) {
+            case 32 /* CharCode.Space */:
+                if (nextCharCode === 32 /* CharCode.Space */) {
                     sb.write1(0xA0); // &nbsp;
                 }
                 else {
-                    sb.appendASCII(32 /* Space */);
+                    sb.appendASCII(32 /* CharCode.Space */);
                 }
                 break;
-            case 60 /* LessThan */:
+            case 60 /* CharCode.LessThan */:
                 sb.appendASCIIString('&lt;');
                 break;
-            case 62 /* GreaterThan */:
+            case 62 /* CharCode.GreaterThan */:
                 sb.appendASCIIString('&gt;');
                 break;
-            case 38 /* Ampersand */:
+            case 38 /* CharCode.Ampersand */:
                 sb.appendASCIIString('&amp;');
                 break;
-            case 0 /* Null */:
+            case 0 /* CharCode.Null */:
                 sb.appendASCIIString('&#00;');
                 break;
-            case 65279 /* UTF8_BOM */:
-            case 8232 /* LINE_SEPARATOR */:
-            case 8233 /* PARAGRAPH_SEPARATOR */:
-            case 133 /* NEXT_LINE */:
+            case 65279 /* CharCode.UTF8_BOM */:
+            case 8232 /* CharCode.LINE_SEPARATOR */:
+            case 8233 /* CharCode.PARAGRAPH_SEPARATOR */:
+            case 133 /* CharCode.NEXT_LINE */:
                 sb.write1(0xFFFD);
                 break;
             default:
@@ -282,7 +282,7 @@ function discoverBreaks(range, spans, charOffsets, low, lowRects, high, highRect
     discoverBreaks(range, spans, charOffsets, mid, midRects, high, highRects, result);
 }
 function readClientRect(range, spans, startOffset, endOffset) {
-    range.setStart(spans[(startOffset / 16384 /* SPAN_MODULO_LIMIT */) | 0].firstChild, startOffset % 16384 /* SPAN_MODULO_LIMIT */);
-    range.setEnd(spans[(endOffset / 16384 /* SPAN_MODULO_LIMIT */) | 0].firstChild, endOffset % 16384 /* SPAN_MODULO_LIMIT */);
+    range.setStart(spans[(startOffset / 16384 /* Constants.SPAN_MODULO_LIMIT */) | 0].firstChild, startOffset % 16384 /* Constants.SPAN_MODULO_LIMIT */);
+    range.setEnd(spans[(endOffset / 16384 /* Constants.SPAN_MODULO_LIMIT */) | 0].firstChild, endOffset % 16384 /* Constants.SPAN_MODULO_LIMIT */);
     return range.getClientRects();
 }

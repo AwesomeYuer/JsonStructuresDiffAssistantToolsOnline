@@ -59,8 +59,8 @@ export class InputBox extends Widget {
             this.validation = this.options.validationOptions.validation;
         }
         this.element = dom.append(container, $('.monaco-inputbox.idle'));
-        let tagName = this.options.flexibleHeight ? 'textarea' : 'input';
-        let wrapper = dom.append(this.element, $('.ibwrapper'));
+        const tagName = this.options.flexibleHeight ? 'textarea' : 'input';
+        const wrapper = dom.append(this.element, $('.ibwrapper'));
         this.input = dom.append(wrapper, $(tagName + '.input.empty'));
         this.input.setAttribute('autocorrect', 'off');
         this.input.setAttribute('autocapitalize', 'off');
@@ -71,7 +71,7 @@ export class InputBox extends Widget {
             this.maxHeight = typeof this.options.flexibleMaxHeight === 'number' ? this.options.flexibleMaxHeight : Number.POSITIVE_INFINITY;
             this.mirror = dom.append(wrapper, $('div.mirror'));
             this.mirror.innerText = '\u00a0';
-            this.scrollableElement = new ScrollableElement(this.element, { vertical: 1 /* Auto */ });
+            this.scrollableElement = new ScrollableElement(this.element, { vertical: 1 /* ScrollbarVisibility.Auto */ });
             if (this.options.flexibleWidth) {
                 this.input.setAttribute('wrap', 'off');
                 this.mirror.style.whiteSpace = 'pre';
@@ -268,15 +268,15 @@ export class InputBox extends Widget {
     }
     stylesForType(type) {
         switch (type) {
-            case 1 /* INFO */: return { border: this.inputValidationInfoBorder, background: this.inputValidationInfoBackground, foreground: this.inputValidationInfoForeground };
-            case 2 /* WARNING */: return { border: this.inputValidationWarningBorder, background: this.inputValidationWarningBackground, foreground: this.inputValidationWarningForeground };
+            case 1 /* MessageType.INFO */: return { border: this.inputValidationInfoBorder, background: this.inputValidationInfoBackground, foreground: this.inputValidationInfoForeground };
+            case 2 /* MessageType.WARNING */: return { border: this.inputValidationWarningBorder, background: this.inputValidationWarningBackground, foreground: this.inputValidationWarningForeground };
             default: return { border: this.inputValidationErrorBorder, background: this.inputValidationErrorBackground, foreground: this.inputValidationErrorForeground };
         }
     }
     classForType(type) {
         switch (type) {
-            case 1 /* INFO */: return 'info';
-            case 2 /* WARNING */: return 'warning';
+            case 1 /* MessageType.INFO */: return 'info';
+            case 2 /* MessageType.WARNING */: return 'warning';
             default: return 'error';
         }
     }
@@ -285,10 +285,10 @@ export class InputBox extends Widget {
             return;
         }
         let div;
-        let layout = () => div.style.width = dom.getTotalWidth(this.element) + 'px';
+        const layout = () => div.style.width = dom.getTotalWidth(this.element) + 'px';
         this.contextViewProvider.showContextView({
             getAnchor: () => this.element,
-            anchorAlignment: 1 /* RIGHT */,
+            anchorAlignment: 1 /* AnchorAlignment.RIGHT */,
             render: (container) => {
                 if (!this.message) {
                     return null;
@@ -317,10 +317,10 @@ export class InputBox extends Widget {
         });
         // ARIA Support
         let alertText;
-        if (this.message.type === 3 /* ERROR */) {
+        if (this.message.type === 3 /* MessageType.ERROR */) {
             alertText = nls.localize('alertErrorMessage', "Error: {0}", this.message.content);
         }
-        else if (this.message.type === 2 /* WARNING */) {
+        else if (this.message.type === 2 /* MessageType.WARNING */) {
             alertText = nls.localize('alertWarningMessage', "Warning: {0}", this.message.content);
         }
         else {
@@ -429,6 +429,10 @@ export class HistoryInputBox extends InputBox {
         const NLS_PLACEHOLDER_HISTORY_HINT_SUFFIX = ` or \u21C5 ${NLS_PLACEHOLDER_HISTORY_HINT}`;
         const NLS_PLACEHOLDER_HISTORY_HINT_SUFFIX_IN_PARENS = ` (\u21C5 ${NLS_PLACEHOLDER_HISTORY_HINT})`;
         super(container, contextViewProvider, options);
+        this._onDidFocus = this._register(new Emitter());
+        this.onDidFocus = this._onDidFocus.event;
+        this._onDidBlur = this._register(new Emitter());
+        this.onDidBlur = this._onDidBlur.event;
         this.history = new HistoryNavigator(options.history, 100);
         // Function to append the history suffix to the placeholder if necessary
         const addSuffix = () => {
@@ -512,6 +516,14 @@ export class HistoryInputBox extends InputBox {
             this.value = previous;
             aria.status(this.value);
         }
+    }
+    onBlur() {
+        super.onBlur();
+        this._onDidBlur.fire();
+    }
+    onFocus() {
+        super.onFocus();
+        this._onDidFocus.fire();
     }
     getCurrentValue() {
         let currentValue = this.history.current();

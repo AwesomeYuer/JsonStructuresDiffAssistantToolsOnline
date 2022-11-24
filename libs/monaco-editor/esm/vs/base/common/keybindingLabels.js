@@ -6,9 +6,9 @@ import * as nls from '../../nls.js';
 export class ModifierLabelProvider {
     constructor(mac, windows, linux = windows) {
         this.modifierLabels = [null]; // index 0 will never me accessed.
-        this.modifierLabels[2 /* Macintosh */] = mac;
-        this.modifierLabels[1 /* Windows */] = windows;
-        this.modifierLabels[3 /* Linux */] = linux;
+        this.modifierLabels[2 /* OperatingSystem.Macintosh */] = mac;
+        this.modifierLabels[1 /* OperatingSystem.Windows */] = windows;
+        this.modifierLabels[3 /* OperatingSystem.Linux */] = linux;
     }
     toLabel(OS, parts, keyLabelProvider) {
         if (parts.length === 0) {

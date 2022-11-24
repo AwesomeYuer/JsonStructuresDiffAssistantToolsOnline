@@ -65,7 +65,7 @@ export class FilePreview {
         const { startLineNumber, startColumn, endLineNumber, endColumn } = range;
         const word = model.getWordUntilPosition({ lineNumber: startLineNumber, column: startColumn - n });
         const beforeRange = new Range(startLineNumber, word.startColumn, startLineNumber, startColumn);
-        const afterRange = new Range(endLineNumber, endColumn, endLineNumber, 1073741824 /* MAX_SAFE_SMALL_INTEGER */);
+        const afterRange = new Range(endLineNumber, endColumn, endLineNumber, 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */);
         const before = model.getValueInRange(beforeRange).replace(/^\s+/, '');
         const inside = model.getValueInRange(range);
         const after = model.getValueInRange(afterRange).replace(/\s+$/, '');
@@ -103,7 +103,7 @@ export class FileReferences {
             if (this._previews.size !== 0) {
                 return this;
             }
-            for (let child of this.children) {
+            for (const child of this.children) {
                 if (this._previews.has(child.uri)) {
                     continue;
                 }
@@ -131,7 +131,7 @@ export class ReferencesModel {
         const [providersFirst] = links;
         links.sort(ReferencesModel._compareReferences);
         let current;
-        for (let link of links) {
+        for (const link of links) {
             if (!current || !extUri.isEqual(current.uri, link.uri, true)) {
                 // new group
                 current = new FileReferences(this, link.uri);
@@ -174,10 +174,10 @@ export class ReferencesModel {
         }
     }
     nextOrPreviousReference(reference, next) {
-        let { parent } = reference;
+        const { parent } = reference;
         let idx = parent.children.indexOf(reference);
-        let childCount = parent.children.length;
-        let groupCount = parent.parent.groups.length;
+        const childCount = parent.children.length;
+        const groupCount = parent.parent.groups.length;
         if (groupCount === 1 || next && idx + 1 < childCount || !next && idx > 0) {
             // cycling within one file
             if (next) {

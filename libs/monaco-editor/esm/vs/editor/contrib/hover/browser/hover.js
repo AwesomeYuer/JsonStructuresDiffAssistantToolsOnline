@@ -42,7 +42,7 @@ let ModesHoverController = class ModesHoverController {
         this._glyphWidget = null;
         this._hookEvents();
         this._didChangeConfigurationHandler = this._editor.onDidChangeConfiguration((e) => {
-            if (e.hasChanged(53 /* hover */)) {
+            if (e.hasChanged(55 /* EditorOption.hover */)) {
                 this._unhookEvents();
                 this._hookEvents();
             }
@@ -53,7 +53,7 @@ let ModesHoverController = class ModesHoverController {
     }
     _hookEvents() {
         const hideWidgetsEventHandler = () => this._hideWidgets();
-        const hoverOpts = this._editor.getOption(53 /* hover */);
+        const hoverOpts = this._editor.getOption(55 /* EditorOption.hover */);
         this._isHoverEnabled = hoverOpts.enabled;
         this._isHoverSticky = hoverOpts.sticky;
         if (this._isHoverEnabled) {
@@ -66,7 +66,7 @@ let ModesHoverController = class ModesHoverController {
             this._toUnhook.add(this._editor.onMouseMove((e) => this._onEditorMouseMove(e)));
             this._toUnhook.add(this._editor.onKeyDown((e) => this._onKeyDown(e)));
         }
-        this._toUnhook.add(this._editor.onMouseLeave(hideWidgetsEventHandler));
+        this._toUnhook.add(this._editor.onMouseLeave((e) => this._onEditorMouseLeave(e)));
         this._toUnhook.add(this._editor.onDidChangeModel(hideWidgetsEventHandler));
         this._toUnhook.add(this._editor.onDidScrollChange((e) => this._onEditorScrollChanged(e)));
     }
@@ -81,16 +81,16 @@ let ModesHoverController = class ModesHoverController {
     _onEditorMouseDown(mouseEvent) {
         this._isMouseDown = true;
         const target = mouseEvent.target;
-        if (target.type === 9 /* CONTENT_WIDGET */ && target.detail === ContentHoverWidget.ID) {
+        if (target.type === 9 /* MouseTargetType.CONTENT_WIDGET */ && target.detail === ContentHoverWidget.ID) {
             this._hoverClicked = true;
             // mouse down on top of content hover widget
             return;
         }
-        if (target.type === 12 /* OVERLAY_WIDGET */ && target.detail === MarginHoverWidget.ID) {
+        if (target.type === 12 /* MouseTargetType.OVERLAY_WIDGET */ && target.detail === MarginHoverWidget.ID) {
             // mouse down on top of overlay hover widget
             return;
         }
-        if (target.type !== 12 /* OVERLAY_WIDGET */) {
+        if (target.type !== 12 /* MouseTargetType.OVERLAY_WIDGET */) {
             this._hoverClicked = false;
         }
         this._hideWidgets();
@@ -98,13 +98,22 @@ let ModesHoverController = class ModesHoverController {
     _onEditorMouseUp(mouseEvent) {
         this._isMouseDown = false;
     }
+    _onEditorMouseLeave(mouseEvent) {
+        var _a;
+        const targetEm = (mouseEvent.event.browserEvent.relatedTarget);
+        if ((_a = this._contentWidget) === null || _a === void 0 ? void 0 : _a.containsNode(targetEm)) {
+            // when the mouse is inside hover widget
+            return;
+        }
+        this._hideWidgets();
+    }
     _onEditorMouseMove(mouseEvent) {
         var _a, _b, _c, _d, _e;
         const target = mouseEvent.target;
         if (this._isMouseDown && this._hoverClicked) {
             return;
         }
-        if (this._isHoverSticky && target.type === 9 /* CONTENT_WIDGET */ && target.detail === ContentHoverWidget.ID) {
+        if (this._isHoverSticky && target.type === 9 /* MouseTargetType.CONTENT_WIDGET */ && target.detail === ContentHoverWidget.ID) {
             // mouse moved on top of content hover widget
             return;
         }
@@ -112,12 +121,12 @@ let ModesHoverController = class ModesHoverController {
             // selected text within content hover widget
             return;
         }
-        if (!this._isHoverSticky && target.type === 9 /* CONTENT_WIDGET */ && target.detail === ContentHoverWidget.ID
+        if (!this._isHoverSticky && target.type === 9 /* MouseTargetType.CONTENT_WIDGET */ && target.detail === ContentHoverWidget.ID
             && ((_c = this._contentWidget) === null || _c === void 0 ? void 0 : _c.isColorPickerVisible())) {
             // though the hover is not sticky, the color picker needs to.
             return;
         }
-        if (this._isHoverSticky && target.type === 12 /* OVERLAY_WIDGET */ && target.detail === MarginHoverWidget.ID) {
+        if (this._isHoverSticky && target.type === 12 /* MouseTargetType.OVERLAY_WIDGET */ && target.detail === MarginHoverWidget.ID) {
             // mouse moved on top of overlay hover widget
             return;
         }
@@ -130,7 +139,7 @@ let ModesHoverController = class ModesHoverController {
             (_d = this._glyphWidget) === null || _d === void 0 ? void 0 : _d.hide();
             return;
         }
-        if (target.type === 2 /* GUTTER_GLYPH_MARGIN */ && target.position) {
+        if (target.type === 2 /* MouseTargetType.GUTTER_GLYPH_MARGIN */ && target.position) {
             (_e = this._contentWidget) === null || _e === void 0 ? void 0 : _e.hide();
             if (!this._glyphWidget) {
                 this._glyphWidget = new MarginHoverWidget(this._editor, this._languageService, this._openerService);
@@ -141,7 +150,7 @@ let ModesHoverController = class ModesHoverController {
         this._hideWidgets();
     }
     _onKeyDown(e) {
-        if (e.keyCode !== 5 /* Ctrl */ && e.keyCode !== 6 /* Alt */ && e.keyCode !== 57 /* Meta */ && e.keyCode !== 4 /* Shift */) {
+        if (e.keyCode !== 5 /* KeyCode.Ctrl */ && e.keyCode !== 6 /* KeyCode.Alt */ && e.keyCode !== 57 /* KeyCode.Meta */ && e.keyCode !== 4 /* KeyCode.Shift */) {
             // Do not hide hover when a modifier key is pressed
             this._hideWidgets();
         }
@@ -200,8 +209,8 @@ class ShowHoverAction extends EditorAction {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KeyK */, 2048 /* CtrlCmd */ | 39 /* KeyI */),
-                weight: 100 /* EditorContrib */
+                primary: KeyChord(2048 /* KeyMod.CtrlCmd */ | 41 /* KeyCode.KeyK */, 2048 /* KeyMod.CtrlCmd */ | 39 /* KeyCode.KeyI */),
+                weight: 100 /* KeybindingWeight.EditorContrib */
             }
         });
     }
@@ -209,14 +218,14 @@ class ShowHoverAction extends EditorAction {
         if (!editor.hasModel()) {
             return;
         }
-        let controller = ModesHoverController.get(editor);
+        const controller = ModesHoverController.get(editor);
         if (!controller) {
             return;
         }
         const position = editor.getPosition();
         const range = new Range(position.lineNumber, position.column, position.lineNumber, position.column);
-        const focus = editor.getOption(2 /* accessibilitySupport */) === 2 /* Enabled */;
-        controller.showContentHover(range, 1 /* Immediate */, focus);
+        const focus = editor.getOption(2 /* EditorOption.accessibilitySupport */) === 2 /* AccessibilitySupport.Enabled */;
+        controller.showContentHover(range, 1 /* HoverStartMode.Immediate */, focus);
     }
 }
 class ShowDefinitionPreviewHoverAction extends EditorAction {
@@ -250,7 +259,7 @@ class ShowDefinitionPreviewHoverAction extends EditorAction {
         }
         const promise = goto.startFindDefinitionFromCursor(position);
         promise.then(() => {
-            controller.showContentHover(range, 1 /* Immediate */, true);
+            controller.showContentHover(range, 1 /* HoverStartMode.Immediate */, true);
         });
     }
 }

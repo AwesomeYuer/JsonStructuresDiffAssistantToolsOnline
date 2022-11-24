@@ -6,9 +6,9 @@ import * as browser from './browser.js';
 import { BrowserFeatures } from './canIUse.js';
 import { StandardKeyboardEvent } from './keyboardEvent.js';
 import { StandardMouseEvent } from './mouseEvent.js';
-import { TimeoutTimer } from '../common/async.js';
 import { onUnexpectedError } from '../common/errors.js';
 import * as event from '../common/event.js';
+import * as dompurify from './dompurify/dompurify.js';
 import { Disposable, DisposableStore, toDisposable } from '../common/lifecycle.js';
 import { FileAccess, RemoteAuthorities } from '../common/network.js';
 import * as platform from '../common/platform.js';
@@ -56,7 +56,7 @@ function _wrapAsStandardKeyboardEvent(handler) {
         return handler(new StandardKeyboardEvent(e));
     };
 }
-export let addStandardDisposableListener = function addStandardDisposableListener(node, type, handler, useCapture) {
+export const addStandardDisposableListener = function addStandardDisposableListener(node, type, handler, useCapture) {
     let wrapHandler = handler;
     if (type === 'click' || type === 'mousedown') {
         wrapHandler = _wrapAsStandardMouseEvent(handler);
@@ -66,12 +66,12 @@ export let addStandardDisposableListener = function addStandardDisposableListene
     }
     return addDisposableListener(node, type, wrapHandler, useCapture);
 };
-export let addStandardDisposableGenericMouseDownListener = function addStandardDisposableListener(node, handler, useCapture) {
-    let wrapHandler = _wrapAsStandardMouseEvent(handler);
+export const addStandardDisposableGenericMouseDownListener = function addStandardDisposableListener(node, handler, useCapture) {
+    const wrapHandler = _wrapAsStandardMouseEvent(handler);
     return addDisposableGenericMouseDownListener(node, wrapHandler, useCapture);
 };
-export let addStandardDisposableGenericMouseUpListener = function addStandardDisposableListener(node, handler, useCapture) {
-    let wrapHandler = _wrapAsStandardMouseEvent(handler);
+export const addStandardDisposableGenericMouseUpListener = function addStandardDisposableListener(node, handler, useCapture) {
+    const wrapHandler = _wrapAsStandardMouseEvent(handler);
     return addDisposableGenericMouseUpListener(node, wrapHandler, useCapture);
 };
 export function addDisposableGenericMouseDownListener(node, handler, useCapture) {
@@ -79,32 +79,6 @@ export function addDisposableGenericMouseDownListener(node, handler, useCapture)
 }
 export function addDisposableGenericMouseUpListener(node, handler, useCapture) {
     return addDisposableListener(node, platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_UP : EventType.MOUSE_UP, handler, useCapture);
-}
-export function addDisposableNonBubblingMouseOutListener(node, handler) {
-    return addDisposableListener(node, 'mouseout', (e) => {
-        // Mouse out bubbles, so this is an attempt to ignore faux mouse outs coming from children elements
-        let toElement = (e.relatedTarget);
-        while (toElement && toElement !== node) {
-            toElement = toElement.parentNode;
-        }
-        if (toElement === node) {
-            return;
-        }
-        handler(e);
-    });
-}
-export function addDisposableNonBubblingPointerOutListener(node, handler) {
-    return addDisposableListener(node, 'pointerout', (e) => {
-        // Mouse out bubbles, so this is an attempt to ignore faux mouse outs coming from children elements
-        let toElement = (e.relatedTarget);
-        while (toElement && toElement !== node) {
-            toElement = toElement.parentNode;
-        }
-        if (toElement === node) {
-            return;
-        }
-        handler(e);
-    });
 }
 export function createEventEmitter(target, type, options) {
     let domListener = null;
@@ -194,20 +168,20 @@ class AnimationFrameQueueItem {
      * A flag to indicate if currently handling a native requestAnimationFrame callback
      */
     let inAnimationFrameRunner = false;
-    let animationFrameRunner = () => {
+    const animationFrameRunner = () => {
         animFrameRequested = false;
         CURRENT_QUEUE = NEXT_QUEUE;
         NEXT_QUEUE = [];
         inAnimationFrameRunner = true;
         while (CURRENT_QUEUE.length > 0) {
             CURRENT_QUEUE.sort(AnimationFrameQueueItem.sort);
-            let top = CURRENT_QUEUE.shift();
+            const top = CURRENT_QUEUE.shift();
             top.execute();
         }
         inAnimationFrameRunner = false;
     };
     scheduleAtNextAnimationFrame = (runner, priority = 0) => {
-        let item = new AnimationFrameQueueItem(runner, priority);
+        const item = new AnimationFrameQueueItem(runner, priority);
         NEXT_QUEUE.push(item);
         if (!animFrameRequested) {
             animFrameRequested = true;
@@ -217,7 +191,7 @@ class AnimationFrameQueueItem {
     };
     runAtThisOrScheduleAtNextAnimationFrame = (runner, priority) => {
         if (inAnimationFrameRunner) {
-            let item = new AnimationFrameQueueItem(runner, priority);
+            const item = new AnimationFrameQueueItem(runner, priority);
             CURRENT_QUEUE.push(item);
             return item;
         }
@@ -226,37 +200,6 @@ class AnimationFrameQueueItem {
         }
     };
 })();
-const MINIMUM_TIME_MS = 8;
-const DEFAULT_EVENT_MERGER = function (lastEvent, currentEvent) {
-    return currentEvent;
-};
-class TimeoutThrottledDomListener extends Disposable {
-    constructor(node, type, handler, eventMerger = DEFAULT_EVENT_MERGER, minimumTimeMs = MINIMUM_TIME_MS) {
-        super();
-        let lastEvent = null;
-        let lastHandlerTime = 0;
-        let timeout = this._register(new TimeoutTimer());
-        let invokeHandler = () => {
-            lastHandlerTime = (new Date()).getTime();
-            handler(lastEvent);
-            lastEvent = null;
-        };
-        this._register(addDisposableListener(node, type, (e) => {
-            lastEvent = eventMerger(lastEvent, e);
-            let elapsedTime = (new Date()).getTime() - lastHandlerTime;
-            if (elapsedTime >= minimumTimeMs) {
-                timeout.cancel();
-                invokeHandler();
-            }
-            else {
-                timeout.setIfNotSet(invokeHandler, minimumTimeMs - elapsedTime);
-            }
-        }));
-    }
-}
-export function addDisposableThrottledListener(node, type, handler, eventMerger, minimumTimeMs) {
-    return new TimeoutThrottledDomListener(node, type, handler, eventMerger, minimumTimeMs);
-}
 export function getComputedStyle(el) {
     return document.defaultView.getComputedStyle(el, null);
 }
@@ -290,7 +233,7 @@ class SizeUtils {
         return parseFloat(value) || 0;
     }
     static getDimension(element, cssPropertyName, jsPropertyName) {
-        let computedStyle = getComputedStyle(element);
+        const computedStyle = getComputedStyle(element);
         let value = '0';
         if (computedStyle) {
             if (computedStyle.getPropertyValue) {
@@ -414,13 +357,28 @@ export function size(element, width, height) {
  * Returns the position of a dom node relative to the entire page.
  */
 export function getDomNodePagePosition(domNode) {
-    let bb = domNode.getBoundingClientRect();
+    const bb = domNode.getBoundingClientRect();
     return {
         left: bb.left + StandardWindow.scrollX,
         top: bb.top + StandardWindow.scrollY,
         width: bb.width,
         height: bb.height
     };
+}
+/**
+ * Returns the effective zoom on a given element before window zoom level is applied
+ */
+export function getDomNodeZoomLevel(domNode) {
+    let testElement = domNode;
+    let zoom = 1.0;
+    do {
+        const elementZoomLevel = getComputedStyle(testElement).zoom;
+        if (elementZoomLevel !== null && elementZoomLevel !== undefined && elementZoomLevel !== '1') {
+            zoom *= elementZoomLevel;
+        }
+        testElement = testElement.parentElement;
+    } while (testElement !== null && testElement !== document.documentElement);
+    return zoom;
 }
 export const StandardWindow = new class {
     get scrollX() {
@@ -445,25 +403,25 @@ export const StandardWindow = new class {
 // Adapted from WinJS
 // Gets the width of the element, including margins.
 export function getTotalWidth(element) {
-    let margin = SizeUtils.getMarginLeft(element) + SizeUtils.getMarginRight(element);
+    const margin = SizeUtils.getMarginLeft(element) + SizeUtils.getMarginRight(element);
     return element.offsetWidth + margin;
 }
 export function getContentWidth(element) {
-    let border = SizeUtils.getBorderLeftWidth(element) + SizeUtils.getBorderRightWidth(element);
-    let padding = SizeUtils.getPaddingLeft(element) + SizeUtils.getPaddingRight(element);
+    const border = SizeUtils.getBorderLeftWidth(element) + SizeUtils.getBorderRightWidth(element);
+    const padding = SizeUtils.getPaddingLeft(element) + SizeUtils.getPaddingRight(element);
     return element.offsetWidth - border - padding;
 }
 // Adapted from WinJS
 // Gets the height of the content of the specified element. The content height does not include borders or padding.
 export function getContentHeight(element) {
-    let border = SizeUtils.getBorderTopWidth(element) + SizeUtils.getBorderBottomWidth(element);
-    let padding = SizeUtils.getPaddingTop(element) + SizeUtils.getPaddingBottom(element);
+    const border = SizeUtils.getBorderTopWidth(element) + SizeUtils.getBorderBottomWidth(element);
+    const padding = SizeUtils.getPaddingTop(element) + SizeUtils.getPaddingBottom(element);
     return element.offsetHeight - border - padding;
 }
 // Adapted from WinJS
 // Gets the height of the element, including its margins.
 export function getTotalHeight(element) {
-    let margin = SizeUtils.getMarginTop(element) + SizeUtils.getMarginBottom(element);
+    const margin = SizeUtils.getMarginTop(element) + SizeUtils.getMarginBottom(element);
     return element.offsetHeight + margin;
 }
 // ----------------------------------------------------------------------------------------
@@ -524,7 +482,7 @@ export function getActiveElement() {
     return result;
 }
 export function createStyleSheet(container = document.getElementsByTagName('head')[0]) {
-    let style = document.createElement('style');
+    const style = document.createElement('style');
     style.type = 'text/css';
     style.media = 'screen';
     container.appendChild(style);
@@ -559,10 +517,10 @@ export function removeCSSRulesContainingSelector(ruleName, style = getSharedStyl
     if (!style) {
         return;
     }
-    let rules = getDynamicStyleSheetRules(style);
-    let toDelete = [];
+    const rules = getDynamicStyleSheetRules(style);
+    const toDelete = [];
     for (let i = 0; i < rules.length; i++) {
-        let rule = rules[i];
+        const rule = rules[i];
         if (rule.selectorText.indexOf(ruleName) !== -1) {
             toDelete.push(i);
         }
@@ -593,6 +551,7 @@ export const EventType = {
     POINTER_UP: 'pointerup',
     POINTER_DOWN: 'pointerdown',
     POINTER_MOVE: 'pointermove',
+    POINTER_LEAVE: 'pointerleave',
     CONTEXT_MENU: 'contextmenu',
     WHEEL: 'wheel',
     // Keyboard
@@ -657,7 +616,7 @@ export const EventHelper = {
     }
 };
 export function saveParentsScrollTop(node) {
-    let r = [];
+    const r = [];
     for (let i = 0; node && node.nodeType === node.ELEMENT_NODE; i++) {
         r[i] = node.scrollTop;
         node = node.parentNode;
@@ -701,7 +660,7 @@ class FocusTracker extends Disposable {
             }
         };
         this._refreshStateHandler = () => {
-            let currentNodeHasFocus = FocusTracker.hasFocusWithin(element);
+            const currentNodeHasFocus = FocusTracker.hasFocusWithin(element);
             if (currentNodeHasFocus !== hasFocus) {
                 if (hasFocus) {
                     onBlur();
@@ -749,12 +708,12 @@ export var Namespace;
     Namespace["SVG"] = "http://www.w3.org/2000/svg";
 })(Namespace || (Namespace = {}));
 function _$(namespace, description, attrs, ...children) {
-    let match = SELECTOR_REGEX.exec(description);
+    const match = SELECTOR_REGEX.exec(description);
     if (!match) {
         throw new Error('Bad use of emmet');
     }
     attrs = Object.assign({}, (attrs || {}));
-    let tagName = match[1] || 'div';
+    const tagName = match[1] || 'div';
     let result;
     if (namespace !== Namespace.HTML) {
         result = document.createElementNS(namespace, tagName);
@@ -795,13 +754,13 @@ $.SVG = function (description, attrs, ...children) {
     return _$(Namespace.SVG, description, attrs, ...children);
 };
 export function show(...elements) {
-    for (let element of elements) {
+    for (const element of elements) {
         element.style.display = '';
         element.removeAttribute('aria-hidden');
     }
 }
 export function hide(...elements) {
-    for (let element of elements) {
+    for (const element of elements) {
         element.style.display = 'none';
         element.setAttribute('aria-hidden', 'true');
     }
@@ -862,6 +821,38 @@ export function asCSSUrl(uri) {
 export function asCSSPropertyValue(value) {
     return `'${value.replace(/'/g, '%27')}'`;
 }
+// -- sanitize and trusted html
+/**
+ * Hooks dompurify using `afterSanitizeAttributes` to check that all `href` and `src`
+ * attributes are valid.
+ */
+export function hookDomPurifyHrefAndSrcSanitizer(allowedProtocols, allowDataImages = false) {
+    // https://github.com/cure53/DOMPurify/blob/main/demos/hooks-scheme-allowlist.html
+    // build an anchor to map URLs to
+    const anchor = document.createElement('a');
+    dompurify.addHook('afterSanitizeAttributes', (node) => {
+        // check all href/src attributes for validity
+        for (const attr of ['href', 'src']) {
+            if (node.hasAttribute(attr)) {
+                const attrValue = node.getAttribute(attr);
+                if (attr === 'href' && attrValue.startsWith('#')) {
+                    // Allow fragment links
+                    continue;
+                }
+                anchor.href = attrValue;
+                if (!allowedProtocols.includes(anchor.protocol.replace(/:$/, ''))) {
+                    if (allowDataImages && attr === 'src' && anchor.href.startsWith('data:')) {
+                        continue;
+                    }
+                    node.removeAttribute(attr);
+                }
+            }
+        }
+    });
+    return toDisposable(() => {
+        dompurify.removeHook('afterSanitizeAttributes');
+    });
+}
 export class ModifierKeyEmitter extends event.Emitter {
     constructor() {
         super();
@@ -879,7 +870,7 @@ export class ModifierKeyEmitter extends event.Emitter {
             const event = new StandardKeyboardEvent(e);
             // If Alt-key keydown event is repeated, ignore it #112347
             // Only known to be necessary for Alt-Key at the moment #115810
-            if (event.keyCode === 6 /* Alt */ && e.repeat) {
+            if (event.keyCode === 6 /* KeyCode.Alt */ && e.repeat) {
                 return;
             }
             if (e.altKey && !this._keyStatus.altKey) {
@@ -894,7 +885,7 @@ export class ModifierKeyEmitter extends event.Emitter {
             else if (e.shiftKey && !this._keyStatus.shiftKey) {
                 this._keyStatus.lastKeyPressed = 'shift';
             }
-            else if (event.keyCode !== 6 /* Alt */) {
+            else if (event.keyCode !== 6 /* KeyCode.Alt */) {
                 this._keyStatus.lastKeyPressed = undefined;
             }
             else {
@@ -984,7 +975,108 @@ export class ModifierKeyEmitter extends event.Emitter {
         this._subscriptions.dispose();
     }
 }
-export function addMatchMediaChangeListener(query, callback) {
-    const mediaQueryList = window.matchMedia(query);
-    mediaQueryList.addEventListener('change', callback);
+export class DragAndDropObserver extends Disposable {
+    constructor(element, callbacks) {
+        super();
+        this.element = element;
+        this.callbacks = callbacks;
+        // A helper to fix issues with repeated DRAG_ENTER / DRAG_LEAVE
+        // calls see https://github.com/microsoft/vscode/issues/14470
+        // when the element has child elements where the events are fired
+        // repeadedly.
+        this.counter = 0;
+        // Allows to measure the duration of the drag operation.
+        this.dragStartTime = 0;
+        this.registerListeners();
+    }
+    registerListeners() {
+        this._register(addDisposableListener(this.element, EventType.DRAG_ENTER, (e) => {
+            this.counter++;
+            this.dragStartTime = e.timeStamp;
+            this.callbacks.onDragEnter(e);
+        }));
+        this._register(addDisposableListener(this.element, EventType.DRAG_OVER, (e) => {
+            var _a, _b;
+            e.preventDefault(); // needed so that the drop event fires (https://stackoverflow.com/questions/21339924/drop-event-not-firing-in-chrome)
+            (_b = (_a = this.callbacks).onDragOver) === null || _b === void 0 ? void 0 : _b.call(_a, e, e.timeStamp - this.dragStartTime);
+        }));
+        this._register(addDisposableListener(this.element, EventType.DRAG_LEAVE, (e) => {
+            this.counter--;
+            if (this.counter === 0) {
+                this.dragStartTime = 0;
+                this.callbacks.onDragLeave(e);
+            }
+        }));
+        this._register(addDisposableListener(this.element, EventType.DRAG_END, (e) => {
+            this.counter = 0;
+            this.dragStartTime = 0;
+            this.callbacks.onDragEnd(e);
+        }));
+        this._register(addDisposableListener(this.element, EventType.DROP, (e) => {
+            this.counter = 0;
+            this.dragStartTime = 0;
+            this.callbacks.onDrop(e);
+        }));
+    }
+}
+const H_REGEX = /(?<tag>[\w\-]+)?(?:#(?<id>[\w\-]+))?(?<class>(?:\.(?:[\w\-]+))*)(?:@(?<name>(?:[\w\_])+))?/;
+export function h(tag, ...args) {
+    let attributes;
+    let children;
+    if (Array.isArray(args[0])) {
+        attributes = {};
+        children = args[0];
+    }
+    else {
+        attributes = args[0] || {};
+        children = args[1];
+    }
+    const match = H_REGEX.exec(tag);
+    if (!match || !match.groups) {
+        throw new Error('Bad use of h');
+    }
+    const tagName = match.groups['tag'] || 'div';
+    const el = document.createElement(tagName);
+    if (match.groups['id']) {
+        el.id = match.groups['id'];
+    }
+    if (match.groups['class']) {
+        el.className = match.groups['class'].replace(/\./g, ' ').trim();
+    }
+    const result = {};
+    if (match.groups['name']) {
+        result[match.groups['name']] = el;
+    }
+    if (children) {
+        for (const c of children) {
+            if (c instanceof HTMLElement) {
+                el.appendChild(c);
+            }
+            else if (typeof c === 'string') {
+                el.append(c);
+            }
+            else {
+                Object.assign(result, c);
+                el.appendChild(c.root);
+            }
+        }
+    }
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key === 'style') {
+            for (const [cssKey, cssValue] of Object.entries(value)) {
+                el.style.setProperty(camelCaseToHyphenCase(cssKey), typeof cssValue === 'number' ? cssValue + 'px' : '' + cssValue);
+            }
+        }
+        else if (key === 'tabIndex') {
+            el.tabIndex = value;
+        }
+        else {
+            el.setAttribute(camelCaseToHyphenCase(key), value.toString());
+        }
+    }
+    result['root'] = el;
+    return result;
+}
+function camelCaseToHyphenCase(str) {
+    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }

@@ -28,7 +28,7 @@ export class MarginHoverWidget extends Disposable {
         }));
         this._register(this._editor.onDidChangeModelDecorations(() => this._onModelDecorationsChanged()));
         this._register(this._editor.onDidChangeConfiguration((e) => {
-            if (e.hasChanged(44 /* fontInfo */)) {
+            if (e.hasChanged(46 /* EditorOption.fontInfo */)) {
                 this._updateFont();
             }
         }));
@@ -56,7 +56,7 @@ export class MarginHoverWidget extends Disposable {
             // The decorations have changed and the hover is visible,
             // we need to recompute the displayed text
             this._hoverOperation.cancel();
-            this._hoverOperation.start(0 /* Delayed */);
+            this._hoverOperation.start(0 /* HoverStartMode.Delayed */);
         }
     }
     startShowingAt(lineNumber) {
@@ -67,7 +67,7 @@ export class MarginHoverWidget extends Disposable {
         this._hoverOperation.cancel();
         this.hide();
         this._computer.lineNumber = lineNumber;
-        this._hoverOperation.start(0 /* Delayed */);
+        this._hoverOperation.start(0 /* HoverStartMode.Delayed */);
     }
     hide() {
         this._computer.lineNumber = -1;
@@ -113,7 +113,7 @@ export class MarginHoverWidget extends Disposable {
         const editorLayout = this._editor.getLayoutInfo();
         const topForLineNumber = this._editor.getTopForLineNumber(lineNumber);
         const editorScrollTop = this._editor.getScrollTop();
-        const lineHeight = this._editor.getOption(59 /* lineHeight */);
+        const lineHeight = this._editor.getOption(61 /* EditorOption.lineHeight */);
         const nodeHeight = this._hover.containerDomNode.clientHeight;
         const top = topForLineNumber - editorScrollTop - ((nodeHeight - lineHeight) / 2);
         this._hover.containerDomNode.style.left = `${editorLayout.glyphMarginLeft + editorLayout.glyphMarginWidth}px`;

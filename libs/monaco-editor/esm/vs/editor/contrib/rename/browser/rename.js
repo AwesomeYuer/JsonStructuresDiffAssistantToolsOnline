@@ -64,7 +64,7 @@ class RenameSkeleton {
                 if (!provider.resolveRenameLocation) {
                     break;
                 }
-                let res = yield provider.resolveRenameLocation(this.model, this.position, token);
+                const res = yield provider.resolveRenameLocation(this.model, this.position, token);
                 if (!res) {
                     continue;
                 }
@@ -135,15 +135,15 @@ let RenameController = class RenameController {
         this._logService = _logService;
         this._configService = _configService;
         this._languageFeaturesService = _languageFeaturesService;
-        this._dispoableStore = new DisposableStore();
+        this._disposableStore = new DisposableStore();
         this._cts = new CancellationTokenSource();
-        this._renameInputField = this._dispoableStore.add(new IdleValue(() => this._dispoableStore.add(this._instaService.createInstance(RenameInputField, this.editor, ['acceptRenameInput', 'acceptRenameInputWithPreview']))));
+        this._renameInputField = this._disposableStore.add(new IdleValue(() => this._disposableStore.add(this._instaService.createInstance(RenameInputField, this.editor, ['acceptRenameInput', 'acceptRenameInputWithPreview']))));
     }
     static get(editor) {
         return editor.getContribution(RenameController.ID);
     }
     dispose() {
-        this._dispoableStore.dispose();
+        this._disposableStore.dispose();
         this._cts.dispose(true);
     }
     run() {
@@ -158,7 +158,7 @@ let RenameController = class RenameController {
             if (!skeleton.hasProvider()) {
                 return undefined;
             }
-            this._cts = new EditorStateCancellationTokenSource(this.editor, 4 /* Position */ | 1 /* Value */);
+            this._cts = new EditorStateCancellationTokenSource(this.editor, 4 /* CodeEditorStateFlag.Position */ | 1 /* CodeEditorStateFlag.Value */);
             // resolve rename location
             let loc;
             try {
@@ -181,9 +181,9 @@ let RenameController = class RenameController {
                 return undefined;
             }
             this._cts.dispose();
-            this._cts = new EditorStateCancellationTokenSource(this.editor, 4 /* Position */ | 1 /* Value */, loc.range);
+            this._cts = new EditorStateCancellationTokenSource(this.editor, 4 /* CodeEditorStateFlag.Position */ | 1 /* CodeEditorStateFlag.Value */, loc.range);
             // do rename at location
-            let selection = this.editor.getSelection();
+            const selection = this.editor.getSelection();
             let selectionStart = 0;
             let selectionEnd = loc.text.length;
             if (!Range.isEmpty(selection) && !Range.spansMultipleLines(selection) && Range.containsRange(loc.range, selection)) {
@@ -213,8 +213,10 @@ let RenameController = class RenameController {
                 this._bulkEditService.apply(ResourceEdit.convert(renameResult), {
                     editor: this.editor,
                     showPreview: inputFieldResult.wantsPreview,
-                    label: nls.localize('label', "Renaming '{0}'", loc === null || loc === void 0 ? void 0 : loc.text),
-                    quotableLabel: nls.localize('quotableLabel', "Renaming {0}", loc === null || loc === void 0 ? void 0 : loc.text),
+                    label: nls.localize('label', "Renaming '{0}' to '{1}'", loc === null || loc === void 0 ? void 0 : loc.text, inputFieldResult.newName),
+                    code: 'undoredo.rename',
+                    quotableLabel: nls.localize('quotableLabel', "Renaming {0} to {1}", loc === null || loc === void 0 ? void 0 : loc.text, inputFieldResult.newName),
+                    respectAutoSaveConfig: true
                 }).then(result => {
                     if (result.ariaSummary) {
                         alert(nls.localize('aria', "Successfully renamed '{0}' to '{1}'. Summary: {2}", loc.text, inputFieldResult.newName, result.ariaSummary));
@@ -258,8 +260,8 @@ export class RenameAction extends EditorAction {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasRenameProvider),
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 60 /* F2 */,
-                weight: 100 /* EditorContrib */
+                primary: 60 /* KeyCode.F2 */,
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             contextMenuOpts: {
                 group: '1_modification',
@@ -300,9 +302,9 @@ registerEditorCommand(new RenameCommand({
     precondition: CONTEXT_RENAME_INPUT_VISIBLE,
     handler: x => x.acceptRenameInput(false),
     kbOpts: {
-        weight: 100 /* EditorContrib */ + 99,
+        weight: 100 /* KeybindingWeight.EditorContrib */ + 99,
         kbExpr: EditorContextKeys.focus,
-        primary: 3 /* Enter */
+        primary: 3 /* KeyCode.Enter */
     }
 }));
 registerEditorCommand(new RenameCommand({
@@ -310,9 +312,9 @@ registerEditorCommand(new RenameCommand({
     precondition: ContextKeyExpr.and(CONTEXT_RENAME_INPUT_VISIBLE, ContextKeyExpr.has('config.editor.rename.enablePreview')),
     handler: x => x.acceptRenameInput(true),
     kbOpts: {
-        weight: 100 /* EditorContrib */ + 99,
+        weight: 100 /* KeybindingWeight.EditorContrib */ + 99,
         kbExpr: EditorContextKeys.focus,
-        primary: 1024 /* Shift */ + 3 /* Enter */
+        primary: 1024 /* KeyMod.Shift */ + 3 /* KeyCode.Enter */
     }
 }));
 registerEditorCommand(new RenameCommand({
@@ -320,10 +322,10 @@ registerEditorCommand(new RenameCommand({
     precondition: CONTEXT_RENAME_INPUT_VISIBLE,
     handler: x => x.cancelRenameInput(),
     kbOpts: {
-        weight: 100 /* EditorContrib */ + 99,
+        weight: 100 /* KeybindingWeight.EditorContrib */ + 99,
         kbExpr: EditorContextKeys.focus,
-        primary: 9 /* Escape */,
-        secondary: [1024 /* Shift */ | 9 /* Escape */]
+        primary: 9 /* KeyCode.Escape */,
+        secondary: [1024 /* KeyMod.Shift */ | 9 /* KeyCode.Escape */]
     }
 }));
 // ---- api bridge command
@@ -349,7 +351,7 @@ Registry.as(Extensions.Configuration).registerConfiguration({
     id: 'editor',
     properties: {
         'editor.rename.enablePreview': {
-            scope: 5 /* LANGUAGE_OVERRIDABLE */,
+            scope: 5 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
             description: nls.localize('enablePreview', "Enable/disable the ability to preview changes before renaming"),
             default: true,
             type: 'boolean'

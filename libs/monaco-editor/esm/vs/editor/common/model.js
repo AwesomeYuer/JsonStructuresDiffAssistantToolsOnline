@@ -77,6 +77,12 @@ export class FindMatch {
 /**
  * @internal
  */
+export function isITextSnapshot(obj) {
+    return (obj && typeof obj.read === 'function');
+}
+/**
+ * @internal
+ */
 export class ValidAnnotatedEditOperation {
     constructor(identifier, range, text, forceMoveMarkers, isAutoWhitespaceEdit, _isTracked) {
         this.identifier = identifier;

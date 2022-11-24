@@ -46,14 +46,14 @@ export class ClickLinkOptions {
 function createOptions(multiCursorModifier) {
     if (multiCursorModifier === 'altKey') {
         if (platform.isMacintosh) {
-            return new ClickLinkOptions(57 /* Meta */, 'metaKey', 6 /* Alt */, 'altKey');
+            return new ClickLinkOptions(57 /* KeyCode.Meta */, 'metaKey', 6 /* KeyCode.Alt */, 'altKey');
         }
-        return new ClickLinkOptions(5 /* Ctrl */, 'ctrlKey', 6 /* Alt */, 'altKey');
+        return new ClickLinkOptions(5 /* KeyCode.Ctrl */, 'ctrlKey', 6 /* KeyCode.Alt */, 'altKey');
     }
     if (platform.isMacintosh) {
-        return new ClickLinkOptions(6 /* Alt */, 'altKey', 57 /* Meta */, 'metaKey');
+        return new ClickLinkOptions(6 /* KeyCode.Alt */, 'altKey', 57 /* KeyCode.Meta */, 'metaKey');
     }
-    return new ClickLinkOptions(6 /* Alt */, 'altKey', 5 /* Ctrl */, 'ctrlKey');
+    return new ClickLinkOptions(6 /* KeyCode.Alt */, 'altKey', 5 /* KeyCode.Ctrl */, 'ctrlKey');
 }
 export class ClickLinkGesture extends Disposable {
     constructor(editor) {
@@ -65,13 +65,13 @@ export class ClickLinkGesture extends Disposable {
         this._onCancel = this._register(new Emitter());
         this.onCancel = this._onCancel.event;
         this._editor = editor;
-        this._opts = createOptions(this._editor.getOption(70 /* multiCursorModifier */));
+        this._opts = createOptions(this._editor.getOption(72 /* EditorOption.multiCursorModifier */));
         this._lastMouseMoveEvent = null;
         this._hasTriggerKeyOnMouseDown = false;
         this._lineNumberOnMouseDown = 0;
         this._register(this._editor.onDidChangeConfiguration((e) => {
-            if (e.hasChanged(70 /* multiCursorModifier */)) {
-                const newOpts = createOptions(this._editor.getOption(70 /* multiCursorModifier */));
+            if (e.hasChanged(72 /* EditorOption.multiCursorModifier */)) {
+                const newOpts = createOptions(this._editor.getOption(72 /* EditorOption.multiCursorModifier */));
                 if (this._opts.equals(newOpts)) {
                     return;
                 }

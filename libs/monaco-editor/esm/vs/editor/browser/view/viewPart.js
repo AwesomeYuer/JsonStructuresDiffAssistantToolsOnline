@@ -21,7 +21,7 @@ export class PartFingerprints {
     static read(target) {
         const r = target.getAttribute('data-mprt');
         if (r === null) {
-            return 0 /* None */;
+            return 0 /* PartFingerprint.None */;
         }
         return parseInt(r, 10);
     }

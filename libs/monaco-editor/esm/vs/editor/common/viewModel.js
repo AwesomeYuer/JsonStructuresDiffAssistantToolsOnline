@@ -72,7 +72,7 @@ export class SingleLineInlineDecoration {
         this.inlineClassNameAffectsLetterSpacing = inlineClassNameAffectsLetterSpacing;
     }
     toInlineDecoration(lineNumber) {
-        return new InlineDecoration(new Range(lineNumber, this.startOffset + 1, lineNumber, this.endOffset + 1), this.inlineClassName, this.inlineClassNameAffectsLetterSpacing ? 3 /* RegularAffectingLetterSpacing */ : 0 /* Regular */);
+        return new InlineDecoration(new Range(lineNumber, this.startOffset + 1, lineNumber, this.endOffset + 1), this.inlineClassName, this.inlineClassNameAffectsLetterSpacing ? 3 /* InlineDecorationType.RegularAffectingLetterSpacing */ : 0 /* InlineDecorationType.Regular */);
     }
 }
 export class ViewModelDecoration {

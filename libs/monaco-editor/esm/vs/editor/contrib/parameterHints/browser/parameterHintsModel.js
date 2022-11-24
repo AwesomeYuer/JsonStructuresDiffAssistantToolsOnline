@@ -20,19 +20,19 @@ import * as languages from '../../../common/languages.js';
 import { provideSignatureHelp } from './provideSignatureHelp.js';
 var ParameterHintState;
 (function (ParameterHintState) {
-    ParameterHintState.Default = { type: 0 /* Default */ };
+    ParameterHintState.Default = { type: 0 /* Type.Default */ };
     class Pending {
         constructor(request, previouslyActiveHints) {
             this.request = request;
             this.previouslyActiveHints = previouslyActiveHints;
-            this.type = 2 /* Pending */;
+            this.type = 2 /* Type.Pending */;
         }
     }
     ParameterHintState.Pending = Pending;
     class Active {
         constructor(hints) {
             this.hints = hints;
-            this.type = 1 /* Active */;
+            this.type = 1 /* Type.Active */;
         }
     }
     ParameterHintState.Active = Active;
@@ -65,7 +65,7 @@ export class ParameterHintsModel extends Disposable {
     }
     get state() { return this._state; }
     set state(value) {
-        if (this._state.type === 2 /* Pending */) {
+        if (this._state.type === 2 /* ParameterHintState.Type.Pending */) {
             this._state.request.cancel();
         }
         this._state = value;
@@ -90,13 +90,13 @@ export class ParameterHintsModel extends Disposable {
             .catch(onUnexpectedError);
     }
     next() {
-        if (this.state.type !== 1 /* Active */) {
+        if (this.state.type !== 1 /* ParameterHintState.Type.Active */) {
             return;
         }
         const length = this.state.hints.signatures.length;
         const activeSignature = this.state.hints.activeSignature;
         const last = (activeSignature % length) === (length - 1);
-        const cycle = this.editor.getOption(76 /* parameterHints */).cycle;
+        const cycle = this.editor.getOption(78 /* EditorOption.parameterHints */).cycle;
         // If there is only one signature, or we're on last signature of list
         if ((length < 2 || last) && !cycle) {
             this.cancel();
@@ -105,13 +105,13 @@ export class ParameterHintsModel extends Disposable {
         this.updateActiveSignature(last && cycle ? 0 : activeSignature + 1);
     }
     previous() {
-        if (this.state.type !== 1 /* Active */) {
+        if (this.state.type !== 1 /* ParameterHintState.Type.Active */) {
             return;
         }
         const length = this.state.hints.signatures.length;
         const activeSignature = this.state.hints.activeSignature;
         const first = activeSignature === 0;
-        const cycle = this.editor.getOption(76 /* parameterHints */).cycle;
+        const cycle = this.editor.getOption(78 /* EditorOption.parameterHints */).cycle;
         // If there is only one signature, or we're on first signature of list
         if ((length < 2 || first) && !cycle) {
             this.cancel();
@@ -120,7 +120,7 @@ export class ParameterHintsModel extends Disposable {
         this.updateActiveSignature(first && cycle ? length - 1 : activeSignature - 1);
     }
     updateActiveSignature(activeSignature) {
-        if (this.state.type !== 1 /* Active */) {
+        if (this.state.type !== 1 /* ParameterHintState.Type.Active */) {
             return;
         }
         this.state = new ParameterHintState.Active(Object.assign(Object.assign({}, this.state.hints), { activeSignature }));
@@ -128,7 +128,7 @@ export class ParameterHintsModel extends Disposable {
     }
     doTrigger(triggerId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const isRetrigger = this.state.type === 1 /* Active */ || this.state.type === 2 /* Pending */;
+            const isRetrigger = this.state.type === 1 /* ParameterHintState.Type.Active */ || this.state.type === 2 /* ParameterHintState.Type.Pending */;
             const activeSignatureHelp = this.getLastActiveHints();
             this.cancel(true);
             if (this._pendingTriggers.length === 0) {
@@ -179,14 +179,14 @@ export class ParameterHintsModel extends Disposable {
     }
     getLastActiveHints() {
         switch (this.state.type) {
-            case 1 /* Active */: return this.state.hints;
-            case 2 /* Pending */: return this.state.previouslyActiveHints;
+            case 1 /* ParameterHintState.Type.Active */: return this.state.hints;
+            case 2 /* ParameterHintState.Type.Pending */: return this.state.previouslyActiveHints;
             default: return undefined;
         }
     }
     get isTriggered() {
-        return this.state.type === 1 /* Active */
-            || this.state.type === 2 /* Pending */
+        return this.state.type === 1 /* ParameterHintState.Type.Active */
+            || this.state.type === 2 /* ParameterHintState.Type.Pending */
             || this.throttledDelayer.isTriggered();
     }
     onModelChanged() {
@@ -236,7 +236,7 @@ export class ParameterHintsModel extends Disposable {
         }
     }
     onEditorConfigurationChange() {
-        this.triggerOnType = this.editor.getOption(76 /* parameterHints */).enabled;
+        this.triggerOnType = this.editor.getOption(78 /* EditorOption.parameterHints */).enabled;
         if (!this.triggerOnType) {
             this.cancel();
         }

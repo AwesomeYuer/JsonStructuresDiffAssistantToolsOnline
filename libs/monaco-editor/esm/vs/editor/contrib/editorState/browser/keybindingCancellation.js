@@ -66,8 +66,8 @@ registerEditorCommand(new class extends EditorCommand {
         super({
             id: 'editor.cancelOperation',
             kbOpts: {
-                weight: 100 /* EditorContrib */,
-                primary: 9 /* Escape */
+                weight: 100 /* KeybindingWeight.EditorContrib */,
+                primary: 9 /* KeyCode.Escape */
             },
             precondition: ctxCancellableOperation
         });

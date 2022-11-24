@@ -107,7 +107,7 @@ function append(list, nodeToAppend) {
             break;
         }
         // assert 0 <= nodeToInsert.listHeight < curNode.listHeight
-        if (curNode.kind !== 4 /* List */) {
+        if (curNode.kind !== 4 /* AstNodeKind.List */) {
             throw new Error('unexpected');
         }
         parents.push(curNode);
@@ -152,7 +152,7 @@ function prepend(list, nodeToAppend) {
     // assert nodeToInsert.listHeight <= curNode.listHeight
     while (nodeToAppend.listHeight !== curNode.listHeight) {
         // assert 0 <= nodeToInsert.listHeight < curNode.listHeight
-        if (curNode.kind !== 4 /* List */) {
+        if (curNode.kind !== 4 /* AstNodeKind.List */) {
             throw new Error('unexpected');
         }
         parents.push(curNode);

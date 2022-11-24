@@ -20,7 +20,7 @@ export class ColorContribution extends Disposable {
     }
     onMouseDown(mouseEvent) {
         const target = mouseEvent.target;
-        if (target.type !== 6 /* CONTENT_TEXT */) {
+        if (target.type !== 6 /* MouseTargetType.CONTENT_TEXT */) {
             return;
         }
         if (!target.detail.injectedText) {
@@ -38,7 +38,7 @@ export class ColorContribution extends Disposable {
         }
         if (!hoverController.isColorPickerVisible()) {
             const range = new Range(target.range.startLineNumber, target.range.startColumn + 1, target.range.endLineNumber, target.range.endColumn + 1);
-            hoverController.showContentHover(range, 1 /* Immediate */, false);
+            hoverController.showContentHover(range, 1 /* HoverStartMode.Immediate */, false);
         }
     }
 }

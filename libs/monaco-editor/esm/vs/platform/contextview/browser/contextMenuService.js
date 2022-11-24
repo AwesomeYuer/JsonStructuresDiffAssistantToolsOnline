@@ -33,9 +33,8 @@ let ContextMenuService = class ContextMenuService extends Disposable {
     // ContextMenu
     showContextMenu(delegate) {
         this.contextMenuHandler.showContextMenu(Object.assign(Object.assign({}, delegate), { onHide: (didCancel) => {
-                if (delegate.onHide) {
-                    delegate.onHide(didCancel);
-                }
+                var _a;
+                (_a = delegate.onHide) === null || _a === void 0 ? void 0 : _a.call(delegate, didCancel);
                 this._onDidHideContextMenu.fire();
             } }));
         ModifierKeyEmitter.getInstance().resetKeyStatus();

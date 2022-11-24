@@ -45,7 +45,7 @@ export class HoverAction extends Disposable {
         }));
         this._register(dom.addDisposableListener(this.actionContainer, dom.EventType.KEY_UP, e => {
             const event = new StandardKeyboardEvent(e);
-            if (event.equals(3 /* Enter */)) {
+            if (event.equals(3 /* KeyCode.Enter */)) {
                 e.stopPropagation();
                 e.preventDefault();
                 actionOptions.run(this.actionContainer);

@@ -44,12 +44,12 @@ class Parser {
         while (true) {
             const token = this.tokenizer.peek();
             if (!token ||
-                (token.kind === 2 /* ClosingBracket */ &&
+                (token.kind === 2 /* TokenKind.ClosingBracket */ &&
                     token.bracketIds.intersects(openedBracketIds))) {
                 break;
             }
             const child = this.parseChild(openedBracketIds);
-            if (child.kind === 4 /* List */ && child.childrenLength === 0) {
+            if (child.kind === 4 /* AstNodeKind.List */ && child.childrenLength === 0) {
                 continue;
             }
             items.push(child);
@@ -81,16 +81,16 @@ class Parser {
         this._itemsConstructed++;
         const token = this.tokenizer.read();
         switch (token.kind) {
-            case 2 /* ClosingBracket */:
+            case 2 /* TokenKind.ClosingBracket */:
                 return new InvalidBracketAstNode(token.bracketIds, token.length);
-            case 0 /* Text */:
+            case 0 /* TokenKind.Text */:
                 return token.astNode;
-            case 1 /* OpeningBracket */: {
+            case 1 /* TokenKind.OpeningBracket */: {
                 const set = openedBracketIds.merge(token.bracketIds);
                 const child = this.parseList(set);
                 const nextToken = this.tokenizer.peek();
                 if (nextToken &&
-                    nextToken.kind === 2 /* ClosingBracket */ &&
+                    nextToken.kind === 2 /* TokenKind.ClosingBracket */ &&
                     (nextToken.bracketId === token.bracketId || nextToken.bracketIds.intersects(token.bracketIds))) {
                     this.tokenizer.read();
                     return PairAstNode.create(token.astNode, child, nextToken.astNode);

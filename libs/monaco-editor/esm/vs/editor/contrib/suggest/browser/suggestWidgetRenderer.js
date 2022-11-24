@@ -12,16 +12,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var _a;
-import { isSafari } from '../../../../base/browser/browser.js';
 import { $, append, hide, show } from '../../../../base/browser/dom.js';
 import { IconLabel } from '../../../../base/browser/ui/iconLabel/iconLabel.js';
-import { flatten } from '../../../../base/common/arrays.js';
 import { Codicon, CSSIcon } from '../../../../base/common/codicons.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { createMatches } from '../../../../base/common/filters.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { URI } from '../../../../base/common/uri.js';
-import { EDITOR_FONT_DEFAULTS } from '../../../common/config/editorOptions.js';
 import { CompletionItemKinds } from '../../../common/languages.js';
 import { getIconClasses } from '../../../common/services/getIconClasses.js';
 import { IModelService } from '../../../common/services/model.js';
@@ -92,16 +89,19 @@ let ItemRenderer = class ItemRenderer {
         data.readMore.title = nls.localize('readMore', "Read More");
         const configureFont = () => {
             const options = this._editor.getOptions();
-            const fontInfo = options.get(44 /* fontInfo */);
-            const fontFamily = fontInfo.getMassagedFontFamily(isSafari ? EDITOR_FONT_DEFAULTS.fontFamily : null);
+            const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+            const fontFamily = fontInfo.getMassagedFontFamily();
             const fontFeatureSettings = fontInfo.fontFeatureSettings;
-            const fontSize = options.get(107 /* suggestFontSize */) || fontInfo.fontSize;
-            const lineHeight = options.get(108 /* suggestLineHeight */) || fontInfo.lineHeight;
+            const fontSize = options.get(109 /* EditorOption.suggestFontSize */) || fontInfo.fontSize;
+            const lineHeight = options.get(110 /* EditorOption.suggestLineHeight */) || fontInfo.lineHeight;
             const fontWeight = fontInfo.fontWeight;
+            const letterSpacing = fontInfo.letterSpacing;
             const fontSizePx = `${fontSize}px`;
             const lineHeightPx = `${lineHeight}px`;
+            const letterSpacingPx = `${letterSpacing}px`;
             data.root.style.fontSize = fontSizePx;
             data.root.style.fontWeight = fontWeight;
+            data.root.style.letterSpacing = letterSpacingPx;
             main.style.fontFamily = fontFamily;
             main.style.fontFeatureSettings = fontFeatureSettings;
             main.style.lineHeight = lineHeightPx;
@@ -112,7 +112,7 @@ let ItemRenderer = class ItemRenderer {
         };
         configureFont();
         data.disposables.add(this._editor.onDidChangeConfiguration(e => {
-            if (e.hasChanged(44 /* fontInfo */) || e.hasChanged(107 /* suggestFontSize */) || e.hasChanged(108 /* suggestLineHeight */)) {
+            if (e.hasChanged(46 /* EditorOption.fontInfo */) || e.hasChanged(109 /* EditorOption.suggestFontSize */) || e.hasChanged(110 /* EditorOption.suggestLineHeight */)) {
                 configureFont();
             }
         }));
@@ -126,14 +126,14 @@ let ItemRenderer = class ItemRenderer {
             labelEscapeNewLines: true,
             matches: createMatches(element.score)
         };
-        let color = [];
-        if (completion.kind === 19 /* Color */ && _completionItemColor.extract(element, color)) {
+        const color = [];
+        if (completion.kind === 19 /* CompletionItemKind.Color */ && _completionItemColor.extract(element, color)) {
             // special logic for 'color' completion items
             data.icon.className = 'icon customcolor';
             data.iconContainer.className = 'icon hide';
             data.colorspan.style.backgroundColor = color[0];
         }
-        else if (completion.kind === 20 /* File */ && this._themeService.getFileIconTheme().hasFileIcons) {
+        else if (completion.kind === 20 /* CompletionItemKind.File */ && this._themeService.getFileIconTheme().hasFileIcons) {
             // special logic for 'file' completion items
             data.icon.className = 'icon hide';
             data.iconContainer.className = 'icon hide';
@@ -141,14 +141,14 @@ let ItemRenderer = class ItemRenderer {
             const detailClasses = getIconClasses(this._modelService, this._languageService, URI.from({ scheme: 'fake', path: completion.detail }), FileKind.FILE);
             labelOptions.extraClasses = labelClasses.length > detailClasses.length ? labelClasses : detailClasses;
         }
-        else if (completion.kind === 23 /* Folder */ && this._themeService.getFileIconTheme().hasFolderIcons) {
+        else if (completion.kind === 23 /* CompletionItemKind.Folder */ && this._themeService.getFileIconTheme().hasFolderIcons) {
             // special logic for 'folder' completion items
             data.icon.className = 'icon hide';
             data.iconContainer.className = 'icon hide';
-            labelOptions.extraClasses = flatten([
+            labelOptions.extraClasses = [
                 getIconClasses(this._modelService, this._languageService, URI.from({ scheme: 'fake', path: element.textLabel }), FileKind.FOLDER),
                 getIconClasses(this._modelService, this._languageService, URI.from({ scheme: 'fake', path: completion.detail }), FileKind.FOLDER)
-            ]);
+            ].flat();
         }
         else {
             // normal icon
@@ -156,7 +156,7 @@ let ItemRenderer = class ItemRenderer {
             data.iconContainer.className = '';
             data.iconContainer.classList.add('suggest-icon', ...CSSIcon.asClassNameArray(CompletionItemKinds.toIcon(completion.kind)));
         }
-        if (completion.tags && completion.tags.indexOf(1 /* Deprecated */) >= 0) {
+        if (completion.tags && completion.tags.indexOf(1 /* CompletionItemTag.Deprecated */) >= 0) {
             labelOptions.extraClasses = (labelOptions.extraClasses || []).concat(['deprecated']);
             labelOptions.matches = [];
         }
@@ -171,7 +171,7 @@ let ItemRenderer = class ItemRenderer {
             data.detailsLabel.textContent = stripNewLines(completion.label.description || '');
             data.root.classList.remove('string-label');
         }
-        if (this._editor.getOption(106 /* suggest */).showInlineDetails) {
+        if (this._editor.getOption(108 /* EditorOption.suggest */).showInlineDetails) {
             show(data.detailsLabel);
         }
         else {

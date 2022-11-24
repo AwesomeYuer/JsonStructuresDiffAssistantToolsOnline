@@ -34,7 +34,7 @@ export class MarkdownHover {
         this.ordinal = ordinal;
     }
     isValidForHoverAnchor(anchor) {
-        return (anchor.type === 1 /* Range */
+        return (anchor.type === 1 /* HoverAnchorType.Range */
             && this.range.startColumn <= anchor.range.startColumn
             && this.range.endColumn >= anchor.range.endColumn);
     }
@@ -52,7 +52,7 @@ let MarkdownHoverParticipant = class MarkdownHoverParticipant {
         return new MarkdownHover(this, anchor.range, [new MarkdownString().appendText(nls.localize('modesContentHover.loading', "Loading..."))], 2000);
     }
     computeSync(anchor, lineDecorations) {
-        if (!this._editor.hasModel() || anchor.type !== 1 /* Range */) {
+        if (!this._editor.hasModel() || anchor.type !== 1 /* HoverAnchorType.Range */) {
             return [];
         }
         const model = this._editor.getModel();
@@ -83,7 +83,7 @@ let MarkdownHoverParticipant = class MarkdownHoverParticipant {
         return result;
     }
     computeAsync(anchor, lineDecorations, token) {
-        if (!this._editor.hasModel() || anchor.type !== 1 /* Range */) {
+        if (!this._editor.hasModel() || anchor.type !== 1 /* HoverAnchorType.Range */) {
             return AsyncIterableObject.EMPTY;
         }
         const model = this._editor.getModel();

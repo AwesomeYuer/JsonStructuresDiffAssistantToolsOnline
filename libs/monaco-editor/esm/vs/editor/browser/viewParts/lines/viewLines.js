@@ -66,19 +66,19 @@ export class ViewLines extends ViewPart {
         this.domNode = this._visibleLines.domNode;
         const conf = this._context.configuration;
         const options = this._context.configuration.options;
-        const fontInfo = options.get(44 /* fontInfo */);
-        const wrappingInfo = options.get(132 /* wrappingInfo */);
-        const layoutInfo = options.get(131 /* layoutInfo */);
-        this._lineHeight = options.get(59 /* lineHeight */);
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        const wrappingInfo = options.get(134 /* EditorOption.wrappingInfo */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
         this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
         this._isViewportWrapping = wrappingInfo.isViewportWrapping;
-        this._revealHorizontalRightPadding = options.get(89 /* revealHorizontalRightPadding */);
+        this._revealHorizontalRightPadding = options.get(91 /* EditorOption.revealHorizontalRightPadding */);
         this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
-        this._cursorSurroundingLines = options.get(25 /* cursorSurroundingLines */);
-        this._cursorSurroundingLinesStyle = options.get(26 /* cursorSurroundingLinesStyle */);
-        this._canUseLayerHinting = !options.get(28 /* disableLayerHinting */);
+        this._cursorSurroundingLines = options.get(25 /* EditorOption.cursorSurroundingLines */);
+        this._cursorSurroundingLinesStyle = options.get(26 /* EditorOption.cursorSurroundingLinesStyle */);
+        this._canUseLayerHinting = !options.get(28 /* EditorOption.disableLayerHinting */);
         this._viewLineOptions = new ViewLineOptions(conf, this._context.theme.type);
-        PartFingerprints.write(this.domNode, 7 /* ViewLines */);
+        PartFingerprints.write(this.domNode, 7 /* PartFingerprint.ViewLines */);
         this.domNode.setClassName(`view-lines ${MOUSE_CURSOR_TEXT_CSS_CLASS_NAME}`);
         applyFontInfo(this.domNode, fontInfo);
         // --- width & height
@@ -108,24 +108,24 @@ export class ViewLines extends ViewPart {
     // ---- begin view event handlers
     onConfigurationChanged(e) {
         this._visibleLines.onConfigurationChanged(e);
-        if (e.hasChanged(132 /* wrappingInfo */)) {
+        if (e.hasChanged(134 /* EditorOption.wrappingInfo */)) {
             this._maxLineWidth = 0;
         }
         const options = this._context.configuration.options;
-        const fontInfo = options.get(44 /* fontInfo */);
-        const wrappingInfo = options.get(132 /* wrappingInfo */);
-        const layoutInfo = options.get(131 /* layoutInfo */);
-        this._lineHeight = options.get(59 /* lineHeight */);
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        const wrappingInfo = options.get(134 /* EditorOption.wrappingInfo */);
+        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
+        this._lineHeight = options.get(61 /* EditorOption.lineHeight */);
         this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
         this._isViewportWrapping = wrappingInfo.isViewportWrapping;
-        this._revealHorizontalRightPadding = options.get(89 /* revealHorizontalRightPadding */);
+        this._revealHorizontalRightPadding = options.get(91 /* EditorOption.revealHorizontalRightPadding */);
         this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
-        this._cursorSurroundingLines = options.get(25 /* cursorSurroundingLines */);
-        this._cursorSurroundingLinesStyle = options.get(26 /* cursorSurroundingLinesStyle */);
-        this._canUseLayerHinting = !options.get(28 /* disableLayerHinting */);
+        this._cursorSurroundingLines = options.get(25 /* EditorOption.cursorSurroundingLines */);
+        this._cursorSurroundingLinesStyle = options.get(26 /* EditorOption.cursorSurroundingLinesStyle */);
+        this._canUseLayerHinting = !options.get(28 /* EditorOption.disableLayerHinting */);
         applyFontInfo(this.domNode, fontInfo);
         this._onOptionsMaybeChanged();
-        if (e.hasChanged(131 /* layoutInfo */)) {
+        if (e.hasChanged(133 /* EditorOption.layoutInfo */)) {
             this._maxLineWidth = 0;
         }
         return true;
@@ -208,7 +208,7 @@ export class ViewLines extends ViewPart {
             this._horizontalRevealRequest = null;
         }
         const scrollTopDelta = Math.abs(this._context.viewLayout.getCurrentScrollTop() - newScrollPosition.scrollTop);
-        const scrollType = (scrollTopDelta <= this._lineHeight ? 1 /* Immediate */ : e.scrollType);
+        const scrollType = (scrollTopDelta <= this._lineHeight ? 1 /* ScrollType.Immediate */ : e.scrollType);
         this._context.viewModel.viewLayout.setScrollPosition(newScrollPosition, scrollType);
         return true;
     }
@@ -315,7 +315,8 @@ export class ViewLines extends ViewPart {
         if (!range) {
             return null;
         }
-        let visibleRanges = [], visibleRangesLen = 0;
+        const visibleRanges = [];
+        let visibleRangesLen = 0;
         const domReadingContext = new DomReadingContext(this.domNode.domNode, this._textRangeRestingSpot);
         let nextLineModelLineNumber = 0;
         if (includeNewLines) {
@@ -535,7 +536,7 @@ export class ViewLines extends ViewPart {
                 boxStartY -= this._lineHeight;
             }
         }
-        if (verticalType === 0 /* Simple */ || verticalType === 4 /* Bottom */) {
+        if (verticalType === 0 /* viewEvents.VerticalRevealType.Simple */ || verticalType === 4 /* viewEvents.VerticalRevealType.Bottom */) {
             // Reveal one line more when the last line would be covered by the scrollbar - arrow down case or revealing a line explicitly at bottom
             boxEndY += (minimalReveal ? this._horizontalScrollbarHeight : this._lineHeight);
         }
@@ -548,8 +549,8 @@ export class ViewLines extends ViewPart {
             }
             newScrollTop = boxStartY;
         }
-        else if (verticalType === 5 /* NearTop */ || verticalType === 6 /* NearTopIfOutsideViewport */) {
-            if (verticalType === 6 /* NearTopIfOutsideViewport */ && viewportStartY <= boxStartY && boxEndY <= viewportEndY) {
+        else if (verticalType === 5 /* viewEvents.VerticalRevealType.NearTop */ || verticalType === 6 /* viewEvents.VerticalRevealType.NearTopIfOutsideViewport */) {
+            if (verticalType === 6 /* viewEvents.VerticalRevealType.NearTopIfOutsideViewport */ && viewportStartY <= boxStartY && boxEndY <= viewportEndY) {
                 // Box is already in the viewport... do nothing
                 newScrollTop = viewportStartY;
             }
@@ -563,8 +564,8 @@ export class ViewLines extends ViewPart {
                 newScrollTop = Math.max(minScrollTop, desiredScrollTop);
             }
         }
-        else if (verticalType === 1 /* Center */ || verticalType === 2 /* CenterIfOutsideViewport */) {
-            if (verticalType === 2 /* CenterIfOutsideViewport */ && viewportStartY <= boxStartY && boxEndY <= viewportEndY) {
+        else if (verticalType === 1 /* viewEvents.VerticalRevealType.Center */ || verticalType === 2 /* viewEvents.VerticalRevealType.CenterIfOutsideViewport */) {
+            if (verticalType === 2 /* viewEvents.VerticalRevealType.CenterIfOutsideViewport */ && viewportStartY <= boxStartY && boxEndY <= viewportEndY) {
                 // Box is already in the viewport... do nothing
                 newScrollTop = viewportStartY;
             }
@@ -575,7 +576,7 @@ export class ViewLines extends ViewPart {
             }
         }
         else {
-            newScrollTop = this._computeMinimumScrolling(viewportStartY, viewportEndY, boxStartY, boxEndY, verticalType === 3 /* Top */, verticalType === 4 /* Bottom */);
+            newScrollTop = this._computeMinimumScrolling(viewportStartY, viewportEndY, boxStartY, boxEndY, verticalType === 3 /* viewEvents.VerticalRevealType.Top */, verticalType === 4 /* viewEvents.VerticalRevealType.Bottom */);
         }
         return newScrollTop;
     }
@@ -583,7 +584,7 @@ export class ViewLines extends ViewPart {
         const viewport = this._context.viewLayout.getCurrentViewport();
         const viewportStartX = viewport.left;
         const viewportEndX = viewportStartX + viewport.width;
-        let boxStartX = 1073741824 /* MAX_SAFE_SMALL_INTEGER */;
+        let boxStartX = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */;
         let boxEndX = 0;
         if (horizontalRevealRequest.type === 'range') {
             const visibleRanges = this._visibleRangesForLineRange(horizontalRevealRequest.lineNumber, horizontalRevealRequest.startColumn, horizontalRevealRequest.endColumn);

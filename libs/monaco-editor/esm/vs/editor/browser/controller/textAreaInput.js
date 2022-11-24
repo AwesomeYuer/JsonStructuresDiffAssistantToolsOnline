@@ -104,12 +104,12 @@ export class TextAreaInput extends Disposable {
         let lastKeyDown = null;
         this._register(this._textArea.onKeyDown((_e) => {
             const e = new StandardKeyboardEvent(_e);
-            if (e.keyCode === 109 /* KEY_IN_COMPOSITION */
-                || (this._currentComposition && e.keyCode === 1 /* Backspace */)) {
+            if (e.keyCode === 109 /* KeyCode.KEY_IN_COMPOSITION */
+                || (this._currentComposition && e.keyCode === 1 /* KeyCode.Backspace */)) {
                 // Stop propagation for keyDown events if the IME is processing key input
                 e.stopPropagation();
             }
-            if (e.equals(9 /* Escape */)) {
+            if (e.equals(9 /* KeyCode.Escape */)) {
                 // Prevent default always for `Esc`, otherwise it will generate a keypress
                 // See https://msdn.microsoft.com/en-us/library/ie/ms536939(v=vs.85).aspx
                 e.preventDefault();
@@ -132,9 +132,9 @@ export class TextAreaInput extends Disposable {
                 return;
             }
             this._currentComposition = currentComposition;
-            if (this._OS === 2 /* Macintosh */
+            if (this._OS === 2 /* OperatingSystem.Macintosh */
                 && lastKeyDown
-                && lastKeyDown.equals(109 /* KEY_IN_COMPOSITION */)
+                && lastKeyDown.equals(109 /* KeyCode.KEY_IN_COMPOSITION */)
                 && this._textAreaState.selectionStart === this._textAreaState.selectionEnd
                 && this._textAreaState.selectionStart > 0
                 && this._textAreaState.value.substr(this._textAreaState.selectionStart - 1, 1) === e.data
@@ -221,7 +221,7 @@ export class TextAreaInput extends Disposable {
                 return;
             }
             const newState = TextAreaState.readFromTextArea(this._textArea);
-            const typeInput = TextAreaState.deduceInput(this._textAreaState, newState, /*couldBeEmojiInput*/ this._OS === 2 /* Macintosh */);
+            const typeInput = TextAreaState.deduceInput(this._textAreaState, newState, /*couldBeEmojiInput*/ this._OS === 2 /* OperatingSystem.Macintosh */);
             if (typeInput.replacePrevCharCnt === 0 && typeInput.text.length === 1 && strings.isHighSurrogate(typeInput.text.charCodeAt(0))) {
                 // Ignore invalid input but keep it around for next time
                 return;
@@ -458,6 +458,11 @@ class ClipboardEventUtils {
             catch (err) {
                 // no problem!
             }
+        }
+        if (text.length === 0 && metadata === null && clipboardData.files.length > 0) {
+            // no textual data pasted, generate text from file names
+            const files = Array.prototype.slice.call(clipboardData.files, 0);
+            return [files.map(file => file.name).join('\n'), null];
         }
         return [text, metadata];
     }

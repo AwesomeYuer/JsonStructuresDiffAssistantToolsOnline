@@ -43,7 +43,7 @@ class SelectionRanges {
         this.ranges = ranges;
     }
     mov(fwd) {
-        let index = this.index + (fwd ? 1 : -1);
+        const index = this.index + (fwd ? 1 : -1);
         if (index < 0 || index >= this.ranges.length) {
             return this;
         }
@@ -76,7 +76,7 @@ let SmartSelectController = class SmartSelectController {
             const selections = this._editor.getSelections();
             const model = this._editor.getModel();
             if (!this._state) {
-                yield provideSelectionRanges(this._languageFeaturesService.selectionRangeProvider, model, selections.map(s => s.getPosition()), this._editor.getOption(102 /* smartSelect */), CancellationToken.None).then(ranges => {
+                yield provideSelectionRanges(this._languageFeaturesService.selectionRangeProvider, model, selections.map(s => s.getPosition()), this._editor.getOption(104 /* EditorOption.smartSelect */), CancellationToken.None).then(ranges => {
                     var _a;
                     if (!arrays.isNonEmptyArray(ranges) || ranges.length !== selections.length) {
                         // invalid result
@@ -133,7 +133,7 @@ class AbstractSmartSelect extends EditorAction {
     }
     run(_accessor, editor) {
         return __awaiter(this, void 0, void 0, function* () {
-            let controller = SmartSelectController.get(editor);
+            const controller = SmartSelectController.get(editor);
             if (controller) {
                 yield controller.run(this._forward);
             }
@@ -149,12 +149,12 @@ class GrowSelectionAction extends AbstractSmartSelect {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 1024 /* Shift */ | 512 /* Alt */ | 17 /* RightArrow */,
+                primary: 1024 /* KeyMod.Shift */ | 512 /* KeyMod.Alt */ | 17 /* KeyCode.RightArrow */,
                 mac: {
-                    primary: 2048 /* CtrlCmd */ | 256 /* WinCtrl */ | 1024 /* Shift */ | 17 /* RightArrow */,
-                    secondary: [256 /* WinCtrl */ | 1024 /* Shift */ | 17 /* RightArrow */],
+                    primary: 2048 /* KeyMod.CtrlCmd */ | 256 /* KeyMod.WinCtrl */ | 1024 /* KeyMod.Shift */ | 17 /* KeyCode.RightArrow */,
+                    secondary: [256 /* KeyMod.WinCtrl */ | 1024 /* KeyMod.Shift */ | 17 /* KeyCode.RightArrow */],
                 },
-                weight: 100 /* EditorContrib */
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             menuOpts: {
                 menuId: MenuId.MenubarSelectionMenu,
@@ -176,12 +176,12 @@ class ShrinkSelectionAction extends AbstractSmartSelect {
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 1024 /* Shift */ | 512 /* Alt */ | 15 /* LeftArrow */,
+                primary: 1024 /* KeyMod.Shift */ | 512 /* KeyMod.Alt */ | 15 /* KeyCode.LeftArrow */,
                 mac: {
-                    primary: 2048 /* CtrlCmd */ | 256 /* WinCtrl */ | 1024 /* Shift */ | 15 /* LeftArrow */,
-                    secondary: [256 /* WinCtrl */ | 1024 /* Shift */ | 15 /* LeftArrow */],
+                    primary: 2048 /* KeyMod.CtrlCmd */ | 256 /* KeyMod.WinCtrl */ | 1024 /* KeyMod.Shift */ | 15 /* KeyCode.LeftArrow */,
+                    secondary: [256 /* KeyMod.WinCtrl */ | 1024 /* KeyMod.Shift */ | 15 /* KeyCode.LeftArrow */],
                 },
-                weight: 100 /* EditorContrib */
+                weight: 100 /* KeybindingWeight.EditorContrib */
             },
             menuOpts: {
                 menuId: MenuId.MenubarSelectionMenu,
@@ -203,8 +203,8 @@ export function provideSelectionRanges(registry, model, positions, options, toke
             // add word selection and bracket selection when no provider exists
             providers.unshift(new BracketSelectionRangeProvider());
         }
-        let work = [];
-        let allRawRanges = [];
+        const work = [];
+        const allRawRanges = [];
         for (const provider of providers) {
             work.push(Promise.resolve(provider.provideSelectionRanges(model, positions, token)).then(allProviderRanges => {
                 if (arrays.isNonEmptyArray(allProviderRanges) && allProviderRanges.length === positions.length) {
@@ -246,7 +246,7 @@ export function provideSelectionRanges(registry, model, positions, options, toke
             });
             // remove ranges that don't contain the former range or that are equal to the
             // former range
-            let oneRanges = [];
+            const oneRanges = [];
             let last;
             for (const range of oneRawRanges) {
                 if (!last || (Range.containsRange(range, last) && !Range.equalsRange(range, last))) {
@@ -259,7 +259,7 @@ export function provideSelectionRanges(registry, model, positions, options, toke
             }
             // add ranges that expand trivia at line starts and ends whenever a range
             // wraps onto the a new line
-            let oneRangesWithTrivia = [oneRanges[0]];
+            const oneRangesWithTrivia = [oneRanges[0]];
             for (let i = 1; i < oneRanges.length; i++) {
                 const prev = oneRanges[i - 1];
                 const cur = oneRanges[i];

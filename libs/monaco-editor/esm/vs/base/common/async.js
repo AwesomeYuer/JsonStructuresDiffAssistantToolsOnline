@@ -223,11 +223,10 @@ export class Delayer {
         return !!((_a = this.deferred) === null || _a === void 0 ? void 0 : _a.isTriggered());
     }
     cancel() {
+        var _a;
         this.cancelTimeout();
         if (this.completionPromise) {
-            if (this.doReject) {
-                this.doReject(new CancellationError());
-            }
+            (_a = this.doReject) === null || _a === void 0 ? void 0 : _a.call(this, new CancellationError());
             this.completionPromise = null;
         }
     }
@@ -402,9 +401,8 @@ export class RunOnceScheduler {
         }
     }
     doRun() {
-        if (this.runner) {
-            this.runner();
-        }
+        var _a;
+        (_a = this.runner) === null || _a === void 0 ? void 0 : _a.call(this);
     }
 }
 /**
@@ -578,7 +576,7 @@ export var Promises;
  */
 export class AsyncIterableObject {
     constructor(executor) {
-        this._state = 0 /* Initial */;
+        this._state = 0 /* AsyncIterableSourceState.Initial */;
         this._results = [];
         this._error = null;
         this._onStateChanged = new Emitter();
@@ -642,13 +640,13 @@ export class AsyncIterableObject {
         return {
             next: () => __awaiter(this, void 0, void 0, function* () {
                 do {
-                    if (this._state === 2 /* DoneError */) {
+                    if (this._state === 2 /* AsyncIterableSourceState.DoneError */) {
                         throw this._error;
                     }
                     if (i < this._results.length) {
                         return { done: false, value: this._results[i++] };
                     }
-                    if (this._state === 1 /* DoneOK */) {
+                    if (this._state === 1 /* AsyncIterableSourceState.DoneOK */) {
                         return { done: true, value: undefined };
                     }
                     yield Event.toPromise(this._onStateChanged.event);
@@ -736,7 +734,7 @@ export class AsyncIterableObject {
      * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
      */
     emitOne(value) {
-        if (this._state !== 0 /* Initial */) {
+        if (this._state !== 0 /* AsyncIterableSourceState.Initial */) {
             return;
         }
         // it is important to add new values at the end,
@@ -750,7 +748,7 @@ export class AsyncIterableObject {
      * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
      */
     emitMany(values) {
-        if (this._state !== 0 /* Initial */) {
+        if (this._state !== 0 /* AsyncIterableSourceState.Initial */) {
             return;
         }
         // it is important to add new values at the end,
@@ -765,10 +763,10 @@ export class AsyncIterableObject {
      * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
      */
     resolve() {
-        if (this._state !== 0 /* Initial */) {
+        if (this._state !== 0 /* AsyncIterableSourceState.Initial */) {
             return;
         }
-        this._state = 1 /* DoneOK */;
+        this._state = 1 /* AsyncIterableSourceState.DoneOK */;
         this._onStateChanged.fire();
     }
     /**
@@ -778,10 +776,10 @@ export class AsyncIterableObject {
      * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
      */
     reject(error) {
-        if (this._state !== 0 /* Initial */) {
+        if (this._state !== 0 /* AsyncIterableSourceState.Initial */) {
             return;
         }
-        this._state = 2 /* DoneError */;
+        this._state = 2 /* AsyncIterableSourceState.DoneError */;
         this._error = error;
         this._onStateChanged.fire();
     }

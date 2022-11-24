@@ -85,7 +85,7 @@ export class RangeUtil {
         if (startChildIndex !== endChildIndex) {
             if (endChildIndex > 0 && endOffset === 0) {
                 endChildIndex--;
-                endOffset = 1073741824 /* MAX_SAFE_SMALL_INTEGER */;
+                endOffset = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */;
             }
         }
         let startElement = domNode.children[startChildIndex].firstChild;
@@ -94,11 +94,11 @@ export class RangeUtil {
             // When having an empty <span> (without any text content), try to move to the previous <span>
             if (!startElement && startOffset === 0 && startChildIndex > 0) {
                 startElement = domNode.children[startChildIndex - 1].firstChild;
-                startOffset = 1073741824 /* MAX_SAFE_SMALL_INTEGER */;
+                startOffset = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */;
             }
             if (!endElement && endOffset === 0 && endChildIndex > 0) {
                 endElement = domNode.children[endChildIndex - 1].firstChild;
-                endOffset = 1073741824 /* MAX_SAFE_SMALL_INTEGER */;
+                endOffset = 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */;
             }
         }
         if (!startElement || !endElement) {

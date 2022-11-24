@@ -10,6 +10,7 @@ import './button.css';
 const defaultOptions = {
     buttonBackground: Color.fromHex('#0E639C'),
     buttonHoverBackground: Color.fromHex('#006BB3'),
+    buttonSeparator: Color.white,
     buttonForeground: Color.white
 };
 export class Button extends Disposable {
@@ -43,11 +44,11 @@ export class Button extends Disposable {
         this._register(addDisposableListener(this._element, EventType.KEY_DOWN, e => {
             const event = new StandardKeyboardEvent(e);
             let eventHandled = false;
-            if (this.enabled && (event.equals(3 /* Enter */) || event.equals(10 /* Space */))) {
+            if (this.enabled && (event.equals(3 /* KeyCode.Enter */) || event.equals(10 /* KeyCode.Space */))) {
                 this._onDidClick.fire(e);
                 eventHandled = true;
             }
-            else if (event.equals(9 /* Escape */)) {
+            else if (event.equals(9 /* KeyCode.Escape */)) {
                 this._element.blur();
                 eventHandled = true;
             }
@@ -65,8 +66,12 @@ export class Button extends Disposable {
         }));
         // Also set hover background when button is focused for feedback
         this.focusTracker = this._register(trackFocus(this._element));
-        this._register(this.focusTracker.onDidFocus(() => this.setHoverBackground()));
-        this._register(this.focusTracker.onDidBlur(() => this.applyStyles())); // restore standard styles
+        this._register(this.focusTracker.onDidFocus(() => { if (this.enabled) {
+            this.setHoverBackground();
+        } }));
+        this._register(this.focusTracker.onDidBlur(() => { if (this.enabled) {
+            this.applyStyles();
+        } }));
         this.applyStyles();
     }
     get onDidClick() { return this._onDidClick.event; }

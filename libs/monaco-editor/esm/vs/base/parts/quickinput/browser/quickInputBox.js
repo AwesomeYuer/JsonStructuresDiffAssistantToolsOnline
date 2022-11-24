@@ -71,11 +71,11 @@ export class QuickInputBox extends Disposable {
             this.inputBox.hideMessage();
         }
         else {
-            this.inputBox.showMessage({ type: decoration === Severity.Info ? 1 /* INFO */ : decoration === Severity.Warning ? 2 /* WARNING */ : 3 /* ERROR */, content: '' });
+            this.inputBox.showMessage({ type: decoration === Severity.Info ? 1 /* MessageType.INFO */ : decoration === Severity.Warning ? 2 /* MessageType.WARNING */ : 3 /* MessageType.ERROR */, content: '' });
         }
     }
     stylesForType(decoration) {
-        return this.inputBox.stylesForType(decoration === Severity.Info ? 1 /* INFO */ : decoration === Severity.Warning ? 2 /* WARNING */ : 3 /* ERROR */);
+        return this.inputBox.stylesForType(decoration === Severity.Info ? 1 /* MessageType.INFO */ : decoration === Severity.Warning ? 2 /* MessageType.WARNING */ : 3 /* MessageType.ERROR */);
     }
     setFocus() {
         this.inputBox.focus();

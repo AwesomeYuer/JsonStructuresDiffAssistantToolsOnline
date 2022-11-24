@@ -16,12 +16,12 @@ class KeybindingsRegistryImpl {
      * Take current platform into account and reduce to primary & secondary.
      */
     static bindToCurrentPlatform(kb) {
-        if (OS === 1 /* Windows */) {
+        if (OS === 1 /* OperatingSystem.Windows */) {
             if (kb && kb.win) {
                 return kb.win;
             }
         }
-        else if (OS === 2 /* Macintosh */) {
+        else if (OS === 2 /* OperatingSystem.Macintosh */) {
             if (kb && kb.mac) {
                 return kb.mac;
             }
@@ -56,27 +56,27 @@ class KeybindingsRegistryImpl {
         CommandsRegistry.registerCommand(desc);
     }
     static _mightProduceChar(keyCode) {
-        if (keyCode >= 21 /* Digit0 */ && keyCode <= 30 /* Digit9 */) {
+        if (keyCode >= 21 /* KeyCode.Digit0 */ && keyCode <= 30 /* KeyCode.Digit9 */) {
             return true;
         }
-        if (keyCode >= 31 /* KeyA */ && keyCode <= 56 /* KeyZ */) {
+        if (keyCode >= 31 /* KeyCode.KeyA */ && keyCode <= 56 /* KeyCode.KeyZ */) {
             return true;
         }
-        return (keyCode === 80 /* Semicolon */
-            || keyCode === 81 /* Equal */
-            || keyCode === 82 /* Comma */
-            || keyCode === 83 /* Minus */
-            || keyCode === 84 /* Period */
-            || keyCode === 85 /* Slash */
-            || keyCode === 86 /* Backquote */
-            || keyCode === 110 /* ABNT_C1 */
-            || keyCode === 111 /* ABNT_C2 */
-            || keyCode === 87 /* BracketLeft */
-            || keyCode === 88 /* Backslash */
-            || keyCode === 89 /* BracketRight */
-            || keyCode === 90 /* Quote */
-            || keyCode === 91 /* OEM_8 */
-            || keyCode === 92 /* IntlBackslash */);
+        return (keyCode === 80 /* KeyCode.Semicolon */
+            || keyCode === 81 /* KeyCode.Equal */
+            || keyCode === 82 /* KeyCode.Comma */
+            || keyCode === 83 /* KeyCode.Minus */
+            || keyCode === 84 /* KeyCode.Period */
+            || keyCode === 85 /* KeyCode.Slash */
+            || keyCode === 86 /* KeyCode.Backquote */
+            || keyCode === 110 /* KeyCode.ABNT_C1 */
+            || keyCode === 111 /* KeyCode.ABNT_C2 */
+            || keyCode === 87 /* KeyCode.BracketLeft */
+            || keyCode === 88 /* KeyCode.Backslash */
+            || keyCode === 89 /* KeyCode.BracketRight */
+            || keyCode === 90 /* KeyCode.Quote */
+            || keyCode === 91 /* KeyCode.OEM_8 */
+            || keyCode === 92 /* KeyCode.IntlBackslash */);
     }
     _assertNoCtrlAlt(keybinding, commandId) {
         if (keybinding.ctrlKey && keybinding.altKey && !keybinding.metaKey) {
@@ -86,7 +86,7 @@ class KeybindingsRegistryImpl {
         }
     }
     _registerDefaultKeybinding(keybinding, commandId, commandArgs, weight1, weight2, when) {
-        if (OS === 1 /* Windows */) {
+        if (OS === 1 /* OperatingSystem.Windows */) {
             this._assertNoCtrlAlt(keybinding.parts[0], commandId);
         }
         this._coreKeybindings.push({
@@ -119,11 +119,13 @@ function sorter(a, b) {
     if (a.weight1 !== b.weight1) {
         return a.weight1 - b.weight1;
     }
-    if (a.command < b.command) {
-        return -1;
-    }
-    if (a.command > b.command) {
-        return 1;
+    if (a.command && b.command) {
+        if (a.command < b.command) {
+            return -1;
+        }
+        if (a.command > b.command) {
+            return 1;
+        }
     }
     return a.weight2 - b.weight2;
 }

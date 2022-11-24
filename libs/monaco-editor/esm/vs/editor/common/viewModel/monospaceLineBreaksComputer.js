@@ -11,7 +11,7 @@ export class MonospaceLineBreaksComputerFactory {
         this.classifier = new WrappingCharacterClassifier(breakBeforeChars, breakAfterChars);
     }
     static create(options) {
-        return new MonospaceLineBreaksComputerFactory(options.get(120 /* wordWrapBreakBeforeCharacters */), options.get(119 /* wordWrapBreakAfterCharacters */));
+        return new MonospaceLineBreaksComputerFactory(options.get(122 /* EditorOption.wordWrapBreakBeforeCharacters */), options.get(121 /* EditorOption.wordWrapBreakAfterCharacters */));
     }
     createLineBreaksComputer(fontInfo, tabSize, wrappingColumn, wrappingIndent) {
         const requests = [];
@@ -45,12 +45,12 @@ export class MonospaceLineBreaksComputerFactory {
 }
 class WrappingCharacterClassifier extends CharacterClassifier {
     constructor(BREAK_BEFORE, BREAK_AFTER) {
-        super(0 /* NONE */);
+        super(0 /* CharacterClass.NONE */);
         for (let i = 0; i < BREAK_BEFORE.length; i++) {
-            this.set(BREAK_BEFORE.charCodeAt(i), 1 /* BREAK_BEFORE */);
+            this.set(BREAK_BEFORE.charCodeAt(i), 1 /* CharacterClass.BREAK_BEFORE */);
         }
         for (let i = 0; i < BREAK_AFTER.length; i++) {
-            this.set(BREAK_AFTER.charCodeAt(i), 2 /* BREAK_AFTER */);
+            this.set(BREAK_AFTER.charCodeAt(i), 2 /* CharacterClass.BREAK_AFTER */);
         }
     }
     get(charCode) {
@@ -65,7 +65,7 @@ class WrappingCharacterClassifier extends CharacterClassifier {
             if ((charCode >= 0x3040 && charCode <= 0x30FF)
                 || (charCode >= 0x3400 && charCode <= 0x4DBF)
                 || (charCode >= 0x4E00 && charCode <= 0x9FFF)) {
-                return 3 /* BREAK_IDEOGRAPHIC */;
+                return 3 /* CharacterClass.BREAK_IDEOGRAPHIC */;
             }
             return (this._map.get(charCode) || this._defaultValue);
         }
@@ -119,8 +119,8 @@ function createLineBreaksFromPreviousLineBreaks(classifier, previousBreakingData
         // initially, we search as much as possible to the right (if it fits)
         if (prevBreakOffsetVisibleColumn <= breakingColumn) {
             let visibleColumn = prevBreakOffsetVisibleColumn;
-            let prevCharCode = prevBreakOffset === 0 ? 0 /* Null */ : lineText.charCodeAt(prevBreakOffset - 1);
-            let prevCharCodeClass = prevBreakOffset === 0 ? 0 /* NONE */ : classifier.get(prevCharCode);
+            let prevCharCode = prevBreakOffset === 0 ? 0 /* CharCode.Null */ : lineText.charCodeAt(prevBreakOffset - 1);
+            let prevCharCodeClass = prevBreakOffset === 0 ? 0 /* CharacterClass.NONE */ : classifier.get(prevCharCode);
             let entireLineFits = true;
             for (let i = prevBreakOffset; i < len; i++) {
                 const charStartOffset = i;
@@ -130,7 +130,7 @@ function createLineBreaksFromPreviousLineBreaks(classifier, previousBreakingData
                 if (strings.isHighSurrogate(charCode)) {
                     // A surrogate pair must always be considered as a single unit, so it is never to be broken
                     i++;
-                    charCodeClass = 0 /* NONE */;
+                    charCodeClass = 0 /* CharacterClass.NONE */;
                     charWidth = 2;
                 }
                 else {
@@ -184,7 +184,7 @@ function createLineBreaksFromPreviousLineBreaks(classifier, previousBreakingData
             for (let i = prevBreakOffset - 1; i >= lastBreakingOffset; i--) {
                 const charStartOffset = i + 1;
                 const prevCharCode = lineText.charCodeAt(i);
-                if (prevCharCode === 9 /* Tab */) {
+                if (prevCharCode === 9 /* CharCode.Tab */) {
                     // cannot determine the width of a tab when going backwards, so we must go forwards
                     hitATabCharacter = true;
                     break;
@@ -194,7 +194,7 @@ function createLineBreaksFromPreviousLineBreaks(classifier, previousBreakingData
                 if (strings.isLowSurrogate(prevCharCode)) {
                     // A surrogate pair must always be considered as a single unit, so it is never to be broken
                     i--;
-                    prevCharCodeClass = 0 /* NONE */;
+                    prevCharCodeClass = 0 /* CharacterClass.NONE */;
                     prevCharWidth = 2;
                 }
                 else {
@@ -350,7 +350,7 @@ function createLineBreaks(classifier, _lineText, injectedTexts, tabSize, firstLi
         if (strings.isHighSurrogate(charCode)) {
             // A surrogate pair must always be considered as a single unit, so it is never to be broken
             i++;
-            charCodeClass = 0 /* NONE */;
+            charCodeClass = 0 /* CharacterClass.NONE */;
             charWidth = 2;
         }
         else {
@@ -388,7 +388,7 @@ function createLineBreaks(classifier, _lineText, injectedTexts, tabSize, firstLi
     return new ModelLineProjectionData(injectionOffsets, injectionOptions, breakingOffsets, breakingOffsetsVisibleColumn, wrappedTextIndentLength);
 }
 function computeCharWidth(charCode, visibleColumn, tabSize, columnsForFullWidthChar) {
-    if (charCode === 9 /* Tab */) {
+    if (charCode === 9 /* CharCode.Tab */) {
         return (tabSize - (visibleColumn % tabSize));
     }
     if (strings.isFullWidthCharacter(charCode)) {
@@ -408,24 +408,24 @@ function tabCharacterWidth(visibleColumn, tabSize) {
  * Kinsoku Shori : Don't break before a trailing character, like a period
  */
 function canBreak(prevCharCode, prevCharCodeClass, charCode, charCodeClass) {
-    return (charCode !== 32 /* Space */
-        && ((prevCharCodeClass === 2 /* BREAK_AFTER */)
-            || (prevCharCodeClass === 3 /* BREAK_IDEOGRAPHIC */ && charCodeClass !== 2 /* BREAK_AFTER */)
-            || (charCodeClass === 1 /* BREAK_BEFORE */)
-            || (charCodeClass === 3 /* BREAK_IDEOGRAPHIC */ && prevCharCodeClass !== 1 /* BREAK_BEFORE */)));
+    return (charCode !== 32 /* CharCode.Space */
+        && ((prevCharCodeClass === 2 /* CharacterClass.BREAK_AFTER */ && charCodeClass !== 2 /* CharacterClass.BREAK_AFTER */) // break at the end of multiple BREAK_AFTER
+            || (prevCharCodeClass !== 1 /* CharacterClass.BREAK_BEFORE */ && charCodeClass === 1 /* CharacterClass.BREAK_BEFORE */) // break at the start of multiple BREAK_BEFORE
+            || (prevCharCodeClass === 3 /* CharacterClass.BREAK_IDEOGRAPHIC */ && charCodeClass !== 2 /* CharacterClass.BREAK_AFTER */)
+            || (charCodeClass === 3 /* CharacterClass.BREAK_IDEOGRAPHIC */ && prevCharCodeClass !== 1 /* CharacterClass.BREAK_BEFORE */)));
 }
 function computeWrappedTextIndentLength(lineText, tabSize, firstLineBreakColumn, columnsForFullWidthChar, wrappingIndent) {
     let wrappedTextIndentLength = 0;
-    if (wrappingIndent !== 0 /* None */) {
+    if (wrappingIndent !== 0 /* WrappingIndent.None */) {
         const firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineText);
         if (firstNonWhitespaceIndex !== -1) {
             // Track existing indent
             for (let i = 0; i < firstNonWhitespaceIndex; i++) {
-                const charWidth = (lineText.charCodeAt(i) === 9 /* Tab */ ? tabCharacterWidth(wrappedTextIndentLength, tabSize) : 1);
+                const charWidth = (lineText.charCodeAt(i) === 9 /* CharCode.Tab */ ? tabCharacterWidth(wrappedTextIndentLength, tabSize) : 1);
                 wrappedTextIndentLength += charWidth;
             }
             // Increase indent of continuation lines, if desired
-            const numberOfAdditionalTabs = (wrappingIndent === 3 /* DeepIndent */ ? 2 : wrappingIndent === 2 /* Indent */ ? 1 : 0);
+            const numberOfAdditionalTabs = (wrappingIndent === 3 /* WrappingIndent.DeepIndent */ ? 2 : wrappingIndent === 2 /* WrappingIndent.Indent */ ? 1 : 0);
             for (let i = 0; i < numberOfAdditionalTabs; i++) {
                 const charWidth = tabCharacterWidth(wrappedTextIndentLength, tabSize);
                 wrappedTextIndentLength += charWidth;

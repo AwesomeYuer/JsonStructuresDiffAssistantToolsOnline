@@ -97,14 +97,13 @@ class LanguageSelection {
         return this._emitter.event;
     }
     _evaluate() {
+        var _a;
         const languageId = this._selector();
         if (languageId === this.languageId) {
             // no change
             return;
         }
         this.languageId = languageId;
-        if (this._emitter) {
-            this._emitter.fire(this.languageId);
-        }
+        (_a = this._emitter) === null || _a === void 0 ? void 0 : _a.fire(this.languageId);
     }
 }

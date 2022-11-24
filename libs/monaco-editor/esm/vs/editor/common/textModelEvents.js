@@ -8,7 +8,7 @@
  */
 export class ModelRawFlush {
     constructor() {
-        this.changeType = 1 /* Flush */;
+        this.changeType = 1 /* RawContentChangedType.Flush */;
     }
 }
 /**
@@ -65,7 +65,7 @@ export class LineInjectedText {
  */
 export class ModelRawLineChanged {
     constructor(lineNumber, detail, injectedText) {
-        this.changeType = 2 /* LineChanged */;
+        this.changeType = 2 /* RawContentChangedType.LineChanged */;
         this.lineNumber = lineNumber;
         this.detail = detail;
         this.injectedText = injectedText;
@@ -77,7 +77,7 @@ export class ModelRawLineChanged {
  */
 export class ModelRawLinesDeleted {
     constructor(fromLineNumber, toLineNumber) {
-        this.changeType = 3 /* LinesDeleted */;
+        this.changeType = 3 /* RawContentChangedType.LinesDeleted */;
         this.fromLineNumber = fromLineNumber;
         this.toLineNumber = toLineNumber;
     }
@@ -88,7 +88,7 @@ export class ModelRawLinesDeleted {
  */
 export class ModelRawLinesInserted {
     constructor(fromLineNumber, toLineNumber, detail, injectedTexts) {
-        this.changeType = 4 /* LinesInserted */;
+        this.changeType = 4 /* RawContentChangedType.LinesInserted */;
         this.injectedTexts = injectedTexts;
         this.fromLineNumber = fromLineNumber;
         this.toLineNumber = toLineNumber;
@@ -101,7 +101,7 @@ export class ModelRawLinesInserted {
  */
 export class ModelRawEOLChanged {
     constructor() {
-        this.changeType = 5 /* EOLChanged */;
+        this.changeType = 5 /* RawContentChangedType.EOLChanged */;
     }
 }
 /**

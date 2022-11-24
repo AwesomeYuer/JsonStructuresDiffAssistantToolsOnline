@@ -7,8 +7,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
+import { Disposable, toDisposable } from '../../../base/common/lifecycle.js';
+import { LinkedList } from '../../../base/common/linkedList.js';
 import { IThemeService } from '../../../platform/theme/common/themeService.js';
 let AbstractCodeEditorService = class AbstractCodeEditorService extends Disposable {
     constructor(_themeService) {
@@ -23,6 +33,7 @@ let AbstractCodeEditorService = class AbstractCodeEditorService extends Disposab
         this._onDiffEditorRemove = this._register(new Emitter());
         this.onDiffEditorRemove = this._onDiffEditorRemove.event;
         this._decorationOptionProviders = new Map();
+        this._codeEditorOpenHandlers = new LinkedList();
         this._modelProperties = new Map();
         this._codeEditors = Object.create(null);
         this._diffEditors = Object.create(null);
@@ -73,7 +84,7 @@ let AbstractCodeEditorService = class AbstractCodeEditorService extends Disposab
             if (provider.refCount <= 0) {
                 this._decorationOptionProviders.delete(key);
                 provider.dispose();
-                this.listCodeEditors().forEach((ed) => ed.removeDecorations(key));
+                this.listCodeEditors().forEach((ed) => ed.removeDecorationsByType(key));
             }
         }
     }
@@ -96,6 +107,21 @@ let AbstractCodeEditorService = class AbstractCodeEditorService extends Disposab
             return innerMap.get(key);
         }
         return undefined;
+    }
+    openCodeEditor(input, source, sideBySide) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (const handler of this._codeEditorOpenHandlers) {
+                const candidate = yield handler(input, source, sideBySide);
+                if (candidate !== null) {
+                    return candidate;
+                }
+            }
+            return null;
+        });
+    }
+    registerCodeEditorOpenHandler(handler) {
+        const rm = this._codeEditorOpenHandlers.unshift(handler);
+        return toDisposable(rm);
     }
 };
 AbstractCodeEditorService = __decorate([

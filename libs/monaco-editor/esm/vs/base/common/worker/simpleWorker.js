@@ -27,7 +27,7 @@ class RequestMessage {
         this.req = req;
         this.method = method;
         this.args = args;
-        this.type = 0 /* Request */;
+        this.type = 0 /* MessageType.Request */;
     }
 }
 class ReplyMessage {
@@ -36,7 +36,7 @@ class ReplyMessage {
         this.seq = seq;
         this.res = res;
         this.err = err;
-        this.type = 1 /* Reply */;
+        this.type = 1 /* MessageType.Reply */;
     }
 }
 class SubscribeEventMessage {
@@ -45,7 +45,7 @@ class SubscribeEventMessage {
         this.req = req;
         this.eventName = eventName;
         this.arg = arg;
-        this.type = 2 /* SubscribeEvent */;
+        this.type = 2 /* MessageType.SubscribeEvent */;
     }
 }
 class EventMessage {
@@ -53,14 +53,14 @@ class EventMessage {
         this.vsWorker = vsWorker;
         this.req = req;
         this.event = event;
-        this.type = 3 /* Event */;
+        this.type = 3 /* MessageType.Event */;
     }
 }
 class UnsubscribeEventMessage {
     constructor(vsWorker, req) {
         this.vsWorker = vsWorker;
         this.req = req;
-        this.type = 4 /* UnsubscribeEvent */;
+        this.type = 4 /* MessageType.UnsubscribeEvent */;
     }
 }
 class SimpleWorkerProtocol {
@@ -112,15 +112,15 @@ class SimpleWorkerProtocol {
     }
     _handleMessage(msg) {
         switch (msg.type) {
-            case 1 /* Reply */:
+            case 1 /* MessageType.Reply */:
                 return this._handleReplyMessage(msg);
-            case 0 /* Request */:
+            case 0 /* MessageType.Request */:
                 return this._handleRequestMessage(msg);
-            case 2 /* SubscribeEvent */:
+            case 2 /* MessageType.SubscribeEvent */:
                 return this._handleSubscribeEventMessage(msg);
-            case 3 /* Event */:
+            case 3 /* MessageType.Event */:
                 return this._handleEventMessage(msg);
-            case 4 /* UnsubscribeEvent */:
+            case 4 /* MessageType.UnsubscribeEvent */:
                 return this._handleUnsubscribeEventMessage(msg);
         }
     }
@@ -129,7 +129,7 @@ class SimpleWorkerProtocol {
             console.warn('Got reply to unknown seq');
             return;
         }
-        let reply = this._pendingReplies[replyMessage.seq];
+        const reply = this._pendingReplies[replyMessage.seq];
         delete this._pendingReplies[replyMessage.seq];
         if (replyMessage.err) {
             let err = replyMessage.err;
@@ -145,8 +145,8 @@ class SimpleWorkerProtocol {
         reply.resolve(replyMessage.res);
     }
     _handleRequestMessage(requestMessage) {
-        let req = requestMessage.req;
-        let result = this._handler.handleMessage(requestMessage.method, requestMessage.args);
+        const req = requestMessage.req;
+        const result = this._handler.handleMessage(requestMessage.method, requestMessage.args);
         result.then((r) => {
             this._send(new ReplyMessage(this._workerId, req, r, undefined));
         }, (e) => {
@@ -180,15 +180,15 @@ class SimpleWorkerProtocol {
         this._pendingEvents.delete(msg.req);
     }
     _send(msg) {
-        let transfer = [];
-        if (msg.type === 0 /* Request */) {
+        const transfer = [];
+        if (msg.type === 0 /* MessageType.Request */) {
             for (let i = 0; i < msg.args.length; i++) {
                 if (msg.args[i] instanceof ArrayBuffer) {
                     transfer.push(msg.args[i]);
                 }
             }
         }
-        else if (msg.type === 1 /* Reply */) {
+        else if (msg.type === 1 /* MessageType.Reply */) {
             if (msg.res instanceof ArrayBuffer) {
                 transfer.push(msg.res);
             }
@@ -208,9 +208,7 @@ export class SimpleWorkerClient extends Disposable {
         }, (err) => {
             // in Firefox, web workers fail lazily :(
             // we will reject the proxy
-            if (lazyProxyReject) {
-                lazyProxyReject(err);
-            }
+            lazyProxyReject === null || lazyProxyReject === void 0 ? void 0 : lazyProxyReject(err);
         }));
         this._protocol = new SimpleWorkerProtocol({
             sendMessage: (msg, transfer) => {
@@ -316,7 +314,7 @@ function createProxyObject(methodNames, invoke, proxyListen) {
             return proxyListen(eventName, arg);
         };
     };
-    let result = {};
+    const result = {};
     for (const methodName of methodNames) {
         if (propertyIsDynamicEvent(methodName)) {
             result[methodName] = createProxyDynamicEvent(methodName);

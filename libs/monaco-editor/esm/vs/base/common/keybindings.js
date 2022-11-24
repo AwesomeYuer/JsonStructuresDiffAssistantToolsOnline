@@ -18,13 +18,13 @@ export function createKeybinding(keybinding, OS) {
     return new ChordKeybinding([createSimpleKeybinding(firstPart, OS)]);
 }
 export function createSimpleKeybinding(keybinding, OS) {
-    const ctrlCmd = (keybinding & 2048 /* CtrlCmd */ ? true : false);
-    const winCtrl = (keybinding & 256 /* WinCtrl */ ? true : false);
-    const ctrlKey = (OS === 2 /* Macintosh */ ? winCtrl : ctrlCmd);
-    const shiftKey = (keybinding & 1024 /* Shift */ ? true : false);
-    const altKey = (keybinding & 512 /* Alt */ ? true : false);
-    const metaKey = (OS === 2 /* Macintosh */ ? ctrlCmd : winCtrl);
-    const keyCode = (keybinding & 255 /* KeyCode */);
+    const ctrlCmd = (keybinding & 2048 /* BinaryKeybindingsMask.CtrlCmd */ ? true : false);
+    const winCtrl = (keybinding & 256 /* BinaryKeybindingsMask.WinCtrl */ ? true : false);
+    const ctrlKey = (OS === 2 /* OperatingSystem.Macintosh */ ? winCtrl : ctrlCmd);
+    const shiftKey = (keybinding & 1024 /* BinaryKeybindingsMask.Shift */ ? true : false);
+    const altKey = (keybinding & 512 /* BinaryKeybindingsMask.Alt */ ? true : false);
+    const metaKey = (OS === 2 /* OperatingSystem.Macintosh */ ? ctrlCmd : winCtrl);
+    const keyCode = (keybinding & 255 /* BinaryKeybindingsMask.KeyCode */);
     return new SimpleKeybinding(ctrlKey, shiftKey, altKey, metaKey, keyCode);
 }
 export class SimpleKeybinding {
@@ -43,11 +43,11 @@ export class SimpleKeybinding {
             && this.keyCode === other.keyCode);
     }
     isModifierKey() {
-        return (this.keyCode === 0 /* Unknown */
-            || this.keyCode === 5 /* Ctrl */
-            || this.keyCode === 57 /* Meta */
-            || this.keyCode === 6 /* Alt */
-            || this.keyCode === 4 /* Shift */);
+        return (this.keyCode === 0 /* KeyCode.Unknown */
+            || this.keyCode === 5 /* KeyCode.Ctrl */
+            || this.keyCode === 57 /* KeyCode.Meta */
+            || this.keyCode === 6 /* KeyCode.Alt */
+            || this.keyCode === 4 /* KeyCode.Shift */);
     }
     toChord() {
         return new ChordKeybinding([this]);
@@ -56,10 +56,10 @@ export class SimpleKeybinding {
      * Does this keybinding refer to the key code of a modifier and it also has the modifier flag?
      */
     isDuplicateModifierCase() {
-        return ((this.ctrlKey && this.keyCode === 5 /* Ctrl */)
-            || (this.shiftKey && this.keyCode === 4 /* Shift */)
-            || (this.altKey && this.keyCode === 6 /* Alt */)
-            || (this.metaKey && this.keyCode === 57 /* Meta */));
+        return ((this.ctrlKey && this.keyCode === 5 /* KeyCode.Ctrl */)
+            || (this.shiftKey && this.keyCode === 4 /* KeyCode.Shift */)
+            || (this.altKey && this.keyCode === 6 /* KeyCode.Alt */)
+            || (this.metaKey && this.keyCode === 57 /* KeyCode.Meta */));
     }
 }
 export class ChordKeybinding {
@@ -82,10 +82,10 @@ export class ScanCodeBinding {
      * Does this keybinding refer to the key code of a modifier and it also has the modifier flag?
      */
     isDuplicateModifierCase() {
-        return ((this.ctrlKey && (this.scanCode === 157 /* ControlLeft */ || this.scanCode === 161 /* ControlRight */))
-            || (this.shiftKey && (this.scanCode === 158 /* ShiftLeft */ || this.scanCode === 162 /* ShiftRight */))
-            || (this.altKey && (this.scanCode === 159 /* AltLeft */ || this.scanCode === 163 /* AltRight */))
-            || (this.metaKey && (this.scanCode === 160 /* MetaLeft */ || this.scanCode === 164 /* MetaRight */)));
+        return ((this.ctrlKey && (this.scanCode === 157 /* ScanCode.ControlLeft */ || this.scanCode === 161 /* ScanCode.ControlRight */))
+            || (this.shiftKey && (this.scanCode === 158 /* ScanCode.ShiftLeft */ || this.scanCode === 162 /* ScanCode.ShiftRight */))
+            || (this.altKey && (this.scanCode === 159 /* ScanCode.AltLeft */ || this.scanCode === 163 /* ScanCode.AltRight */))
+            || (this.metaKey && (this.scanCode === 160 /* ScanCode.MetaLeft */ || this.scanCode === 164 /* ScanCode.MetaRight */)));
     }
 }
 export class ResolvedKeybindingPart {

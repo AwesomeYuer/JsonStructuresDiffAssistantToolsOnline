@@ -18,59 +18,48 @@ export class ViewUserInputEvents {
         this._coordinatesConverter = coordinatesConverter;
     }
     emitKeyDown(e) {
-        if (this.onKeyDown) {
-            this.onKeyDown(e);
-        }
+        var _a;
+        (_a = this.onKeyDown) === null || _a === void 0 ? void 0 : _a.call(this, e);
     }
     emitKeyUp(e) {
-        if (this.onKeyUp) {
-            this.onKeyUp(e);
-        }
+        var _a;
+        (_a = this.onKeyUp) === null || _a === void 0 ? void 0 : _a.call(this, e);
     }
     emitContextMenu(e) {
-        if (this.onContextMenu) {
-            this.onContextMenu(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onContextMenu) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseMove(e) {
-        if (this.onMouseMove) {
-            this.onMouseMove(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onMouseMove) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseLeave(e) {
-        if (this.onMouseLeave) {
-            this.onMouseLeave(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onMouseLeave) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseDown(e) {
-        if (this.onMouseDown) {
-            this.onMouseDown(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onMouseDown) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseUp(e) {
-        if (this.onMouseUp) {
-            this.onMouseUp(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onMouseUp) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseDrag(e) {
-        if (this.onMouseDrag) {
-            this.onMouseDrag(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onMouseDrag) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseDrop(e) {
-        if (this.onMouseDrop) {
-            this.onMouseDrop(this._convertViewToModelMouseEvent(e));
-        }
+        var _a;
+        (_a = this.onMouseDrop) === null || _a === void 0 ? void 0 : _a.call(this, this._convertViewToModelMouseEvent(e));
     }
     emitMouseDropCanceled() {
-        if (this.onMouseDropCanceled) {
-            this.onMouseDropCanceled();
-        }
+        var _a;
+        (_a = this.onMouseDropCanceled) === null || _a === void 0 ? void 0 : _a.call(this);
     }
     emitMouseWheel(e) {
-        if (this.onMouseWheel) {
-            this.onMouseWheel(e);
-        }
+        var _a;
+        (_a = this.onMouseWheel) === null || _a === void 0 ? void 0 : _a.call(this, e);
     }
     _convertViewToModelMouseEvent(e) {
         if (e.target) {

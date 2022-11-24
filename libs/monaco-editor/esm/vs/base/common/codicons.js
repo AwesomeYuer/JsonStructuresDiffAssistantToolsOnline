@@ -413,7 +413,8 @@ Codicon.debugBreakpointFunctionUnverified = new Codicon('debug-breakpoint-functi
 Codicon.debugBreakpointFunction = new Codicon('debug-breakpoint-function', { fontCharacter: '\\eb88' });
 Codicon.debugBreakpointFunctionDisabled = new Codicon('debug-breakpoint-function-disabled', { fontCharacter: '\\eb88' });
 Codicon.debugStackframeActive = new Codicon('debug-stackframe-active', { fontCharacter: '\\eb89' });
-Codicon.debugStackframeDot = new Codicon('debug-stackframe-dot', { fontCharacter: '\\eb8a' });
+Codicon.circleSmallFilled = new Codicon('circle-small-filled', { fontCharacter: '\\eb8a' });
+Codicon.debugStackframeDot = new Codicon('debug-stackframe-dot', Codicon.circleSmallFilled.definition);
 Codicon.debugStackframe = new Codicon('debug-stackframe', { fontCharacter: '\\eb8b' });
 Codicon.debugStackframeFocused = new Codicon('debug-stackframe-focused', { fontCharacter: '\\eb8b' });
 Codicon.debugBreakpointUnsupported = new Codicon('debug-breakpoint-unsupported', { fontCharacter: '\\eb8c' });
@@ -526,6 +527,9 @@ Codicon.layoutSidebarRight = new Codicon('layout-sidebar-right', { fontCharacter
 Codicon.layoutStatusbar = new Codicon('layout-statusbar', { fontCharacter: '\\ebf5' });
 Codicon.layoutMenubar = new Codicon('layout-menubar', { fontCharacter: '\\ebf6' });
 Codicon.layoutCentered = new Codicon('layout-centered', { fontCharacter: '\\ebf7' });
+Codicon.layoutSidebarRightOff = new Codicon('layout-sidebar-right-off', { fontCharacter: '\\ec00' });
+Codicon.layoutPanelOff = new Codicon('layout-panel-off', { fontCharacter: '\\ec01' });
+Codicon.layoutSidebarLeftOff = new Codicon('layout-sidebar-left-off', { fontCharacter: '\\ec02' });
 Codicon.target = new Codicon('target', { fontCharacter: '\\ebf8' });
 Codicon.indent = new Codicon('indent', { fontCharacter: '\\ebf9' });
 Codicon.recordSmall = new Codicon('record-small', { fontCharacter: '\\ebfa' });
@@ -534,6 +538,15 @@ Codicon.arrowCircleDown = new Codicon('arrow-circle-down', { fontCharacter: '\\e
 Codicon.arrowCircleLeft = new Codicon('arrow-circle-left', { fontCharacter: '\\ebfd' });
 Codicon.arrowCircleRight = new Codicon('arrow-circle-right', { fontCharacter: '\\ebfe' });
 Codicon.arrowCircleUp = new Codicon('arrow-circle-up', { fontCharacter: '\\ebff' });
+Codicon.heartFilled = new Codicon('heart-filled', { fontCharacter: '\\ec04' });
+Codicon.map = new Codicon('map', { fontCharacter: '\\ec05' });
+Codicon.mapFilled = new Codicon('map-filled', { fontCharacter: '\\ec06' });
+Codicon.circleSmall = new Codicon('circle-small', { fontCharacter: '\\ec07' });
+Codicon.bellSlash = new Codicon('bell-slash', { fontCharacter: '\\ec08' });
+Codicon.bellSlashDot = new Codicon('bell-slash-dot', { fontCharacter: '\\ec09' });
+Codicon.commentUnresolved = new Codicon('comment-unresolved', { fontCharacter: '\\ec0a' });
+Codicon.gitPullRequestGoToChanges = new Codicon('git-pull-request-go-to-changes', { fontCharacter: '\\ec0b' });
+Codicon.gitPullRequestNewChanges = new Codicon('git-pull-request-new-changes', { fontCharacter: '\\ec0c' });
 // derived icons, that could become separate icons
 Codicon.dialogError = new Codicon('dialog-error', Codicon.error.definition);
 Codicon.dialogWarning = new Codicon('dialog-warning', Codicon.warning.definition);
@@ -568,7 +581,7 @@ export var CSSIcon;
         if (!match) {
             return asClassNameArray(Codicon.error);
         }
-        let [, id, modifier] = match;
+        const [, id, modifier] = match;
         const classNames = ['codicon', 'codicon-' + id];
         if (modifier) {
             classNames.push('codicon-modifier-' + modifier.substr(1));

@@ -11,7 +11,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { isSafari } from '../../../../base/browser/browser.js';
 import * as dom from '../../../../base/browser/dom.js';
 import { DomScrollableElement } from '../../../../base/browser/ui/scrollbar/scrollableElement.js';
 import { Codicon } from '../../../../base/common/codicons.js';
@@ -19,8 +18,7 @@ import { Emitter } from '../../../../base/common/event.js';
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { MarkdownRenderer } from '../../markdownRenderer/browser/markdownRenderer.js';
-import { EDITOR_FONT_DEFAULTS } from '../../../common/config/editorOptions.js';
-import { ResizableHTMLElement } from './resizable.js';
+import { ResizableHTMLElement } from '../../../../base/browser/ui/resizable/resizable.js';
 import * as nls from '../../../../nls.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 export function canExpandCompletionItem(item) {
@@ -41,7 +39,9 @@ let SuggestDetailsWidget = class SuggestDetailsWidget {
         this.domNode.classList.add('no-docs');
         this._markdownRenderer = instaService.createInstance(MarkdownRenderer, { editor: _editor });
         this._body = dom.$('.body');
-        this._scrollbar = new DomScrollableElement(this._body, {});
+        this._scrollbar = new DomScrollableElement(this._body, {
+            alwaysConsumeMouseWheel: true,
+        });
         dom.append(this.domNode, this._scrollbar.getDomNode());
         this._disposables.add(this._scrollbar);
         this._header = dom.append(this._body, dom.$('.header'));
@@ -51,7 +51,7 @@ let SuggestDetailsWidget = class SuggestDetailsWidget {
         this._docs = dom.append(this._body, dom.$('p.docs'));
         this._configureFont();
         this._disposables.add(this._editor.onDidChangeConfiguration(e => {
-            if (e.hasChanged(44 /* fontInfo */)) {
+            if (e.hasChanged(46 /* EditorOption.fontInfo */)) {
                 this._configureFont();
             }
         }));
@@ -62,10 +62,10 @@ let SuggestDetailsWidget = class SuggestDetailsWidget {
     }
     _configureFont() {
         const options = this._editor.getOptions();
-        const fontInfo = options.get(44 /* fontInfo */);
-        const fontFamily = fontInfo.getMassagedFontFamily(isSafari ? EDITOR_FONT_DEFAULTS.fontFamily : null);
-        const fontSize = options.get(107 /* suggestFontSize */) || fontInfo.fontSize;
-        const lineHeight = options.get(108 /* suggestLineHeight */) || fontInfo.lineHeight;
+        const fontInfo = options.get(46 /* EditorOption.fontInfo */);
+        const fontFamily = fontInfo.getMassagedFontFamily();
+        const fontSize = options.get(109 /* EditorOption.suggestFontSize */) || fontInfo.fontSize;
+        const lineHeight = options.get(110 /* EditorOption.suggestLineHeight */) || fontInfo.lineHeight;
         const fontWeight = fontInfo.fontWeight;
         const fontSizePx = `${fontSize}px`;
         const lineHeightPx = `${lineHeight}px`;
@@ -78,7 +78,7 @@ let SuggestDetailsWidget = class SuggestDetailsWidget {
         this._close.style.width = lineHeightPx;
     }
     getLayoutInfo() {
-        const lineHeight = this._editor.getOption(108 /* suggestLineHeight */) || this._editor.getOption(44 /* fontInfo */).lineHeight;
+        const lineHeight = this._editor.getOption(110 /* EditorOption.suggestLineHeight */) || this._editor.getOption(46 /* EditorOption.fontInfo */).lineHeight;
         const borderWidth = this._borderWidth;
         const borderHeight = borderWidth * 2;
         return {

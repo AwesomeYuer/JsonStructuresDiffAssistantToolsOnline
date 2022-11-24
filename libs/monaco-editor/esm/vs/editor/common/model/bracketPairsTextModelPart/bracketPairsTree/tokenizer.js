@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { NotSupportedError } from '../../../../../base/common/errors.js';
-import { TokenMetadata } from '../../../languages.js';
+import { TokenMetadata } from '../../../encodedTokenAttributes.js';
 import { TextAstNode } from './ast.js';
 import { lengthAdd, lengthDiff, lengthGetColumnCountIfZeroLineCount, lengthToObj, lengthZero, toLength } from './length.js';
 import { SmallImmutableSet } from './smallImmutableSet.js';
@@ -115,7 +115,7 @@ class NonPeekableTextBufferTokenizer {
             return null;
         }
         if (this.line === null) {
-            this.lineTokens = this.textModel.getLineTokens(this.lineIdx + 1);
+            this.lineTokens = this.textModel.tokenization.getLineTokens(this.lineIdx + 1);
             this.line = this.lineTokens.getLineContent();
             this.lineTokenOffset = this.lineCharOffset === 0 ? 0 : this.lineTokens.findTokenIndexAtOffset(this.lineCharOffset);
         }
@@ -135,10 +135,11 @@ class NonPeekableTextBufferTokenizer {
                     // Sometimes, (bracket) identifiers are split up into multiple tokens.
                     this.lineTokenOffset++;
                 }
-                const isOther = TokenMetadata.getTokenType(tokenMetadata) === 0 /* Other */;
+                const isOther = TokenMetadata.getTokenType(tokenMetadata) === 0 /* StandardTokenType.Other */;
+                const containsBracketType = TokenMetadata.containsBalancedBrackets(tokenMetadata);
                 const endOffset = lineTokens.getEndOffset(this.lineTokenOffset);
                 // Is there a bracket token next? Only consume text.
-                if (isOther && endOffset !== this.lineCharOffset) {
+                if (containsBracketType && isOther && this.lineCharOffset < endOffset) {
                     const languageId = lineTokens.getLanguageId(this.lineTokenOffset);
                     const text = this.line.substring(this.lineCharOffset, endOffset);
                     const brackets = this.bracketTokens.getSingleLanguageBracketTokens(languageId);
@@ -180,7 +181,7 @@ class NonPeekableTextBufferTokenizer {
                     break;
                 }
                 this.lineIdx++;
-                this.lineTokens = this.textModel.getLineTokens(this.lineIdx + 1);
+                this.lineTokens = this.textModel.tokenization.getLineTokens(this.lineIdx + 1);
                 this.lineTokenOffset = 0;
                 this.line = this.lineTokens.getLineContent();
                 this.lineCharOffset = 0;
@@ -203,7 +204,7 @@ class NonPeekableTextBufferTokenizer {
         // unless the line is too long.
         // Thus, the min indentation of the document is the minimum min indentation of every text node.
         const length = lengthDiff(startLineIdx, startLineCharOffset, this.lineIdx, this.lineCharOffset);
-        return new Token(length, 0 /* Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
+        return new Token(length, 0 /* TokenKind.Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
     }
 }
 export class FastTokenizer {
@@ -212,7 +213,7 @@ export class FastTokenizer {
         this._offset = lengthZero;
         this.idx = 0;
         const regExpStr = brackets.getRegExpStr();
-        const regexp = regExpStr ? new RegExp(brackets.getRegExpStr() + '|\n', 'g') : null;
+        const regexp = regExpStr ? new RegExp(regExpStr + '|\n', 'gi') : null;
         const tokens = [];
         let match;
         let curLineCount = 0;
@@ -221,11 +222,11 @@ export class FastTokenizer {
         let lastTokenEndLine = 0;
         const smallTextTokens0Line = new Array();
         for (let i = 0; i < 60; i++) {
-            smallTextTokens0Line.push(new Token(toLength(0, i), 0 /* Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(toLength(0, i))));
+            smallTextTokens0Line.push(new Token(toLength(0, i), 0 /* TokenKind.Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(toLength(0, i))));
         }
         const smallTextTokens1Line = new Array();
         for (let i = 0; i < 60; i++) {
-            smallTextTokens1Line.push(new Token(toLength(1, i), 0 /* Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(toLength(1, i))));
+            smallTextTokens1Line.push(new Token(toLength(1, i), 0 /* TokenKind.Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(toLength(1, i))));
         }
         if (regexp) {
             regexp.lastIndex = 0;
@@ -247,7 +248,7 @@ export class FastTokenizer {
                             }
                             else {
                                 const length = toLength(0, colCount);
-                                token = new Token(length, 0 /* Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
+                                token = new Token(length, 0 /* TokenKind.Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
                             }
                         }
                         else {
@@ -258,7 +259,7 @@ export class FastTokenizer {
                             }
                             else {
                                 const length = toLength(lineCount, colCount);
-                                token = new Token(length, 0 /* Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
+                                token = new Token(length, 0 /* TokenKind.Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
                             }
                         }
                         tokens.push(token);
@@ -275,7 +276,7 @@ export class FastTokenizer {
             const length = (lastTokenEndLine === curLineCount)
                 ? toLength(0, offset - lastTokenEndOffset)
                 : toLength(curLineCount - lastTokenEndLine, offset - lastLineBreakOffset);
-            tokens.push(new Token(length, 0 /* Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length)));
+            tokens.push(new Token(length, 0 /* TokenKind.Text */, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length)));
         }
         this.length = toLength(curLineCount, offset - lastLineBreakOffset);
         this.tokens = tokens;

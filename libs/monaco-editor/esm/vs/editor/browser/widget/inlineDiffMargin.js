@@ -32,7 +32,7 @@ export class InlineDiffMargin extends Disposable {
         this._diffActions = document.createElement('div');
         this._diffActions.className = Codicon.lightBulb.classNames + ' lightbulb-glyph';
         this._diffActions.style.position = 'absolute';
-        const lineHeight = editor.getOption(59 /* lineHeight */);
+        const lineHeight = editor.getOption(61 /* EditorOption.lineHeight */);
         const lineFeed = editor.getModel().getEOL();
         this._diffActions.style.right = '0px';
         this._diffActions.style.visibility = 'hidden';
@@ -63,7 +63,7 @@ export class InlineDiffMargin extends Disposable {
                 if (lineContent === '') {
                     // empty line
                     const eof = diff.originalModel.getEndOfLineSequence();
-                    yield this._clipboardService.writeText(eof === 0 /* LF */ ? '\n' : '\r\n');
+                    yield this._clipboardService.writeText(eof === 0 /* EndOfLineSequence.LF */ ? '\n' : '\r\n');
                 }
                 else {
                     yield this._clipboardService.writeText(lineContent);
@@ -71,7 +71,7 @@ export class InlineDiffMargin extends Disposable {
             }));
             actions.push(copyLineAction);
         }
-        const readOnly = editor.getOption(81 /* readOnly */);
+        const readOnly = editor.getOption(83 /* EditorOption.readOnly */);
         if (!readOnly) {
             actions.push(new Action('diff.inline.revertChange', nls.localize('diff.inline.revertChange.label', "Revert this change"), undefined, true, () => __awaiter(this, void 0, void 0, function* () {
                 const range = new Range(diff.originalStartLineNumber, 1, diff.originalEndLineNumber, diff.originalModel.getLineMaxColumn(diff.originalEndLineNumber));
@@ -124,7 +124,7 @@ export class InlineDiffMargin extends Disposable {
             showContextMenu(e.posx, top + height + pad);
         }));
         this._register(editor.onMouseMove((e) => {
-            if (e.target.type === 8 /* CONTENT_VIEW_ZONE */ || e.target.type === 5 /* GUTTER_VIEW_ZONE */) {
+            if (e.target.type === 8 /* MouseTargetType.CONTENT_VIEW_ZONE */ || e.target.type === 5 /* MouseTargetType.GUTTER_VIEW_ZONE */) {
                 const viewZoneId = e.target.detail.viewZoneId;
                 if (viewZoneId === this._viewZoneId) {
                     this.visibility = true;
@@ -142,7 +142,7 @@ export class InlineDiffMargin extends Disposable {
             if (!e.event.rightButton) {
                 return;
             }
-            if (e.target.type === 8 /* CONTENT_VIEW_ZONE */ || e.target.type === 5 /* GUTTER_VIEW_ZONE */) {
+            if (e.target.type === 8 /* MouseTargetType.CONTENT_VIEW_ZONE */ || e.target.type === 5 /* MouseTargetType.GUTTER_VIEW_ZONE */) {
                 const viewZoneId = e.target.detail.viewZoneId;
                 if (viewZoneId === this._viewZoneId) {
                     e.event.preventDefault();
