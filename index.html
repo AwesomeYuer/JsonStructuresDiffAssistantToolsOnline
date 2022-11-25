@@ -335,7 +335,7 @@
             var jj = jsonStructuresStringify(
                         "Left",
                         topLeftEditor.getValue(),
-                        vm.SelectedSortedStringify()
+                        vm.SelectedSortByKeyStringify()
                     );
             var j1 = {
                 TextBody: jj
@@ -343,7 +343,7 @@
             jj = jsonStructuresStringify(
                         "Right",
                         topRightEditor.getValue(),
-                        vm.SelectedSortedStringify()
+                        vm.SelectedSortByKeyStringify()
                     );
             var j2 = {
                 TextBody: jj
@@ -467,10 +467,10 @@
             <table width="100%">
                 <tr>
                     <td align="right" width="50%">
-                        <span id="checkboxSortedStringifySpan">
-                            <input type="checkbox" id="checkboxSortedStringify" data-bind="checked:SelectedSortedStringify" />
-                            <label id="checkboxSortedStringifyLabel" accesskey="k" for="checkboxSortedStringify">
-                                ↓ Sorted by <strong><u>K</u></strong>ey ↓
+                        <span id="checkboxSortByKeyStringifySpan">
+                            <input type="checkbox" id="checkboxSortByKeyStringify" data-bind="checked:SelectedSortByKeyStringify" />
+                            <label id="checkboxSortByKeyStringifyLabel" accesskey="k" for="checkboxSortByKeyStringify">
+                                ↓ Sort by <strong><u>K</u></strong>ey ↓
                             </label>
                         </span>
                     </td>
@@ -650,7 +650,7 @@
                 }
             },
             {
-                element: '#checkboxSortedStringifySpan',
+                element: '#checkboxSortByKeyStringifySpan',
                 popover: {
                     title: 'Sorted key Stringify',
                     description: 'Click here or press key [Alt+k] for switch mode of whether base on Sorted key Stringify comparison',
@@ -791,7 +791,7 @@
         var viewModel = function (data) {
             var self = this;
             self.SelectedDiffViewType = ko.observable("0");
-            self.SelectedSortedStringify = ko.observable("0");
+            self.SelectedSortByKeyStringify = ko.observable("0");
             self.SelectedKeepKeyWithValueStringify = ko.observable("0");
             self.availableThemes = ko.observableArray([
                 new editorTheme("Visual Studio",        "vs"),
