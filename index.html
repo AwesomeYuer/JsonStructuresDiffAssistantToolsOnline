@@ -771,9 +771,9 @@
             });
         });
 
-        function diffView(viewType, compareBaseObject, comparseWithObject) {
+        function diffView(viewType, compareBaseObject, compareWithObject) {
             var originalTxt = compareBaseObject.TextBody;
-            var modifiedTxt = comparseWithObject.TextBody;
+            var modifiedTxt = compareWithObject.TextBody;
             diffEditor.updateOptions({
                 renderSideBySide: !viewType,
                 readOnly: true
