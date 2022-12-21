@@ -226,7 +226,7 @@
             return element1.currentStyle ? element1.currentStyle[element2] : getComputedStyle(element1)[element2];  //element1,要改变的元素代替名;element2,要改变的属性名
         }
 
-        function setEditorJson(editor, url) {
+        function setEditorText(editor, url) {
             $.get(url, function(text) {
                     editor.setValue(text);
                 },"text");
@@ -251,8 +251,8 @@
 
         function clearDiffEditor() {
             diffEditor.setModel({
-                original: monaco.editor.createModel(null, 'json'),
-                modified: monaco.editor.createModel(null, 'json')
+                original: monaco.editor.createModel("", vm.selectedLanguage().languageId),
+                modified: monaco.editor.createModel("", vm.selectedLanguage().languageId)
             });
         }
 
@@ -724,7 +724,7 @@
                 element: '#diffViewType0Span',
                 popover: {
                     title: 'Side',
-                    description: 'Click here or press key [Alt+s] for Side diff View type selection and view diff on below',
+                    description: 'Click here or press key [Alt+z] for Side diff View type selection and view diff on below',
                     position: 'bottom-center'
                 }
             },
@@ -781,7 +781,7 @@
                 renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
                 theme: "vs",
             });
-            setEditorJson(topLeftEditor, "json1.json");
+            setEditorText(topLeftEditor, "json1.json");
         });
 
         var topRightEditor;            
@@ -802,7 +802,7 @@
                 renderLineHighlight: 'line'                                     ,
                 theme: "vs",
             });
-            setEditorJson(topRightEditor, "json2.json");
+            setEditorText(topRightEditor, "json2.json");
         });
         var diffEditor;
         require(['vs/editor/editor.main'], function() {
@@ -822,20 +822,22 @@
         var modifiedModel;
 
         function diffView(viewType, compareBaseObject, compareWithObject) {
-            var originalTxt = compareBaseObject.TextBody;
-            var modifiedTxt = compareWithObject.TextBody;
+            var originalText = compareBaseObject.TextBody;
+            var modifiedText = compareWithObject.TextBody;
+
             diffEditor.updateOptions({
                 renderSideBySide: !viewType,
                 readOnly: true
             });
-            originalModel = monaco.editor.createModel(originalTxt, vm.selectedLanguage().languageId);
-            modifiedModel = monaco.editor.createModel(modifiedTxt, vm.selectedLanguage().languageId);
+            originalModel = monaco.editor.createModel(originalText, vm.selectedLanguage().languageId);
+            modifiedModel = monaco.editor.createModel(modifiedText, vm.selectedLanguage().languageId);
             diffEditor.setModel({
                 original: originalModel ,
                 modified: modifiedModel
             });
             $('#loading').fadeOut();
         }
+
         var editorTheme = function(themeName, themeId) {
             this.themeName = themeName;
             this.themeId = themeId;
@@ -848,15 +850,18 @@
 
         var viewModel = function (data) {
             var self = this;
+
             self.SelectedDiffViewType = ko.observable("0");
             self.SelectedSortByKeyStringify = ko.observable("0");
             self.SelectedKeepKeyWithValueStringify = ko.observable("0");
             self.SelectedKeepOriginalText = ko.observable("0");
+
             self.availableThemes = ko.observableArray([
                 new editorTheme("Visual Studio"         , "vs"          ),
                 new editorTheme("Dark Vsiual Studio"    , "vs-dark"     ),
                 new editorTheme("High Contrast Black"   , "hc-black"    )
             ]);
+
             self.availableLanguages = ko.observableArray([
                 new modelLanguage("Json"            ,  "json"           ),
                 new modelLanguage("C++"             ,  "cpp"            ),
@@ -865,6 +870,7 @@
                 new modelLanguage("Java"            ,  "java"           ),
                 new modelLanguage("JavaScript"      ,  "javascript"     ),
             ]);
+
             self.selectedTheme = ko.observable();
             self.selectedLanguage = ko.observable();
             self.SelectedKeepKeyWithValueStringify(0);
@@ -881,6 +887,7 @@
         vm.selectedLanguage.subscribe(function(newValue) {
             monaco.editor.setModelLanguage(topLeftEditor.getModel(), newValue.languageId);
             monaco.editor.setModelLanguage(topRightEditor.getModel(), newValue.languageId);
+
             monaco.editor.setModelLanguage(originalModel, newValue.languageId);
             monaco.editor.setModelLanguage(modifiedModel, newValue.languageId);
         });
@@ -888,6 +895,7 @@
         vm.SelectedKeepOriginalText.subscribe(function(newValue) {
             var label1 = document.getElementById("checkboxSortByKeyStringifyLabel");
             var label2 = document.getElementById("checkboxKeepKeyWithValueStringifyLabel");
+
             if (newValue) {
                 label1.setAttribute("disabled", newValue);
                 label2.setAttribute("disabled", newValue);
