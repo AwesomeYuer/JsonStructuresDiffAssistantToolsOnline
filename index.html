@@ -136,6 +136,13 @@
             color: #000000
         }
     </style>
+    <style>
+        label[disabled] {
+            color: #999;
+            opacity: 0.5;
+        }
+
+    </style>
     <link href="styles/taiji.css" rel="stylesheet" />
     <link href="styles/fan.css" rel="stylesheet" />
     <link href="styles/text-magic.css" rel="stylesheet" />
@@ -879,6 +886,18 @@
             monaco.editor.setModelLanguage(topRightEditor.getModel(), newValue.languageId);
             monaco.editor.setModelLanguage(originalModel, newValue.languageId);
             monaco.editor.setModelLanguage(modifiedModel, newValue.languageId);
+        });
+
+        vm.SelectedKeepOriginalText.subscribe(function(newValue) {
+            var label1 = document.getElementById("checkboxSortByKeyStringifyLabel");
+            var label2 = document.getElementById("checkboxKeepKeyWithValueStringifyLabel");
+            if (newValue) {
+                label1.setAttribute("disabled", newValue);
+                label2.setAttribute("disabled", newValue);
+            } else {
+                label1.removeAttribute("disabled");
+                label2.removeAttribute("disabled");
+            }
         });
 
         resizeEditors();
