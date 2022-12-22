@@ -1,11 +1,14 @@
 <!doctype html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="Generator" content="EditPlus®,Microshaoft">
     <meta name="Author" content="EditPlus®,Microshaoft">
-    <meta name="Keywords" content="json,Json Structures,diff,jsondiff,stringify,json-stable-stringify,fast-json-stable-stringify,monaco-editor,splitjs,split.js,driverjs,driver.js,EditPlus®,EditPlus,Microshaoft,AwesomeYuer,Awesome Yuer,Awesome-Yuer,于斯人也,于斯人野">
-    <meta name="Description" content="Json Structures Diff Assistant Tools Online (powered by pure HTML/JavaScript/CSS i.e. monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)">
+    <meta name="Keywords"
+        content="json,Json Structures,diff,jsondiff,stringify,json-stable-stringify,fast-json-stable-stringify,monaco-editor,splitjs,split.js,driverjs,driver.js,EditPlus®,EditPlus,Microshaoft,AwesomeYuer,Awesome Yuer,Awesome-Yuer,于斯人也,于斯人野">
+    <meta name="Description"
+        content="Json Structures Diff Assistant Tools Online (powered by pure HTML/JavaScript/CSS i.e. monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
     <title>Json Structures Diff Assistant Tools Online</title>
 
@@ -16,10 +19,10 @@
     <link rel="stylesheet" href="libs/jquery-ui/jquery-ui-1.12.1.css">
     <script src="libs/jquery-ui/jquery-ui-1.12.1.js"></script>
     <script src="libs/splitjs/split.js"></script>
-    
+
     <link href="libs/driver.js/driver.min.css" rel="stylesheet" />
     <script src="libs/driver.js/driver.min.js"></script>
-    
+
     <script src="libs/monaco-editor/dev/vs/loader.js"></script>
 
     <style type="text/css">
@@ -70,7 +73,6 @@
     </style>
     <!--split.js css-->
     <style>
-
         html,
         body {
             height: 100%;
@@ -148,19 +150,19 @@
     <link href="styles/text-magic.css" rel="stylesheet" />
 
     <script type="text/javascript">
-        (function($, h, c) {
+        (function ($, h, c) {
             var a = $([]),
-            e = $.resize = $.extend($.resize, {}),
-            i,
-            k = "setTimeout",
-            j = "resize",
-            d = j + "-special-event",
-            b = "delay",
-            f = "throttleWindow";
+                e = $.resize = $.extend($.resize, {}),
+                i,
+                k = "setTimeout",
+                j = "resize",
+                d = j + "-special-event",
+                b = "delay",
+                f = "throttleWindow";
             e[b] = 250;
             e[f] = true;
             $.event.special[j] = {
-                setup: function() {
+                setup: function () {
                     if (!e[f] && this[k]) {
                         return false;
                     }
@@ -174,7 +176,7 @@
                         g();
                     }
                 },
-                teardown: function() {
+                teardown: function () {
                     if (!e[f] && this[k]) {
                         return false;
                     }
@@ -185,16 +187,16 @@
                         clearTimeout(i);
                     }
                 },
-                add: function(l) {
+                add: function (l) {
                     if (!e[f] && this[k]) {
                         return false;
                     }
                     var n;
                     function m(s, o, p) {
                         var q = $(this),
-                        r = $.data(this, d);
-                        r.w = o !== c ? o: q.width();
-                        r.h = p !== c ? p: q.height();
+                            r = $.data(this, d);
+                        r.w = o !== c ? o : q.width();
+                        r.h = p !== c ? p : q.height();
                         n.apply(this, arguments);
                     }
                     if ($.isFunction(l)) {
@@ -207,19 +209,19 @@
                 }
             };
             function g() {
-                i = h[k](function() {
-                    a.each(function() {
+                i = h[k](function () {
+                    a.each(function () {
                         var n = $(this),
-                        m = n.width(),
-                        l = n.height(),
-                        o = $.data(this, d);
+                            m = n.width(),
+                            l = n.height(),
+                            o = $.data(this, d);
                         if (m !== o.w || l !== o.h) {
                             n.trigger(j, [o.w = m, o.h = l]);
                         }
                     });
                     g();
                 },
-                e[b]);
+                    e[b]);
             }
         })(jQuery, this);
         function getStyle(element1, element2) {
@@ -227,22 +229,22 @@
         }
 
         function setEditorText(editor, url) {
-            $.get(url, function(text) {
-                    editor.setValue(text);
-                },"text");
+            $.get(url, function (text) {
+                editor.setValue(text);
+            }, "text");
         }
 
         function readFileToEditor(input, editor) {
-            var file = input.files[0]; 
-            var fileReader = new FileReader(); 
-            fileReader.readAsText(file); 
-            fileReader.onload = function() {
+            var file = input.files[0];
+            var fileReader = new FileReader();
+            fileReader.readAsText(file);
+            fileReader.onload = function () {
                 editor.setValue(fileReader.result);
                 clearDiffEditor();
-            }; 
-            fileReader.onerror = function() {
+            };
+            fileReader.onerror = function () {
                 editor.setValue(fileReader.error);
-            }; 
+            };
         }
 
         function clearEditor(editor) {
@@ -263,8 +265,8 @@
             var o;
             var jTokens = "";
             try {
-                o = JSON.parse(x, function(k, v){
-                    jTokens += "\n(" + k + " : " + v + ")" ;
+                o = JSON.parse(x, function (k, v) {
+                    jTokens += "\n(" + k + " : " + v + ")";
                     return v;
                 });
             }
@@ -285,19 +287,19 @@
                 o = JSON.parse(fastJsonStableStringify(o));
             }
             var j = JSON.stringify(o, function (k, v) {
-                    if (!vm.SelectedKeepKeyWithValueStringify()) {
-                        if (typeof v == 'string') {
-                            return '*****';
-                        } else if (typeof v == 'number') {
-                            return -1;
-                        } else if (typeof v == 'boolean') {
-                            return true;
-                        } else if (typeof v == 'undeclaredVariable') {
-                            return undefined;
-                        }
+                if (!vm.SelectedKeepKeyWithValueStringify()) {
+                    if (typeof v == 'string') {
+                        return '*****';
+                    } else if (typeof v == 'number') {
+                        return -1;
+                    } else if (typeof v == 'boolean') {
+                        return true;
+                    } else if (typeof v == 'undeclaredVariable') {
+                        return undefined;
                     }
-                    return v;
-                },
+                }
+                return v;
+            },
                 4
             );
             return j;
@@ -306,20 +308,20 @@
         function resizeEditors() {
             var div1 = document.getElementById("left");
             var div2 = document.getElementById("topLeftEditorDiv");
-            var height = parseInt(getStyle(div1,"height"));
+            var height = parseInt(getStyle(div1, "height"));
             div2.style.height = height - 28 + "px";
 
             div1 = document.getElementById("right");
             div2 = document.getElementById("topRightEditorDiv");
-            height = parseInt(getStyle(div1,"height"));
+            height = parseInt(getStyle(div1, "height"));
             div2.style.height = height - 28 + "px";
 
             div1 = document.getElementById("down");
             div2 = document.getElementById("container");
-            height = parseInt(getStyle(div1,"height"));
+            height = parseInt(getStyle(div1, "height"));
             div2.style.height = height - 160 + "px";
         }
-       
+
         function swap() {
             var s = topLeftEditor.getValue();
             topLeftEditor.setValue(topRightEditor.getValue());
@@ -343,18 +345,18 @@
             //debugger;
             $('#loading').fadeIn();
             var jj = jsonStructuresStringify(
-                        "Left",
-                        topLeftEditor.getValue(),
-                        vm.SelectedSortByKeyStringify()
-                    );
+                "Left",
+                topLeftEditor.getValue(),
+                vm.SelectedSortByKeyStringify()
+            );
             var j1 = {
                 TextBody: jj
             };
             jj = jsonStructuresStringify(
-                        "Right",
-                        topRightEditor.getValue(),
-                        vm.SelectedSortByKeyStringify()
-                    );
+                "Right",
+                topRightEditor.getValue(),
+                vm.SelectedSortByKeyStringify()
+            );
             var j2 = {
                 TextBody: jj
             };
@@ -364,6 +366,7 @@
         }
     </script>
 </head>
+
 <body>
     <div id="loading" align="center">
 
@@ -383,99 +386,101 @@
         <div class="box-taiji">
         </div>
     </div>
-        <div id="up1Div" align="center" width="100%">
-            <h4>
-                Json Structures Diff Assistant Tools Online
-                (powered by pure HTML/JavaScript/CSS i.e. monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)
-            </h4> 
-        </div>
-        <hr>
-        <div id="up2Div" align="left" width="100%">
-            <span id="helpSpan">
-                <button id="help"  accesskey="h" onclick="help();">
-                    <strong><u>H</u></strong>elp
-                </button>
-            </span>
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            <span id="themesSpan" align="right" >
-                <strong><u>T</u></strong>heme:&nbsp;
-                <select accesskey="t" data-bind="options: availableThemes,
+    <div id="up1Div" align="center" width="100%">
+        <h4>
+            Json Structures Diff Assistant Tools Online
+            (powered by pure HTML/JavaScript/CSS i.e. monaco-editor/fast-json-stable-stringify/split.js/driver.js/knockoutjs/jquery/jquery-ui.)
+        </h4>
+    </div>
+    <hr>
+    <div id="up2Div" align="left" width="100%">
+        <span id="helpSpan">
+            <button id="help" accesskey="h" onclick="help();">
+                <strong><u>H</u></strong>elp
+            </button>
+        </span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span id="themesSpan" align="right">
+            <strong><u>T</u></strong>heme:&nbsp;
+            <select accesskey="t" data-bind="options: availableThemes,
                                                     optionsText: 'themeName',
                                                     value: selectedTheme,
                                                     updateValue: 'afterkeydown'
                                                 ">
-                </select>
-            </span>
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            <span id="languagesSpan" align="right" >
-                Lang<strong><u>u</u></strong>ges:&nbsp;
-                <select accesskey="u" data-bind="options: availableLanguages,
+            </select>
+        </span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span id="languagesSpan" align="right">
+            Lang<strong><u>u</u></strong>ges:&nbsp;
+            <select accesskey="u" data-bind="options: availableLanguages,
                                                     optionsText: 'languageName',
                                                     value: selectedLanguage,
                                                     updateValue: 'afterkeydown'
                                                 ">
-                </select>
-            </span>
-        </div>
-        <br>
-        <div id="up" class="split" style="border: 1px solid black">
-            <div id="left" class="split content split-horizontal" width="50%">
-                <div style="height: 25px;background-color: lightgray;">
-                    <table width="100%">
-                        <tr>
-                            <td align="left">
-                                <span id="chooseFileLeftSpan">
-                                    &nbsp;(<strong><u>L</u></strong>)&nbsp;
-                                    <input id="chooseFileLeft" accesskey="l" type="file" onchange="readFileToEditor(this, topLeftEditor);">
-                                </span>
-                            </td>
-                            <td align="right">
-                                <span id="clearLeftSpan" >
-                                    <button accesskey="1" onclick="clearEditor(topLeftEditor);">
-                                        Clear (<strong><u>1</u></strong>)
-                                    </button>
-                                </span>
-                            </td>
-                        </tr>
-                    </table>
-                </div>                
-                
-                <div id="topLeftEditorDiv" style="height: 100%;">
+            </select>
+        </span>
+    </div>
+    <br>
+    <div id="up" class="split" style="border: 1px solid black">
+        <div id="left" class="split content split-horizontal" width="50%">
+            <div style="height: 25px;background-color: lightgray;">
+                <table width="100%">
+                    <tr>
+                        <td align="left">
+                            <span id="chooseFileLeftSpan">
+                                &nbsp;(<strong><u>L</u></strong>)&nbsp;
+                                <input id="chooseFileLeft" accesskey="l" type="file"
+                                    onchange="readFileToEditor(this, topLeftEditor);">
+                            </span>
+                        </td>
+                        <td align="right">
+                            <span id="clearLeftSpan">
+                                <button accesskey="1" onclick="clearEditor(topLeftEditor);">
+                                    Clear (<strong><u>1</u></strong>)
+                                </button>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
-                </div>
-            </div>
-            
-            <div id="right" class="split content split-horizontal" width="50%">
-                <div style="height: 25px; background-color: lightgray;">
-                    <table width="100%">
-                        <tr>
-                            <td align="left">
-                                <span id="chooseFileRightSpan">
-                                    &nbsp;(<strong><u>R</u></strong>)&nbsp;
-                                    <input id="chooseFileRight" accesskey="r" type="file" onchange="readFileToEditor(this, topRightEditor);">
-                                </span>
-                            </td>
-                            <td align="right">
-                                <span id="clearRightSpan">
-                                    <button accesskey="2" onclick="clearEditor(topRightEditor);">
-                                        Clear (<strong><u>2</u></strong>)
-                                    </button>
-                                </span>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div id="topRightEditorDiv" style="height: 100%;">
-                    
-                </div>
+            <div id="topLeftEditorDiv" style="height: 100%;">
+
             </div>
         </div>
+
+        <div id="right" class="split content split-horizontal" width="50%">
+            <div style="height: 25px; background-color: lightgray;">
+                <table width="100%">
+                    <tr>
+                        <td align="left">
+                            <span id="chooseFileRightSpan">
+                                &nbsp;(<strong><u>R</u></strong>)&nbsp;
+                                <input id="chooseFileRight" accesskey="r" type="file"
+                                    onchange="readFileToEditor(this, topRightEditor);">
+                            </span>
+                        </td>
+                        <td align="right">
+                            <span id="clearRightSpan">
+                                <button accesskey="2" onclick="clearEditor(topRightEditor);">
+                                    Clear (<strong><u>2</u></strong>)
+                                </button>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="topRightEditorDiv" style="height: 100%;">
+
+            </div>
+        </div>
+    </div>
 
     <div id="down" class="split content">
         <br>
         <div align="center">
-            <button id="format"  accesskey="m" onclick="format();">
+            <button id="format" accesskey="m" onclick="format();">
                 ↑ For<strong><u>m</u></strong>at ↑
             </button>
             <button id="swap" accesskey="w" onclick="swap();">
@@ -488,7 +493,8 @@
                 <tr>
                     <td align="right" width="50%">
                         <span id="checkboxSortByKeyStringifySpan">
-                            <input type="checkbox" id="checkboxSortByKeyStringify" data-bind="checked:SelectedSortByKeyStringify, enable: (!SelectedKeepOriginalText())" />
+                            <input type="checkbox" id="checkboxSortByKeyStringify"
+                                data-bind="checked:SelectedSortByKeyStringify, enable: (!SelectedKeepOriginalText())" />
                             <label id="checkboxSortByKeyStringifyLabel" accesskey="k" for="checkboxSortByKeyStringify">
                                 ↓ Sort by <strong><u>K</u></strong>ey ↓
                             </label>
@@ -499,15 +505,18 @@
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <span id="checkboxKeepKeyWithValueStringifySpan">
-                            <input type="checkbox" id="checkboxKeepKeyWithValueStringify" data-bind="checked:SelectedKeepKeyWithValueStringify, enable: (!SelectedKeepOriginalText())" />
-                            <label id="checkboxKeepKeyWithValueStringifyLabel" accesskey="v" for="checkboxKeepKeyWithValueStringify">
+                            <input type="checkbox" id="checkboxKeepKeyWithValueStringify"
+                                data-bind="checked:SelectedKeepKeyWithValueStringify, enable: (!SelectedKeepOriginalText())" />
+                            <label id="checkboxKeepKeyWithValueStringifyLabel" accesskey="v"
+                                for="checkboxKeepKeyWithValueStringify">
                                 ↓ Keep Key With <strong><u>V</u></strong>alue ↓
                             </label>
                         </span>
                     </td>
                     <td align="right" width="20%">
                         <span id="checkboxKeepOriginalTextSpan">
-                            <input type="checkbox" id="checkboxKeepOriginalText" data-bind="checked:SelectedKeepOriginalText" />
+                            <input type="checkbox" id="checkboxKeepOriginalText"
+                                data-bind="checked:SelectedKeepOriginalText" />
                             <label id="checkboxKeepOriginalTextLabel" accesskey="o" for="checkboxKeepOriginalText">
                                 ↓ Keep <strong><u>O</u></strong>riginal Text ↓
                             </label>
@@ -526,14 +535,16 @@
                     </td>
                     <td>
                         <span id="diffViewType0Span">
-                            <input type="radio" name="diffViewType" id="diffViewType0" onclick="diff(0);" value="0" data-bind="checked:SelectedDiffViewType" />
+                            <input type="radio" name="diffViewType" id="diffViewType0" onclick="diff(0);" value="0"
+                                data-bind="checked:SelectedDiffViewType" />
                             <label id="diffViewType0Label" accesskey="z" for="diffViewType0">
                                 Side (<strong><u>z</u></strong>)
                             </label>
                         </span>
                         &nbsp;
                         <span id="diffViewType1Span">
-                            <input type="radio" name="diffViewType" id="diffViewType1" onclick="diff(1);" value="1" data-bind="checked:SelectedDiffViewType" />
+                            <input type="radio" name="diffViewType" id="diffViewType1" onclick="diff(1);" value="1"
+                                data-bind="checked:SelectedDiffViewType" />
                             <label id="diffViewType1Label" accesskey="i" for="diffViewType1">
                                 Inl<strong><u>i</u></strong>ne
                             </label>
@@ -560,7 +571,7 @@
             }
         });
 
-        $("#left").resize(function() {
+        $("#left").resize(function () {
             resizeEditors();
         });
 
@@ -596,7 +607,7 @@
                 element: '#themesSpan',
                 popover: {
                     title: 'Editor Themes ...',
-                    description: "Click here or press key [Alt+t] for editor's Theme selection" ,
+                    description: "Click here or press key [Alt+t] for editor's Theme selection",
                     position: 'right'
                 }
             },
@@ -604,7 +615,7 @@
                 element: '#languagesSpan',
                 popover: {
                     title: 'Editor Languages ...',
-                    description: "Click here or press key [Alt+u] for editor's Language selection" ,
+                    description: "Click here or press key [Alt+u] for editor's Language selection",
                     position: 'right'
                 }
             },
@@ -612,7 +623,7 @@
                 element: '#chooseFileLeftSpan',
                 popover: {
                     title: 'Choose File ...',
-                    description: "Click here or press key [Alt+l] for choose file content into Left" ,
+                    description: "Click here or press key [Alt+l] for choose file content into Left",
                     position: 'right'
                 }
             },
@@ -620,7 +631,7 @@
                 element: '#clearLeftSpan',
                 popover: {
                     title: 'Choose File ...',
-                    description: "Click here or press key [Alt+1] for clear content in Left editor" ,
+                    description: "Click here or press key [Alt+1] for clear content in Left editor",
                     position: 'right'
                 }
             },
@@ -644,7 +655,7 @@
                 element: '#chooseFileRightSpan',
                 popover: {
                     title: 'Choose File ...',
-                    description: "Click here or press key [Alt+r] for choose file content into Right editor" ,
+                    description: "Click here or press key [Alt+r] for choose file content into Right editor",
                     position: 'right'
                 }
             },
@@ -652,7 +663,7 @@
                 element: '#clearRightSpan',
                 popover: {
                     title: 'Choose File ...',
-                    description: "Click here or press key [Alt+2] for clear content in Right" ,
+                    description: "Click here or press key [Alt+2] for clear content in Right",
                     position: 'left'
                 }
             },
@@ -740,7 +751,7 @@
                 element: '#clearDiffSpan',
                 popover: {
                     title: 'Choose File ...',
-                    description: "Click here or press key [Alt+c] for clear content in Diff editor" ,
+                    description: "Click here or press key [Alt+c] for clear content in Diff editor",
                     position: 'left'
                 }
             },
@@ -755,36 +766,39 @@
         ]);
         // Start the introduction
         driver.start();
-    
-        require.config({ paths: { 
-            'vs': 'libs/monaco-editor/min/vs'
-        }});
+
+        require.config({
+            paths: {
+                'vs': 'libs/monaco-editor/min/vs'
+            }
+        });
         var topLeftEditor;
         require(['vs/editor/editor.main'], function () {
             topLeftEditor = monaco.editor.create(document.getElementById('topLeftEditorDiv'), {
                 value: [
-                        '{'                                                     ,
-                            '   "z": [{"a":1}],'                                ,
-                            '   "y": [{"a":{"a":true}}],'                       ,
-                            '   "a": "11111",'                                  ,
-                            '   "b": "222",'                                    ,
-                            '   "c": false, trigger json syntax error'          ,
-                            '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]'              ,
-                        '}'
-                ].join('\n')                                                    ,
-                language: 'json'                                                ,
-                automaticLayout: true                                           ,
-                foldingStrategy: 'indentation'                                  , // 代码可分小段折叠
-                overviewRulerBorder: false                                      , // 是否应围绕概览标尺绘制边框
-                folding: true                                                   , // 是否启用代码折叠
-                scrollBeyondLastLine: false                                     , // 设置编辑器是否可以滚动到最后一行之后
-                renderLineHighlight: 'line'                                     , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
+                    '{',
+                    '   "z": [{"a":1}],',
+                    '   "y": [{"a":{"a":true}}],',
+                    '   "a": "11111",',
+                    '   "b": "222",',
+                    '   "c": false, trigger json syntax error',
+                    '   "d": [1,2,3,{"z":1,"a":"aaaaaa"}]',
+                    '}'
+                ].join('\n'),
+                language: 'json',
+                automaticLayout: true,
+                foldingStrategy: 'indentation'      , // 代码可分小段折叠
+                overviewRulerBorder: false          , // 是否应围绕概览标尺绘制边框
+                folding: true                       , // 是否启用代码折叠
+                scrollBeyondLastLine: false         , // 设置编辑器是否可以滚动到最后一行之后
+                renderLineHighlight: 'line'         , // 当前行突出显示方式  "all" | "line" | "none" | "gutter"
                 theme: "vs",
             });
             setEditorText(topLeftEditor, "json1.json");
         });
 
-        var topRightEditor;            
+        var topRightEditor;
+
         require(['vs/editor/editor.main'], function () {
             topRightEditor = monaco.editor.create(document.getElementById('topRightEditorDiv'), {
                 value: [
@@ -817,7 +831,7 @@
                     theme: "vs",
             });
         });
-        
+
         var originalModel;
         var modifiedModel;
 
@@ -832,18 +846,18 @@
             originalModel = monaco.editor.createModel(originalText, vm.selectedLanguage().languageId);
             modifiedModel = monaco.editor.createModel(modifiedText, vm.selectedLanguage().languageId);
             diffEditor.setModel({
-                original: originalModel ,
+                original: originalModel,
                 modified: modifiedModel
             });
             $('#loading').fadeOut();
         }
 
-        var editorTheme = function(themeName, themeId) {
+        var editorTheme = function (themeName, themeId) {
             this.themeName = themeName;
             this.themeId = themeId;
         };
 
-        var modelLanguage = function(languageName, languageId) {
+        var modelLanguage = function (languageName, languageId) {
             this.languageName = languageName;
             this.languageId = languageId;
         };
@@ -880,11 +894,11 @@
         var vm = new viewModel([]);
         ko.applyBindings(vm);
 
-        vm.selectedTheme.subscribe(function(newValue) {
+        vm.selectedTheme.subscribe(function (newValue) {
             monaco.editor.setTheme(newValue.themeId);
         });
 
-        vm.selectedLanguage.subscribe(function(newValue) {
+        vm.selectedLanguage.subscribe(function (newValue) {
             monaco.editor.setModelLanguage(topLeftEditor.getModel(), newValue.languageId);
             monaco.editor.setModelLanguage(topRightEditor.getModel(), newValue.languageId);
 
@@ -892,7 +906,7 @@
             monaco.editor.setModelLanguage(modifiedModel, newValue.languageId);
         });
 
-        vm.SelectedKeepOriginalText.subscribe(function(newValue) {
+        vm.SelectedKeepOriginalText.subscribe(function (newValue) {
             var label1 = document.getElementById("checkboxSortByKeyStringifyLabel");
             var label2 = document.getElementById("checkboxKeepKeyWithValueStringifyLabel");
 
@@ -908,4 +922,5 @@
         resizeEditors();
     </script>
 </body>
+
 </html>
